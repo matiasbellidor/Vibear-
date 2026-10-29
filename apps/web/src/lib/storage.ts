@@ -74,9 +74,57 @@ export function useSaved() {
     savedStore.write(
       exists ? current.filter((item) => item.link !== match.link) : [{ ...match, savedAt: Date.now() }, ...current],
     );
+    savedAtStore.write(Date.now());
+    pushCloset();
   }, []);
 
   return { items, isSaved, toggle };
+}
+
+// ─── Closet backup (GET/PUT /v1/closet in the API) ──────────────────────────────────────────────
+// The saved products are copied to the API under an anonymous id that lives in an HttpOnly cookie
+// set by the server. Safari wipes a site's storage after 7 days without a visit, but not that
+// cookie, so the next visit restores the closet. No account: it stays tied to this browser.
+// The newest copy wins, by updated_at (epoch ms).
+
+const savedAtStore = createStore("vibear:saved-at", 0);
+const CLOSET_URL = "/api/v1/closet";
+type Closet = { items: SavedItem[]; updated_at: number };
+
+let pushTimer: ReturnType<typeof setTimeout> | undefined;
+
+function pushCloset() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => {
+    const body = JSON.stringify({ items: savedStore.read(), updated_at: savedAtStore.read() } satisfies Closet);
+    // keepalive lets the last save finish if the tab closes, but only for small bodies.
+    fetch(CLOSET_URL, { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: body.length < 60_000 }).catch(
+      () => {}, // offline or API down: the browser copy still works, the next change retries
+    );
+  }, 400);
+}
+
+let synced = false;
+
+/** Once per page load: restore the closet if the browser lost it, or back it up if it's newer. */
+export function syncCloset() {
+  if (synced) return;
+  synced = true;
+  fetch(CLOSET_URL)
+    .then((response) => (response.ok ? (response.json() as Promise<Closet>) : null))
+    .then((remote) => {
+      if (!remote) return;
+      // Closets saved before the backup existed have no timestamp: count them as old but real.
+      const local = savedAtStore.read() || (savedStore.read().length > 0 ? 1 : 0);
+      if (remote.updated_at > local) {
+        savedStore.write(remote.items);
+        savedAtStore.write(remote.updated_at);
+      } else if (local > remote.updated_at) {
+        if (!savedAtStore.read()) savedAtStore.write(local);
+        pushCloset();
+      }
+    })
+    .catch(() => {});
 }
 
 export function useRecentLooks(): RecentLook[] {

@@ -1,8 +1,10 @@
 import asyncio
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 import httpx
+import numpy as np
 from PIL import Image
 
 from app.images import ImageError, decode_image
@@ -21,26 +23,64 @@ class RankedMatch:
     size: tuple[int, int] | None  # thumbnail width, height: lets the UI reserve space before it loads
 
 
+Embedded = tuple[np.ndarray, tuple[int, int]]  # CLIP vector and thumbnail size
+
+
+class VectorCache:
+    """Thumbnail vectors by URL, least recently used dropped first (4096 x 512 floats is ~8 MB).
+
+    The same products come back across searches (the demo catalog in every one), so each
+    thumbnail is downloaded and embedded once: CLIP on CPU is most of a search's time.
+    """
+
+    def __init__(self, size: int = 4096):
+        self.size = size
+        self._items: OrderedDict[str, Embedded] = OrderedDict()
+
+    def get(self, url: str) -> Embedded | None:
+        entry = self._items.get(url)
+        if entry is not None:
+            self._items.move_to_end(url)
+        return entry
+
+    def put(self, url: str, entry: Embedded) -> None:
+        self._items[url] = entry
+        self._items.move_to_end(url)
+        while len(self._items) > self.size:
+            self._items.popitem(last=False)
+
+
 async def rank_by_similarity(
     query: Image.Image,
     matches: list[LensMatch],
     embedder: ClipEmbedder,
     load: ThumbnailLoader,
+    cache: VectorCache | None = None,
 ) -> list[RankedMatch]:
     """Order Lens matches by CLIP similarity to the crop. Matches without a usable thumbnail go last."""
-    thumbnails = await asyncio.gather(*(_load_or_none(load, m.thumbnail) for m in matches))
-
-    scored = [(m, img) for m, img in zip(matches, thumbnails) if img is not None]
-    unscored = [RankedMatch(m, None, None) for m, img in zip(matches, thumbnails) if img is None]
-    if not scored:
-        return unscored
+    entries: list[Embedded | None] = [
+        cache.get(m.thumbnail) if cache is not None and m.thumbnail else None for m in matches
+    ]
+    missing = [i for i, entry in enumerate(entries) if entry is None]
+    images = await asyncio.gather(*(_load_or_none(load, matches[i].thumbnail) for i in missing))
+    fresh = [(i, img) for i, img in zip(missing, images) if img is not None]
+    if not fresh and all(entry is None for entry in entries):
+        return [RankedMatch(m, None, None) for m in matches]
 
     # CPU-bound: run in a thread so the event loop keeps serving other requests.
-    vectors = await asyncio.to_thread(embedder.embed, [query] + [img for _, img in scored])
-    similarities = vectors[1:] @ vectors[0]
-    ranked = [RankedMatch(m, round(float(s), 4), img.size) for (m, img), s in zip(scored, similarities)]
+    vectors = await asyncio.to_thread(embedder.embed, [query] + [img for _, img in fresh])
+    for (i, img), vector in zip(fresh, vectors[1:]):
+        entries[i] = (vector, img.size)
+        if cache is not None and matches[i].thumbnail:
+            cache.put(matches[i].thumbnail, entries[i])
+
+    ranked = [
+        RankedMatch(m, round(float(entry[0] @ vectors[0]), 4), entry[1])
+        for m, entry in zip(matches, entries)
+        if entry is not None
+    ]
     ranked.sort(key=lambda r: r.similarity, reverse=True)
-    return ranked + unscored
+    return ranked + [RankedMatch(m, None, None) for m, entry in zip(matches, entries) if entry is None]
 
 
 def http_loader(client: httpx.AsyncClient) -> ThumbnailLoader:

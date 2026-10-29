@@ -2,57 +2,47 @@
 
 import Link from "next/link";
 import { pad } from "@/lib/labels";
+import type { Pin } from "@/lib/landing";
 import { ratioOf } from "@/lib/masonry";
 import { useSaved } from "@/lib/storage";
 import { MasonryGrid } from "./MasonryGrid";
-import type { Pin } from "@/lib/landing";
-import { Photo } from "./landing/Photo";
 import { CARD_CAPTION, ProductCard } from "./ProductCard";
-import { Icon, icons, primaryButton } from "./ui";
+import { ClosetBanner } from "./TabBanners";
+import { primaryButton } from "./ui";
 
-
-/** The moodboard: everything the user bookmarked, newest first. Lives in this browser only. */
+/**
+ * The closet ("placard"): everything the user bookmarked, newest first. It lives in this browser,
+ * with an anonymous backup in the API (lib/storage.ts) so Safari's 7-day purge doesn't erase it.
+ */
 export function SavedBoard({ preview = [] }: { preview?: Pin[] }) {
   const { items } = useSaved();
+  const mine = items.flatMap((item) => (item.thumbnail ? [{ key: item.link, src: item.thumbnail }] : [])).slice(0, 5);
+  const example = mine.length === 0;
 
   return (
     <div className="px-4 pb-10 pt-8 lg:px-8">
       <header className="flex items-end justify-between border-b border-line pb-4">
         <h1 className="font-display text-title tracking-tight">Guardados</h1>
-        <p className="text-micro tabular-nums text-muted">{pad(items.length)}</p>
+        <p className="text-micro tabular-nums text-muted">
+          {pad(items.length)} {items.length === 1 ? "producto" : "productos"}
+        </p>
       </header>
 
+      <ClosetBanner cards={example ? preview.map((pin) => ({ key: pin.src, src: pin.src })) : mine} example={example} />
+
       {items.length === 0 ? (
-        <div className="grid items-center gap-12 py-12 lg:grid-cols-12 lg:gap-10 lg:py-16">
-          <div className="lg:col-span-5">
-            <p className="font-display text-title tracking-tight">
-              Tu <span className="italic text-wine-bright">moodboard</span>
-            </p>
-            <p className="mt-5 text-body">Todavía no guardaste nada.</p>
-            <p className="mt-2 max-w-[40ch] text-small text-muted">
-              Tocá el marcador de cualquier resultado y armá tu tablero acá: queda guardado en este navegador.
-            </p>
-            <Link href="/scan" className={`${primaryButton} mt-8`}>
-              Escanear un look
-            </Link>
-          </div>
-          <figure aria-hidden="true" className="lg:col-span-7">
-            {/* A preview of what a board looks like (decorative, so CSS columns are fine here). */}
-            <div className="columns-3 gap-3 opacity-90 sm:gap-4">
-              {preview.map((pin) => (
-                <div key={pin.src} className="relative mb-3 break-inside-avoid sm:mb-4">
-                  <Photo photo={pin} />
-                  <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center bg-wine text-cream">
-                    <Icon path={icons.bookmark} filled />
-                  </span>
-                </div>
-              ))}
-            </div>
-            <figcaption className="mt-3 text-micro text-muted">Así se va a ver tu tablero</figcaption>
-          </figure>
+        <div className="mx-auto max-w-md pb-6 text-center">
+          <p className="font-display text-title tracking-tight">
+            Tu <span className="italic text-wine-bright">placard</span>
+          </p>
+          <p className="mt-5 text-body">Todavía no guardaste nada.</p>
+          <p className="mt-2 text-small text-muted">Tocá el marcador de cualquier resultado y armá tu placard acá.</p>
+          <Link href="/scan" transitionTypes={["nav-back"]} className={`${primaryButton} mt-8`}>
+            Escanear un look
+          </Link>
         </div>
       ) : (
-        <div className="mt-6">
+        <div className="mt-2">
           <MasonryGrid
             items={items}
             label="Productos guardados"
@@ -65,6 +55,12 @@ export function SavedBoard({ preview = [] }: { preview?: Pin[] }) {
           />
         </div>
       )}
+
+      <p className="mx-auto mt-12 max-w-[72ch] text-center text-micro normal-case tracking-normal text-muted">
+        Tu placard se guarda en este navegador, con una copia anónima en Vibear (sin cuenta). En iPhone, Safari borra
+        los datos de las páginas que no abrís en 7 días: con esa copia tu placard vuelve, salvo que borres los datos de
+        Safari o uses navegación privada.
+      </p>
     </div>
   );
 }

@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   outputFileTracingRoot: path.join(__dirname, "../.."),
   poweredByHeader: false,
+  // Keeps the last visited routes mounted but hidden (React Activity), so switching between the
+  // tabs (Inicio, Escanear, Guardados) shows the page again instead of rebuilding it.
+  cacheComponents: true,
+  partialPrefetching: true,
   experimental: {
     // A search (Google Lens + thumbnails + CLIP) can take 10-20 s on CPU.
     proxyTimeout: 60_000,

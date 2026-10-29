@@ -10,7 +10,7 @@ Everything model-related is real output: YOLO boxes and FashionCLIP similarities
 Run from apps/api with the API's venv (needs network and the models):
     python scripts/build_landing_assets.py
 
-Local mode builds the landing from your own folder instead (subfolders mujer/, hombre/, productos/)
+Local mode builds the landing from your own folder instead (subfolders destacada/, mujer/, hombre/, productos/)
 into apps/web/public/landing-local/ (gitignored: photos you don't own the rights to never reach
 GitHub). The web app prefers that manifest when it exists:
     python scripts/build_landing_assets.py --local ../web/local-photos
@@ -101,7 +101,7 @@ LABEL_ES = {
     "skirt": "Pollera", "short_sleeved_dress": "Vestido manga corta", "long_sleeved_dress": "Vestido manga larga",
     "vest_dress": "Vestido sin mangas", "sling_dress": "Vestido de breteles", "shoes": "Zapatos",
 }
-PIN_WIDTH, DEMO_WIDTH, CROP_WIDTH, BOARD_SIZE = 400, 720, 320, (480, 620)
+PIN_WIDTH, DEMO_WIDTH, CROP_WIDTH, BOARD_SIZE = 400, 1080, 320, (480, 620)  # the hero photo is the first thing seen: sharp on retina
 BOARD_BACKGROUND = (239, 238, 233)
 MIN_CONFIDENCE = 0.5
 
@@ -134,10 +134,10 @@ def commons(title: str) -> tuple[Image.Image, dict]:
     return _cache[title]
 
 
-def save_webp(image: Image.Image, folder: Path, name: str, width: int) -> dict:
+def save_webp(image: Image.Image, folder: Path, name: str, width: int, quality: int = 72) -> dict:
     if image.width > width:
         image = image.resize((width, round(image.height * width / image.width)), Image.LANCZOS)
-    image.save(folder / f"{name}.webp", "WEBP", quality=72, method=6)
+    image.save(folder / f"{name}.webp", "WEBP", quality=quality, method=6)
     return {"width": image.width, "height": image.height}
 
 
@@ -239,7 +239,7 @@ def main() -> None:
 
     # Explainer: real boxes on its photo, then the closest garments of the same family elsewhere.
     demo, demo_credit = commons(EXPLAINER)
-    demo_size = save_webp(demo, PUBLIC, "scan-demo", DEMO_WIDTH)
+    demo_size = save_webp(demo, PUBLIC, "scan-demo", DEMO_WIDTH, quality=82)
     scale = demo_size["width"] / demo.width
     boxes = crop_detections(demo, detector.detect(demo))[:2]
     query = next(crop for det, crop in boxes if EXPLAINER_QUERY in det.label)
@@ -294,12 +294,25 @@ def build_local(folder: Path) -> None:
     out = WEB / "public" / "landing-local"
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
-    groups = {
-        kind: sorted(p for p in (folder / sub).glob("*") if p.suffix.lower() in IMAGE_SUFFIXES)
-        for sub, kind in LOCAL_KINDS.items()
-    }
-    if not any(groups.values()):
-        raise SystemExit(f"No photos in {folder}: add them to mujer/, hombre/ or productos/")
+    photos = lambda sub: sorted(p for p in (folder / sub).glob("*") if p.suffix.lower() in IMAGE_SUFFIXES)
+    groups = {kind: photos(sub) for sub, kind in LOCAL_KINDS.items()}
+    featured = photos("destacada")  # the first one is the photo at the centre of the hero
+    if not any(groups.values()) and not featured:
+        raise SystemExit(f"No photos in {folder}: add them to destacada/, mujer/, hombre/ or productos/")
+
+    settings = Settings(_env_file=None)
+    detector = YoloGarmentDetector(settings.yolo_repo, settings.yolo_file, settings.detect_confidence)
+    embedder = ClipEmbedder(settings.clip_model)
+    open_rgb = lambda path: ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+
+    # With a featured photo, the outfits most like it come first, so the pins around it in the hero
+    # (the first woman and man) share its look. FashionCLIP judges the likeness.
+    if featured:
+        reference = embedder.embed([open_rgb(featured[0])])[0]
+        for kind in ("woman", "man"):
+            if groups[kind]:
+                vectors = embedder.embed([open_rgb(path) for path in groups[kind]])
+                groups[kind] = [path for _, path in sorted(zip(vectors @ reference, groups[kind]), key=lambda pair: -pair[0])]
 
     # Alternate women and men, with a product every third pin, so every stretch is mixed.
     order, products = [], list(groups["product"])
@@ -309,13 +322,10 @@ def build_local(folder: Path) -> None:
             order.append(("product", products.pop(0)))
     order += [("product", p) for p in products]
 
-    settings = Settings(_env_file=None)
-    detector = YoloGarmentDetector(settings.yolo_repo, settings.yolo_file, settings.detect_confidence)
-    embedder = ClipEmbedder(settings.clip_model)
     pins, crops, outfits = [], [], []
     for kind, path in order:
         n = len(pins) + 1
-        image = ImageOps.exif_transpose(Image.open(path)).convert("RGB")
+        image = open_rgb(path)
         credit = {"title": path.stem, "author": "Tu colección", "license": "Uso local, no se publica", "url": ""}
         detections = [d for d in crop_detections(image, detector.detect(image)) if d[0].confidence >= MIN_CONFIDENCE]
         size = save_webp(image, out, f"pin-{n:02d}", PIN_WIDTH)
@@ -327,13 +337,21 @@ def build_local(folder: Path) -> None:
 
     explainer = None
     demo = next((o for o in outfits if len([c for c in crops if c[0] == o[0]]) >= 2), outfits[0] if outfits else None)
-    if demo:
+    if featured:
+        credit = {"title": featured[0].stem, "author": "Tu colección", "license": "Uso local, no se publica", "url": ""}
+        demo = (0, open_rgb(featured[0]), credit)  # 0: not one of the pins
+    boxes = crop_detections(demo[1], detector.detect(demo[1]))[:2] if demo else []
+    if demo and not boxes:
+        print(f"No garments found in {demo[2]['title']}: the hero keeps the published photo")
+    if demo and boxes:
         n, image, credit = demo
-        size = save_webp(image, out, "scan-demo", DEMO_WIDTH)
+        size = save_webp(image, out, "scan-demo", DEMO_WIDTH, quality=82)
         scale = size["width"] / image.width
-        boxes = crop_detections(image, detector.detect(image))[:2]
         family = boxes[0][0].label.split("_")[-1]  # outwear, shirt, trousers, dress, skirt...
         others = [c for c in crops if c[0] != n]
+        if not others:  # only a featured photo: find its matches in the bundled demo catalog
+            items = json.loads((settings.demo_catalog_dir / "catalog.json").read_text(encoding="utf-8"))
+            others = [(-1, item["label"], open_rgb(settings.demo_catalog_dir / item["file"])) for item in items]
         same = [c for c in others if c[1].endswith(family)] or others
         vectors = embedder.embed([boxes[0][1]] + [img for _, _, img in same]) if same else None
         matches = []
@@ -350,6 +368,8 @@ def build_local(folder: Path) -> None:
     (out / "manifest.json").write_text(json.dumps({"pins": pins, "explainer": explainer}, ensure_ascii=False), encoding="utf-8")
     kinds = {k: sum(p["kind"] == k for p in pins) for k in ("woman", "man", "product")}
     print(f"{len(pins)} local pins {kinds} → {out}")
+    if explainer:
+        print("hero photo", explainer["credit"]["title"], [(b["label"], b["confidence"]) for b in explainer["boxes"]])
 
 
 if __name__ == "__main__":

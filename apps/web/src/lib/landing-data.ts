@@ -15,7 +15,9 @@ export function getLanding(): LandingData {
     if (existsSync(manifest)) {
       try {
         const data = JSON.parse(readFileSync(manifest, "utf8")) as { pins: Pin[]; explainer: Explainer | null };
-        if (data.pins.length >= 4) return { pins: data.pins, explainer: data.explainer ?? EXPLAINER, local: true };
+        // A featured photo alone (local-photos/destacada) still takes the hero; the pins need a few.
+        const pins = data.pins.length >= 4 ? data.pins : PINS;
+        if (pins !== PINS || data.explainer) return { pins, explainer: data.explainer ?? EXPLAINER, local: true };
       } catch {
         // A half-written manifest: fall back to the published set.
       }

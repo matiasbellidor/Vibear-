@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { PageTransition } from "@/components/motion/PageTransition";
 import { ScanDemo, STEPS } from "@/components/landing/ScanExplainer";
 import { RecentLooks } from "@/components/RecentLooks";
+import { ScanBanner } from "@/components/TabBanners";
 import { Uploader } from "@/components/Uploader";
 import { pad } from "@/lib/labels";
 import { getLanding } from "@/lib/landing-data";
@@ -11,13 +13,16 @@ export const metadata: Metadata = { title: "Escanear" };
 export default function ScanPage() {
   const { pins, explainer } = getLanding();
   return (
-    <>
+    <PageTransition>
       <section className="px-4 pt-8 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
           <h1 className="font-display text-title tracking-tight">
             Escaneá un <span className="italic text-wine-bright">look</span>
           </h1>
           <p className="text-micro text-muted">Detecta 13 tipos de prenda</p>
+        </div>
+        <div className="mt-6">
+          <ScanBanner pins={pins} />
         </div>
       </section>
 
@@ -46,6 +51,6 @@ export default function ScanPage() {
       </section>
 
       <RecentLooks />
-    </>
+    </PageTransition>
   );
 }

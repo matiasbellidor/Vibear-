@@ -17,11 +17,15 @@ Two strands of DNA, and one rule that decides which applies where:
 | Rhythm | generous white space, few elements | dense masonry, many items |
 | Motion | almost none | soft fade-in, hover overlays |
 
-**Chrome is sharp, media is soft.** If you are unsure whether something is chrome or content, ask: is it a picture of clothing? Then it is content.
+**Chrome is sharp, media is soft.** If you are unsure whether something is chrome or content, ask: is it a picture of clothing? Then it is content. One deliberate exception: the nav tabs are rounded pills, because the user asked for the current tab to stand out by colour *and* shape.
 
 This is an original identity. It borrows moods, not marks: never use another brand's typeface or colour (no Pinterest red) as part of Vibear's look.
 
-The one exception is naming where the clothes come from. The hero's "La ropa que viste en" strip shows the Pinterest, Instagram and TikTok glyphs (`components/landing/SocialLogos.tsx`, paths from Simple Icons, CC0). Rules: monochrome in `currentColor`, never their brand colours; same size as the text around them; `role="img"` with the network's name; never suggest a partnership. The footer carries the disclaimer "Pinterest, Instagram y TikTok son marcas de sus respectivos dueños. Vibear no está afiliado a ellas.", and any new network logo needs it too.
+The one exception is naming where the clothes come from. The hero shows the Pinterest, Instagram and TikTok marks big, in their own colours, in an arc behind "Lo viste." (`AppIcon` in `components/landing/SocialLogos.tsx`, vector paths from Simple Icons, CC0; the user asked for them large and eye-catching, with no tile). Rules:
+- vector only (sharp at any density); never redraw or recolour a mark beyond its official colours;
+- place them so text stays readable: dark or blue areas behind cream text, nothing under the wine line (wine on Pinterest red can't be read), plus the headline's dark text-shadow;
+- the subtitle names the three networks in words, so the meaning never depends on the icons;
+- `role="img"` with the network's name; never suggest a partnership. The footer carries "Pinterest, Instagram y TikTok son marcas de sus respectivos dueños. Vibear no está afiliado a ellas.", and any new network mark needs it too.
 
 ## Tokens
 
@@ -97,7 +101,7 @@ The stage is black: the scanner is the personality and photos glow on it. The la
 
 - Gutters: `px-4` on mobile, `lg:px-8` from 1024px. No horizontal scroll at any width, ever.
 - Grids go full-bleed inside the gutters. Text blocks get a max width.
-- Header (`components/Header.tsx`): sticky, on the black stage, one hairline, wordmark left, micro-label nav right, 56px tall. The active link is underlined with a 6px offset.
+- Header (`components/Header.tsx`): sticky, on the black stage, one hairline, wordmark left, three tabs right (Inicio, Escanear, Guardados), 56px tall. Each tab is an icon and a micro label in a 36px rounded pill; the current one is `bg-wine` with cream text and `aria-current="page"` (Escanear stays current on `/look/*`). On phones only the current tab shows its name; the others keep it as `sr-only`, so the bar fits 360px. The count of saved products follows "Guardados"; the link's `aria-label` says "Guardados (3)" (sr-only parentheses got read as "Guardados ( 3 )").
 - Responsive means phones, iPads in both orientations, laptops and desktop. Check 390×844, 768×1024, 820×1180, 1180×820, 844×390, 1366×768 and 1440×900. Short, wide screens (a landscape iPad, a laptop) are where big display type breaks: cap a `cqw`-sized headline by height too.
 - Multi-column text grids switch at `lg`, not `md`: three columns of display headings at 768px wrap to one word per line.
 - The look page (`components/LookView.tsx`) splits on `lg`: a sticky left column (5/12) with the photo and the garment rail, which scrolls on its own if it is taller than the window, and results on the right (7/12). On mobile: photo (max 55vh), then a horizontal rail, then results.
@@ -120,14 +124,16 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 - **LookCanvas**: the photo with numbered garment boxes, drawn as a double line (paper + ink) so they read on dark and light photos. Its width is derived from the height cap, so the box is final before the image loads. The boxes are mouse shortcuts (`aria-hidden`); the rail is the accessible control.
 - **GarmentRail**: one button per garment: crop (`rounded-media`), `01` + Spanish label, confidence. `aria-pressed` marks the selection, together with a 2px ink outline. A horizontal scroller with `snap-x` needs `scroll-px-*` equal to its padding, or the first tile snaps flush to the screen edge.
 - **ProductCard**: image (aspect reserved) → source in muted micro → title (2 lines max) → price and `87% similitud`. On hover a 20% ink overlay fades in with `VER EN TIENDA ↗`. Reveal on `group-hover` and on `group-has-[a:focus-visible]`, never on `focus-within`, because a mouse click leaves focus behind and the label would stay stuck.
-- **SaveButton** (in ProductCard): a 40px white square with an ink bookmark, filled when saved. Hidden until hover only on `pointer-fine` devices, so it is always visible on touch and once saved. Saved items live in localStorage (`lib/storage.ts`) and feed `/saved`, the moodboard.
+- **SaveButton** (in ProductCard): a 40px white square with an ink bookmark, filled when saved. Hidden until hover only on `pointer-fine` devices, so it is always visible on touch and once saved. Saved items live in localStorage (`lib/storage.ts`) and feed `/saved`, the closet ("placard" in the copy), with an anonymous backup in the API (see below).
 - **FadeImage**: every image goes through it. It fades in on load, degrades to a "Sin imagen" placeholder and sets `loading="lazy"` and `referrerPolicy="no-referrer"`. It is plain `<img>` on purpose: thumbnails come from hundreds of shop domains, which `next/image` remote patterns can't list.
 - **Notice** (in ui.tsx): one line between hairlines, for the demo banner and recoverable errors. Pass `urgent` for `role="alert"`.
 - **NearbyPanel**: "Buscar en mi zona" on the look page. Location comes from the device, typed text or a Google Maps link; it shows OpenStreetMap shops with the brands of the results first (`blush` badge), each linking to Google Maps directions. It credits OpenStreetMap and says the location stays in the browser.
 - **Pins** (`components/landing/Pin.tsx`): landing photos with wine hotspot dots on each detected garment and a one-word caption (`shortLabelFor`). Hover chips show label and confidence; pass `labels={false}` inside a ScanField. The landing, `/scan` and the empty `/saved` reuse pins as representative images; pages read them with `getLanding()` (`lib/landing-data.ts`) and pass them down as props.
-- **Photos you don't own** (Pinterest, Instagram): never copy them into the site or the repo. Show them with Pinterest's official embed (`PinterestEmbeds`, configured by `NEXT_PUBLIC_PINTEREST_BOARD` or `NEXT_PUBLIC_PINTEREST_PINS`), or keep them in `apps/web/local-photos/` (gitignored), built by `npm run photos` and shown by `npm run dev` only.
+- **Photos you don't own** (Pinterest, Instagram): never copy them into the site or the repo. Show them with Pinterest's official embed (`PinterestEmbeds`, configured by `NEXT_PUBLIC_PINTEREST_BOARD` or `NEXT_PUBLIC_PINTEREST_PINS`), or keep them in `apps/web/local-photos/` (gitignored), built by `npm run photos` and shown by `npm run dev` only. `local-photos/destacada/` sets the photo at the centre of the hero (real YOLO boxes on it), and the outfits in `mujer/` and `hombre/` are ordered by FashionCLIP likeness to it, so the pins around it share its look. The first images of the landing matter most: the hero photo is saved at 1080px, quality 82.
 - **Skeletons**: `ResultsSkeleton` and `LookSkeleton` are `bg-surface` shapes of the real layout with a slow shimmer.
-- **RecentLooks** / **SavedBoard**: the masonry reused for the user's history and board.
+- **RecentLooks** / **SavedBoard**: the masonry reused for the user's history and closet.
+- **Tab banners** (`components/TabBanners.tsx`): each tab shows what it does the moment it opens. `ScanBanner` on `/scan` (a strip of looks crossed by a scan beam, each garment named as the beam passes) and `ClosetBanner` on `/saved` (the last five saved products, or example pins, dropping onto the board). Decorative (`aria-hidden`); the page text carries the meaning.
+- **The closet backup**: no accounts. The API keeps a copy of each browser's closet under a random id in an HttpOnly cookie (`GET`/`PUT /v1/closet`, newest copy wins), which survives Safari's 7-day purge of site storage. `/saved` says so in small print, including the iPhone caveat. Don't add a login without asking: the user chose this.
 
 ## Imagery
 

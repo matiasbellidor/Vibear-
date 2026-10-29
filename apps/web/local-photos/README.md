@@ -2,6 +2,8 @@
 
 Poné acá las fotos que quieras ver en la landing mientras desarrollás:
 
+- `destacada/`: la foto del centro de la portada (la que se escanea con la animación). Vibear detecta sus prendas
+  y ordena tus otras fotos por parecido, así las de alrededor siguen la misma estética
 - `mujer/` y `hombre/`: outfits (fotos de cuerpo entero o medio cuerpo)
 - `productos/`: prendas sueltas (mejor sobre fondo claro)
 

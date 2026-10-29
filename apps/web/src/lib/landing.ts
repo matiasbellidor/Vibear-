@@ -789,8 +789,8 @@ export const PINS: Pin[] = [
 
 export const EXPLAINER: Explainer = {
   "src": "/landing/scan-demo.webp",
-  "width": 720,
-  "height": 1080,
+  "width": 960,
+  "height": 1440,
   "credit": {
     "title": "Men's Fall Fashion (Unsplash)",
     "author": "Redd Angelo reddangelo16",
@@ -832,20 +832,20 @@ export const EXPLAINER: Explainer = {
       "label": "long_sleeved_outwear",
       "confidence": 0.929,
       "box": [
-        4,
+        5,
         0,
-        632,
-        285
+        842,
+        380
       ]
     },
     {
       "label": "trousers",
       "confidence": 0.913,
       "box": [
-        161,
-        143,
-        588,
-        914
+        215,
+        191,
+        784,
+        1219
       ]
     }
   ]

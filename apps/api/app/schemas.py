@@ -38,3 +38,14 @@ class SearchResponse(BaseModel):
     crop_id: str
     cached: bool
     results: list[Match]
+
+
+class SavedProduct(Match):
+    savedAt: int  # epoch ms, set by the browser (same shape as the web app's SavedItem)
+
+
+class Closet(BaseModel):
+    """One browser's saved products. updated_at (epoch ms) decides which copy wins."""
+
+    items: list[SavedProduct] = Field(default_factory=list, max_length=500)
+    updated_at: int = Field(default=0, ge=0)

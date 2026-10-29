@@ -268,6 +268,34 @@
     animation: reveal 1s var(--ease-expo) both;
     animation-delay: var(--d, 0.6s);
   }
+  /* The brand marks come out from behind the headline one by one and keep floating gently (a loop,
+     so it pauses with the rest). */
+  .app-pop {
+    animation: app-pop 1.1s var(--ease-expo) both;
+    animation-delay: calc(0.55s + var(--i, 0) * 0.14s);
+  }
+  .app-float {
+    animation: app-float 7s var(--ease-in-out-soft) infinite alternate;
+    animation-delay: calc(var(--i, 0) * -2.3s);
+  }
+
+  /* Tab banners (TabBanners.tsx): one-shot, replayed each time the tab opens. The beam crosses the
+     strip in 1.6 s and each chip appears as it reaches its tile; cards drop like pins, 90 ms apart. */
+  .tab-beam {
+    animation: tab-beam 1.6s var(--ease-in-out-soft) 0.25s both;
+  }
+  .tab-chip {
+    animation: tab-chip 0.5s var(--ease-expo) both;
+    animation-delay: calc(0.25s + 1.6s * (var(--i, 0) + 0.5) / var(--n, 4));
+  }
+  .tab-drop {
+    animation: tab-drop 0.8s var(--ease-expo) both;
+    animation-delay: calc(0.1s + var(--i, 0) * 0.09s);
+  }
+  .tab-pop {
+    animation: tab-chip 0.5s var(--ease-expo) both;
+    animation-delay: calc(0.55s + var(--n, 1) * 0.09s);
+  }
 
   /* Scroll-driven reveals run on the compositor; browsers without support show content as is. */
   @supports (animation-timeline: view()) {
@@ -289,6 +317,30 @@
 }
 @keyframes reveal {
   from { opacity: 0; transform: translateY(2.5rem); }
+}
+@keyframes app-pop {
+  from { opacity: 0; transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(0.35) rotate(var(--from-r, 0deg)); }
+  50% { opacity: 1; }
+}
+/* The beam rests out of sight; only its animation shows it. */
+.tab-beam {
+  opacity: 0;
+}
+@keyframes tab-beam {
+  from { translate: -2% 0; opacity: 1; }
+  90% { opacity: 1; }
+  to { translate: 100% 0; opacity: 0; }
+}
+@keyframes tab-chip {
+  /* Scale only: the chip's centring uses the separate `translate` property. */
+  from { opacity: 0; transform: scale(0.7); }
+}
+@keyframes tab-drop {
+  from { opacity: 0; transform: translateY(-4rem) rotate(calc(var(--r, 0deg) - 20deg)); }
+}
+@keyframes app-float {
+  from { transform: translateY(-3%); }
+  to { transform: translateY(3%); }
 }
 @keyframes scrub {
   from { opacity: 0.15; }
@@ -314,11 +366,15 @@
   color: var(--color-ink);
 }
 
-/* Sections stack like pages: each one's background starts inset and rounded, and opens to full
-   bleed as it scrolls in. The background is a pseudo-element, so the text never scales. */
+/* Sections stack like sheets: each one's background (rounded top corners) starts inset and opens
+   to full bleed as it scrolls in. The background is a pseudo-element, so the text never scales. */
 .page {
   position: relative;
   isolation: isolate;
+  /* Off-screen sections skip style, layout and paint: the landing renders (and reappears after a
+     tab switch) at the cost of what's on screen. `auto` remembers each section's real height. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100svh;
 }
 .page::before {
   content: "";
@@ -326,6 +382,7 @@
   inset: 0;
   z-index: -1;
   background-color: var(--color-paper);
+  border-radius: 1.75rem 1.75rem 0 0;
 }
 
 /* Reading progress under the header (landing). */
@@ -374,7 +431,7 @@
 @media (prefers-reduced-motion: no-preference) and (min-height: 600px) {
   @supports (animation-timeline: view()) {
     .story {
-      height: 330svh;
+      height: 250svh; /* less scroll per beat: the story plays faster */
       view-timeline-name: --story;
     }
     .story-stage {
@@ -388,6 +445,12 @@
       inset: 0;
       z-index: 2;
       animation: story-intro linear both;
+      animation-timeline: --story;
+      animation-range: contain 0% contain 16%;
+    }
+    /* The app icons fly outward while the headline leaves. */
+    .story-app {
+      animation: story-app linear both;
       animation-timeline: --story;
       animation-range: contain 0% contain 16%;
     }
@@ -449,7 +512,11 @@
   to { transform: scaleX(1); }
 }
 @keyframes page-open {
-  from { transform: scaleX(0.9); border-radius: 2.5rem 2.5rem 0 0; }
+  /* Transform only, so it runs on the compositor (animating the radius repainted every frame). */
+  from { transform: scaleX(0.9); }
+}
+@keyframes story-app {
+  to { translate: var(--spread, 0 0); scale: 1.2; }
 }
 @keyframes story-intro {
   to { opacity: 0; transform: translateY(-8svh) scale(0.94); visibility: hidden; }
@@ -493,8 +560,61 @@
 @keyframes scroll-row {
   to { transform: translateX(calc(-100% + 100vw)); }
 }
+/* ─── Page transitions: View Transitions through React's <ViewTransition> (PageTransition, Header)
+   The page leaves fast and the next one arrives gently: 150 ms out, 380 ms in. Tabs slide toward
+   the tab you picked; other navigations crossfade. The header stays put and the wine pill morphs. */
+::view-transition {
+  pointer-events: none; /* clicks during a transition reach the live page */
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+::view-transition-group(.nav-pill) {
+  z-index: 101;
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-expo);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+::view-transition-old(.nav-forward),
+::view-transition-old(.nav-back),
+::view-transition-old(.page-fade) {
+  animation: page-out 150ms var(--ease-in-out-soft) both;
+}
+::view-transition-new(.nav-forward),
+::view-transition-new(.nav-back),
+::view-transition-new(.page-fade) {
+  animation: page-in 380ms var(--ease-expo) 60ms both;
+}
+::view-transition-old(.nav-forward) { --page-to: -3rem 0; }
+::view-transition-new(.nav-forward) { --page-from: 3rem 0; }
+::view-transition-old(.nav-back) { --page-to: 3rem 0; }
+::view-transition-new(.nav-back) { --page-from: -3rem 0; }
+::view-transition-new(.page-fade) { --page-from: 0 0.75rem; }
+@keyframes page-out {
+  to { opacity: 0; translate: var(--page-to, 0 0); }
+}
+@keyframes page-in {
+  from { opacity: 0; translate: var(--page-from, 0 0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-loop {
     animation: none !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

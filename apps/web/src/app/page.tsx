@@ -1,4 +1,5 @@
 import { Benefits, Carousels, FinalCta, FromPinterest, Problem } from "@/components/landing/Sections";
+import { PageTransition } from "@/components/motion/PageTransition";
 import { Story } from "@/components/landing/Story";
 import { getLanding } from "@/lib/landing-data";
 
@@ -7,7 +8,7 @@ import { getLanding } from "@/lib/landing-data";
 export default function Landing() {
   const { pins, explainer } = getLanding();
   return (
-    <>
+    <PageTransition>
       <div aria-hidden="true" className="scroll-progress" />
       <Story pins={pins} explainer={explainer} />
       <Problem />
@@ -15,6 +16,6 @@ export default function Landing() {
       <Benefits />
       <FromPinterest />
       <FinalCta pins={pins} />
-    </>
+    </PageTransition>
   );
 }

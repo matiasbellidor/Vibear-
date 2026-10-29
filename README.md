@@ -2,7 +2,7 @@
 
 AI agent that helps you find the clothes you saw on Instagram Reels, TikTok, Pinterest or any other social media.
 
-Snap an outfit, get shoppable matches. Vibear finds each garment in a photo, lets you pick one, and returns a single list of products ordered by visual similarity. Save the ones you like to a moodboard.
+Snap an outfit, get shoppable matches. Vibear finds each garment in a photo, lets you pick one, and returns a single list of products ordered by visual similarity. Save the ones you like to your closet (*placard*), which is kept when you come back.
 
 ## Quick start
 
@@ -25,7 +25,8 @@ Open http://localhost:3000: the landing tells the story, and **Empezá a escanea
 | Command | What it does |
 |---|---|
 | `npm run setup` | One-time setup (safe to re-run) |
-| `npm run dev` | API + web with reload |
+| `npm run dev` | API + web with reload; it also opens the main pages once at start, so the first tab switch doesn't wait for Next to compile them |
+| `npm run preview` | Production build of the web + API: how fast the site really is (`next dev` compiles on demand and is slower by design) |
 | `npm run check` | API tests, typecheck, lint (zero warnings), production build, Playwright end-to-end and layout tests |
 | `npm run test:api` | API tests only (offline, fakes instead of models) |
 | `npm run photos` | Build the landing from your own photos in `apps/web/local-photos/` (see below) |
@@ -48,7 +49,8 @@ flowchart LR
     end
     C -.-> FS[(data/images · looks)]
     R -.-> FC[(data/cache 72 h)]
-    B -.-> LS[(localStorage:<br/>saved items, recent looks)]
+    B -.-> LS[(localStorage:<br/>closet, recent looks)]
+    CL["/v1/closet"] -.-> FK[(data/closets:<br/>anonymous backup)]
 ```
 
 Design decisions:
@@ -58,6 +60,8 @@ Design decisions:
 - **CLIP re-ranks, it doesn't search.** Google Lens finds candidates; FashionCLIP orders them by similarity to the crop, and the score is shown.
 - **Content-addressed images + cache.** The same crop always gets the same id, and its results are cached for 72 h. Looks are stored, so `/look/<id>` survives a refresh.
 - **One origin.** The browser only talks to Next; `/api/*` is proxied to FastAPI (no CORS, no API URL in the client).
+- **A closet without accounts.** Saved products live in the browser and are backed up in the API under a random id kept in an HttpOnly cookie (see below).
+- **CLIP vectors are cached** by thumbnail URL (LRU, 4096 entries): the same products come back across searches, and the demo catalog is embedded in the background at startup.
 - **"Buscar en mi zona" without paid maps.** Shops come from OpenStreetMap through Nominatim (free, one request per search, cached 10 min). Google Maps is used for what is free: you can paste a Google Maps link as your location, and every shop opens Google Maps directions.
 - **No database yet.** Postgres + pgvector arrive with the own catalog (milestone 2).
 
@@ -92,19 +96,28 @@ scripts/                setup, API runner (cross-platform Node)
 | `POST` | `/v1/search` | `{"crop_id": "...", "limit": 48}` → matches with `title`, `link`, `source`, `thumbnail` (+ size), `price`, `similarity` |
 | `GET` | `/v1/places/geocode?q=` | coordinates for an address, a neighbourhood, `lat, lng` or a Google Maps link (short `maps.app.goo.gl` links are resolved through Google hosts only) |
 | `GET` | `/v1/places/nearby?lat=&lng=&radius=&brands=` | clothing shops nearby from OpenStreetMap (Nominatim), the ones selling a brand from the results first |
+| `GET` / `PUT` | `/v1/closet` | this browser's saved products: `{"items": [...], "updated_at": <epoch ms>}`; the newest copy wins |
 | `GET` | `/media/{id}.jpg` | stored photos and crops |
 
 Interactive docs at http://localhost:8000/docs.
+
+## The closet (*placard*)
+
+Saved products stay in the browser (localStorage) and the API keeps an anonymous copy, so the closet is there every time you come back, even after Safari's purge of site data for sites not opened in 7 days.
+
+- **No login.** The first save gets a random id (`secrets.token_hex(16)`) in an HttpOnly, SameSite=Lax cookie `vibear_closet`, valid 400 days and renewed on each visit. Cookies set by the server are not script-writable storage, so Safari's 7-day cap doesn't apply to them. On load, the browser compares its copy with the API's and keeps the newest (`updated_at`).
+- **Limits:** the closet is per browser (a phone and a laptop have different ones), and clearing the browser's data or using a private window loses it. A login would be the next step to share it across devices; the API's id can be attached to an account then.
+- **Nothing to administer.** Each closet is a JSON file in `apps/api/data/closets/<id>.json` (with Docker, in the `api-data` volume). To see how many there are, count the files; to erase one, delete its file; to erase all, delete the folder. They hold product links and thumbnails, no personal data.
 
 ## Design and motion
 
 A fashion scanner: Bodoni display type and sharp editorial chrome on a black stage, a monospace HUD (live clock, real model readouts, measuring grid, a crosshair that reads the garment under the mouse), wine as the signal colour, and a Pinterest-style feed of pins with a hotspot on every detected garment. The landing alternates black and white sections, so it reads page after page. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md).
 
-The landing tells the story with motion graphics. The hero is an Apple-style scroll story: the headline and the networks where you find the clothes (Pinterest, Instagram, TikTok) give way to a photo that rises to the centre, a scan line, and the garment boxes and confidences that YOLO really produced on that photo. Further down, lines light up as you scroll, a wall of pins slides sideways with the scroll, sections open like pages and a wine bar under the header shows your progress. It is all CSS (transform and opacity, scroll-driven timelines), loops pause off-screen, there is a visible "Pausar movimiento" control, and with reduced motion (or on a phone held sideways) it turns into a static column. Rules in [`.claude/skills/vibear-motion/SKILL.md`](.claude/skills/vibear-motion/SKILL.md). Claude Code loads both skills when you change the front end.
+The landing tells the story with motion graphics. The hero is an Apple-style scroll story: the Pinterest, Instagram and TikTok marks come out from behind the headline and fly apart as you scroll, a photo rises to the centre, a scan line passes, and the garment boxes and confidences that YOLO really produced on that photo appear. Further down, lines light up as you scroll, a wall of pins slides sideways with the scroll, sections open like pages and a wine bar under the header shows your progress. Switching tabs (Inicio, Escanear, Guardados) slides the page toward the tab you picked while a wine pill moves to it (View Transitions), and each tab opens with a short banner of what it does. Visited tabs stay mounted (`cacheComponents`), so going back is instant. It is all CSS (transform and opacity, scroll-driven timelines), loops pause off-screen, there is a visible "Pausar movimiento" control, and with reduced motion (or on a phone held sideways) it turns into a static column. Rules in [`.claude/skills/vibear-motion/SKILL.md`](.claude/skills/vibear-motion/SKILL.md). Claude Code loads both skills when you change the front end.
 
 ### Your own photos and Pinterest
 
-- **Your folder:** put outfits in `apps/web/local-photos/mujer/` and `hombre/` and garments in `productos/`, then run `npm run photos` and `npm run dev`. The landing uses them in development only, and both the folder and the generated files are gitignored. Photos you don't own (for example from Pinterest) never reach GitHub or a published build.
+- **Your folder:** put outfits in `apps/web/local-photos/mujer/` and `hombre/` and garments in `productos/`, and the photo you want at the centre of the hero in `destacada/`, then run `npm run photos` and `npm run dev`. The hero photo gets real YOLO boxes, and your outfits are ordered by FashionCLIP likeness to it, so the pins around it share its look. The landing uses them in development only, and both the folder and the generated files are gitignored. Photos you don't own (for example from Pinterest) never reach GitHub or a published build.
 - **Pinterest, the official way:** set `NEXT_PUBLIC_PINTEREST_BOARD` (or `NEXT_PUBLIC_PINTEREST_PINS`) in `apps/web/.env.local` (see `apps/web/.env.example`). The landing then shows a "Desde Pinterest" section with Pinterest's own embed, so the pins stay their authors' and link back.
 
 The published landing photos are freely licensed photos from Wikimedia Commons (mostly CC0 imports from Unsplash, plus CC BY / CC BY-SA), balanced between menswear and womenswear, with flat-lay boards composed from product cutouts. They are credited on `/creditos`. To change them, edit the lists in `apps/api/scripts/build_landing_assets.py` and run it with the API's venv: it also rebuilds the demo catalog and the explainer from real YOLO and FashionCLIP output.

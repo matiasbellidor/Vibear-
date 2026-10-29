@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { LOOK, PNG, mockApi, nearbyCalls } from "./mock-api";
+import { LOOK, PNG, closetBackup, mockApi, nearbyCalls } from "./mock-api";
 
 test("upload, pick a garment, see ranked results and save one to the board", async ({ page }) => {
   const searched = await mockApi(page);
@@ -111,4 +111,32 @@ test("an unknown look links back to a new search", async ({ page }) => {
   await page.goto("/look/ffffffffffffffff");
   await expect(page.getByText("Ese look ya no existe.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Nueva búsqueda" })).toBeVisible();
+});
+
+test("the closet is still there on the next visit", async ({ page, context }) => {
+  await mockApi(page);
+  await page.goto(`/look/${LOOK.image_id}`);
+  await page.getByRole("button", { name: "Guardar: abrigo 1", exact: true }).click();
+  await page.close();
+
+  // Leave and come back in a new tab of the same browser.
+  const again = await context.newPage();
+  await mockApi(again);
+  closetBackup.items = []; // prove it comes from the browser, not the backup
+  await again.goto("/saved");
+  await expect(again.getByRole("heading", { name: "abrigo 1", exact: true })).toBeVisible();
+  await expect(again.getByText("01 producto")).toBeVisible();
+});
+
+test("the closet comes back after the browser wipes its storage (Safari's 7-day purge)", async ({ page }) => {
+  await mockApi(page);
+  await page.goto(`/look/${LOOK.image_id}`);
+  await page.getByRole("button", { name: "Guardar: abrigo 1", exact: true }).click();
+  // The change is backed up in the API (debounced).
+  await expect.poll(() => closetBackup.items.map((item) => item.title)).toEqual(["abrigo 1"]);
+
+  await page.evaluate(() => localStorage.clear());
+  await page.goto("/saved");
+  await expect(page.getByRole("heading", { name: "abrigo 1", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Guardados (1)" })).toBeVisible();
 });

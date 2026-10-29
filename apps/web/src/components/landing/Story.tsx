@@ -7,7 +7,7 @@ import { KineticText } from "../motion/KineticText";
 import { MotionToggle } from "../motion/MotionToggle";
 import { cx, primaryButton } from "../ui";
 import { PinCard } from "./Pin";
-import { NETWORKS, SocialLogo, networkName } from "./SocialLogos";
+import { AppIcon, NETWORKS, type Network } from "./SocialLogos";
 
 const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
 const pct = (value: number) => `${Math.round(value * 100)}%`;
@@ -19,6 +19,31 @@ const SIDES = [
   { place: "right-[3%] top-[9%]", tilt: "5deg", fromX: "60vw", fromR: "16deg", show: "hidden md:block" },
   { place: "right-[9%] bottom-[14%]", tilt: "-4deg", fromX: "75vw", fromR: "-12deg", show: "hidden lg:block" },
 ];
+
+// The brand marks in an arc over the first line (cqw of the headline box): TikTok's note left of
+// "Lo", Pinterest's badge above the middle, Instagram behind "viste.". "Encontralo." stays clear,
+// since wine on Pinterest red can't be read. Each glows in its own colour. --from-* is where each
+// pops out from (behind the centre); --spread is where it flies as you scroll the headline away.
+const APP_SPOTS: Record<Network, { place: string; tilt: string; glow: string; motion: Record<string, string> }> = {
+  tiktok: {
+    place: "-left-[9cqw] -top-[8cqw] w-[27cqw]",
+    tilt: "-12deg",
+    glow: "[filter:drop-shadow(-0.5cqw_0_2.5cqw_rgb(37_244_238/0.55))_drop-shadow(0.5cqw_0_2.5cqw_rgb(254_44_85/0.55))]",
+    motion: { "--from-x": "28cqw", "--from-y": "16cqw", "--from-r": "10deg", "--spread": "-30cqw -18cqw" },
+  },
+  instagram: {
+    place: "-right-[8cqw] -top-[11cqw] w-[28cqw]",
+    tilt: "11deg",
+    glow: "[filter:drop-shadow(0_0_3cqw_rgb(214_41_118/0.6))]",
+    motion: { "--from-x": "-26cqw", "--from-y": "20cqw", "--from-r": "-12deg", "--spread": "30cqw -22cqw" },
+  },
+  pinterest: {
+    place: "left-[39cqw] -top-[18cqw] w-[22cqw]",
+    tilt: "6deg",
+    glow: "[filter:drop-shadow(0_0_3cqw_rgb(230_0_35/0.65))]",
+    motion: { "--from-x": "0cqw", "--from-y": "18cqw", "--from-r": "-10deg", "--spread": "0cqw -24cqw" },
+  },
+};
 
 function sidePins(pins: Pin[], explainer: Explainer): Pin[] {
   const others = pins.filter((pin) => !pin.credits.some((credit) => credit.url && credit.url === explainer.credit.url));
@@ -49,40 +74,51 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
     <section aria-labelledby="story-title" className="story relative bg-grid">
       <div className="story-stage">
         <div className="story-intro flex flex-col items-center justify-center px-4 py-8 text-center">
-          <p className="enter flex items-center gap-3 text-micro text-muted" style={delay(0.1)}>
-            <span className="flex items-center gap-1.5 text-wine-bright">
-              <span aria-hidden="true" className="blink motion-loop h-1.5 w-1.5 rounded-full bg-wine-bright" /> En vivo
-            </span>
-            <LiveClock />
-          </p>
-          {/* Width capped by the stage height too, so the headline fits a landscape iPad or a laptop. */}
-          <h1 id="story-title" className="@container mt-5 w-full max-w-[min(64rem,calc((100svh-3.5rem)*0.9))] font-display">
-            <span className="block text-display tracking-[-0.03em]">
-              <KineticText lines={[{ text: "Lo viste." }, { text: "Encontralo.", className: "italic text-wine-bright" }]} />
-            </span>
-          </h1>
-          <p className="enter mt-6 max-w-[44ch] text-body text-muted" style={delay(0.7)}>
-            Subí la captura y Vibear encuentra cada prenda del look: online o en un local cerca tuyo.
-          </p>
-          <div className="enter mt-8" style={delay(0.85)}>
-            <p className="text-micro text-muted">La ropa que viste en</p>
-            <ul className="mt-3 flex items-center justify-center gap-6 sm:gap-8">
-              {NETWORKS.map((network) => (
-                <li key={network} className="flex items-center gap-2 text-ink">
-                  <SocialLogo network={network} className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <span className="hidden text-micro sm:inline">{networkName(network)}</span>
+          {/* Width capped by the stage height too, so the headline fits a landscape iPad or a laptop.
+              The app icons sit behind it, sized and placed in container units of the headline. */}
+          <div className="@container relative isolate mt-[9svh] w-full max-w-[min(64rem,calc((100svh-3.5rem)*0.9))]">
+            <h1 id="story-title" className="font-display [text-shadow:0_0.04em_0.35em_rgb(10_10_11/0.85)]">
+              <span className="block text-display tracking-[-0.03em]">
+                <KineticText lines={[{ text: "Lo viste." }, { text: "Encontralo.", className: "italic text-wine-bright" }]} />
+              </span>
+            </h1>
+            <ul aria-label="Dónde la viste" className="pointer-events-none absolute inset-0 -z-10">
+              {NETWORKS.map((network, i) => (
+                <li
+                  key={network}
+                  className={cx("story-app absolute", APP_SPOTS[network].place)}
+                  style={{ rotate: APP_SPOTS[network].tilt, ...APP_SPOTS[network].motion } as CSSProperties}
+                >
+                  <span className="app-pop block" style={{ "--i": i } as CSSProperties}>
+                    <span className="app-float motion-loop block" style={{ "--i": i } as CSSProperties}>
+                      <AppIcon network={network} className={cx("size-full", APP_SPOTS[network].glow)} />
+                    </span>
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
+          <p className="enter mt-6 max-w-[44ch] text-body text-muted" style={delay(0.7)}>
+            ¿Lo viste en Pinterest, Instagram o TikTok? Subí la captura y Vibear encuentra cada prenda del look: online o
+            en un local cerca tuyo.
+          </p>
           <div className="enter mt-9 flex flex-col items-center gap-4" style={delay(1)}>
-            <Link href="/scan" className={primaryButton}>
+            <Link href="/scan" transitionTypes={["nav-forward"]} className={primaryButton}>
               Empezá a escanear
             </Link>
             <span className="text-micro text-muted">
               Bajá para ver cómo <span aria-hidden="true">↓</span>
             </span>
-            <MotionToggle />
+            <div className="flex items-center gap-5">
+              <p className="flex items-center gap-3 text-micro text-muted">
+                <span className="flex items-center gap-1.5 text-wine-bright">
+                  <span aria-hidden="true" className="blink motion-loop h-1.5 w-1.5 rounded-full bg-wine-bright" /> En
+                  vivo
+                </span>
+                <LiveClock />
+              </p>
+              <MotionToggle />
+            </div>
           </div>
         </div>
 
@@ -164,7 +200,7 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
               {steps.map((step, i) => (
                 <li
                   key={step.title}
-                  className="story-caption bg-paper/85 p-3 text-center backdrop-blur-sm"
+                  className="story-caption bg-paper/90 p-3 text-center"
                   style={{ "--caption": `caption-${i + 1}` } as CSSProperties}
                 >
                   <p className="text-micro text-wine-bright">

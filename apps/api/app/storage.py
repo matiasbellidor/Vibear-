@@ -6,6 +6,7 @@ from pathlib import Path
 
 ID_PATTERN = r"^[0-9a-f]{16}$"
 _ID_RE = re.compile(ID_PATTERN)
+CLOSET_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
 def content_id(jpeg: bytes) -> str:
@@ -23,7 +24,8 @@ class MediaStore:
         self.images_dir = root / "images"
         self.looks_dir = root / "looks"
         self.cache_dir = root / "cache"
-        for folder in (self.images_dir, self.looks_dir, self.cache_dir):
+        self.closets_dir = root / "closets"
+        for folder in (self.images_dir, self.looks_dir, self.cache_dir, self.closets_dir):
             folder.mkdir(parents=True, exist_ok=True)
 
     def put(self, jpeg: bytes) -> str:
@@ -60,6 +62,17 @@ class MediaStore:
 
     def write_cache(self, key: str, payload: dict) -> None:
         _write_json(self.cache_dir / f"{key}.json", payload)
+
+    def read_closet(self, closet_id: str) -> dict | None:
+        path = self.closets_dir / f"{closet_id}.json"
+        if not CLOSET_ID_RE.fullmatch(closet_id) or not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def write_closet(self, closet_id: str, closet: dict) -> None:
+        if not CLOSET_ID_RE.fullmatch(closet_id):
+            raise ValueError("Invalid closet id")
+        _write_json(self.closets_dir / f"{closet_id}.json", closet)
 
 
 def _write_json(path: Path, payload: dict) -> None:

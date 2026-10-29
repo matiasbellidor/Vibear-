@@ -36,14 +36,15 @@ export function PinCard({
     <figure className={cx("group/pin", className)} data-garment={top ? readout(top.label, top.confidence) : undefined}>
       <div className="relative">
         <Photo photo={pin} eager={eager} />
-        {pin.hotspots.map((spot) => (
+        {pin.hotspots.map((spot, i) => (
           <span
             key={`${spot.label}-${spot.x}`}
             className="absolute -ml-1.5 -mt-1.5"
             style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
           >
             <span className="relative block h-3 w-3">
-              <span className="hotspot-ring motion-loop absolute inset-0 rounded-full bg-wine-bright" />
+              {/* One breathing ring per pin is enough texture, and keeps a wall of pins cheap. */}
+              {i === 0 && <span className="hotspot-ring motion-loop absolute inset-0 rounded-full bg-wine-bright" />}
               <span className="absolute inset-0 rounded-full border-2 border-ink bg-wine-bright" />
             </span>
             {labels && (

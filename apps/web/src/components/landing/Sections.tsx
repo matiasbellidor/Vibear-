@@ -64,7 +64,8 @@ export function Carousels({ pins }: { pins: Pin[] }) {
         </div>
       </div>
       <ScanField className="mt-12">
-        <PinWall pins={pins} labels={false} className="h-[30rem] sm:h-[36rem] md:h-[42rem]" />
+        {/* 20 pins (10 columns) fill the slide at any width and keep it light on phones. */}
+        <PinWall pins={pins.slice(0, 20)} labels={false} className="h-[30rem] sm:h-[36rem] md:h-[42rem]" />
       </ScanField>
     </section>
   );
@@ -155,7 +156,7 @@ export function FinalCta({ pins }: { pins: Pin[] }) {
             Tu próxima prenda favorita está en una captura. Subila y encontrala en segundos.
           </p>
           <div className="reveal mt-10">
-            <Link href="/scan" className={cx(creamButton, "h-14 px-10")}>
+            <Link href="/scan" transitionTypes={["nav-forward"]} className={cx(creamButton, "h-14 px-10")}>
               Empezá a escanear
             </Link>
           </div>

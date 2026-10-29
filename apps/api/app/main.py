@@ -1,11 +1,12 @@
 """Vibear API. Run with: uvicorn app.main:create_app --factory"""
 
 import asyncio
+import secrets
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, Path, Query, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
@@ -17,12 +18,18 @@ from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError
 from app.ml.detector import YoloGarmentDetector, crop_detections
 from app.ml.embedder import ClipEmbedder
 from app.places import PlaceError, geocode, nearby
-from app.rerank import http_loader, rank_by_similarity
-from app.schemas import DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
-from app.storage import ID_PATTERN, MediaStore
+from app.rerank import VectorCache, http_loader, rank_by_similarity
+from app.schemas import Closet, DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
+from app.storage import CLOSET_ID_RE, ID_PATTERN, MediaStore
 
 # An honest bot UA with a contact link: sites like Wikimedia answer 403 to browser-looking bot UAs.
 USER_AGENT = "VibearBot/0.2 (+https://github.com/matiasbellidor/Vibear-)"
+
+# The closet backup has no accounts: an anonymous random id in an HttpOnly cookie. A cookie set by the
+# server is not script-writable storage, so Safari's 7-day purge of site data leaves it alone.
+CLOSET_COOKIE = "vibear_closet"
+CLOSET_MAX_AGE = 400 * 24 * 3600  # browsers cap cookie lifetimes at 400 days; each visit renews it
+CLOSET_MAX_BYTES = 1024 * 1024
 
 
 def create_app(
@@ -36,6 +43,7 @@ def create_app(
     """Build the app. Tests inject fakes; in production every dependency is created at startup."""
     settings = settings or Settings()
     store = MediaStore(settings.data_dir)
+    vectors = VectorCache()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -61,7 +69,15 @@ def create_app(
             state.search_mode = "off"
         else:
             state.search_mode = "demo" if isinstance(state.lens, DemoLens) else "serpapi"
+        # The demo catalog is the same for every search: embed it in the background now, so the
+        # first "Probar con un ejemplo" doesn't wait for it.
+        warm = None
+        if state.search_mode == "demo":
+            catalog = await state.lens.visual_matches(b"")
+            warm = asyncio.create_task(rank_by_similarity(blank, catalog, state.embedder, state.lens.loader(), vectors))
         yield
+        if warm is not None:
+            warm.cancel()
         if client is None:
             await state.http.aclose()
 
@@ -152,7 +168,7 @@ def create_app(
             except SerpApiError as exc:
                 raise HTTPException(502, str(exc)) from exc
             load = state.lens.loader() if demo else http_loader(state.http)
-            ranked = await rank_by_similarity(decode_image(jpeg), matches, state.embedder, load)
+            ranked = await rank_by_similarity(decode_image(jpeg), matches, state.embedder, load, vectors)
             results = [
                 Match(
                     **asdict(r.match),
@@ -166,6 +182,45 @@ def create_app(
                 store.write_cache(cache_key, {"results": results})
 
         return SearchResponse(crop_id=body.crop_id, cached=cached is not None, results=results[: body.limit])
+
+    def closet_id_of(request: Request) -> str | None:
+        value = request.cookies.get(CLOSET_COOKIE, "")
+        return value if CLOSET_ID_RE.fullmatch(value) else None
+
+    def keep_closet_cookie(response: Response, request: Request, closet_id: str) -> None:
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+        response.set_cookie(
+            CLOSET_COOKIE,
+            closet_id,
+            max_age=CLOSET_MAX_AGE,
+            httponly=True,
+            samesite="lax",
+            secure=scheme == "https",
+        )
+
+    @app.get("/v1/closet", response_model=Closet)
+    async def get_closet(request: Request, response: Response):
+        """This browser's backed-up saved products; empty until it saves something."""
+        closet_id = closet_id_of(request)
+        saved = store.read_closet(closet_id) if closet_id else None
+        if saved is None:
+            return Closet()
+        keep_closet_cookie(response, request, closet_id)
+        return saved
+
+    @app.put("/v1/closet", response_model=Closet)
+    async def put_closet(body: Closet, request: Request, response: Response):
+        """Back up this browser's saved products. The newest copy wins (updated_at), so an older tab
+        can't overwrite newer changes. Returns the copy that is kept."""
+        if int(request.headers.get("content-length") or 0) > CLOSET_MAX_BYTES:
+            raise HTTPException(413, "Closet is too large")
+        closet_id = closet_id_of(request) or secrets.token_hex(16)
+        kept = store.read_closet(closet_id)
+        if kept is None or body.updated_at >= kept["updated_at"]:
+            kept = body.model_dump()
+            store.write_closet(closet_id, kept)
+        keep_closet_cookie(response, request, closet_id)
+        return kept
 
     @app.get("/v1/places/geocode")
     async def places_geocode(request: Request, q: str = Query(min_length=2, max_length=500)):

@@ -60,6 +60,8 @@ export function Icon({ path, filled = false, className }: { path: string; filled
 
 export const icons = {
   bookmark: "M6 3.5h12v17l-6-4.5-6 4.5z",
+  home: "M3.5 10.5 12 3.8l8.5 6.7v9.7h-5.7v-6h-5.6v6H3.5z",
+  scan: "M3.5 8V3.5H8M16 3.5h4.5V8M20.5 16v4.5H16M8 20.5H3.5V16M3.5 12h17",
   arrowRight: "M3 12h17M14 6l6 6-6 6",
   arrowLeft: "M21 12H4M10 6l-6 6 6 6",
   arrowUpRight: "M7 17 17 7M8 7h9v9",

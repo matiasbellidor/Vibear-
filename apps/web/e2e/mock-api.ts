@@ -55,10 +55,15 @@ export const SHOPS = [
 
 export const nearbyCalls: { lat: string | null; lng: string | null; radius: string | null }[] = [];
 
+/** The API's anonymous closet backup, as this test left it (newest copy wins, like the real one). */
+export const closetBackup: { items: Match[]; updated_at: number } = { items: [], updated_at: 0 };
+
 /** Mock every /api call the browser makes. Returns the crop ids that were searched, in order. */
 export async function mockApi(page: Page, { mode = "serpapi", search = "ok", detect = "ok" }: Options = {}) {
   const searched: string[] = [];
   nearbyCalls.length = 0;
+  closetBackup.items = [];
+  closetBackup.updated_at = 0;
   const image = { body: PNG, contentType: "image/png" };
 
   await page.route("**/api/health", (route) => route.fulfill({ json: { status: "ok", search: mode } }));
@@ -84,6 +89,13 @@ export async function mockApi(page: Page, { mode = "serpapi", search = "ok", det
     const params = new URL(route.request().url()).searchParams;
     nearbyCalls.push({ lat: params.get("lat"), lng: params.get("lng"), radius: params.get("radius") });
     return route.fulfill({ json: { radius: Number(params.get("radius")), shops: SHOPS } });
+  });
+  await page.route("**/api/v1/closet", (route) => {
+    if (route.request().method() === "PUT") {
+      const body = route.request().postDataJSON() as typeof closetBackup;
+      if (body.updated_at >= closetBackup.updated_at) Object.assign(closetBackup, body);
+    }
+    return route.fulfill({ json: closetBackup });
   });
   await page.route("**/api/v1/search", (route) => {
     const { crop_id: cropId } = route.request().postDataJSON() as { crop_id: string };
