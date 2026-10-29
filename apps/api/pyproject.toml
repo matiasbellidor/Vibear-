@@ -1,0 +1,11 @@
+[project]
+name = "vibear-api"
+version = "0.1.0"
+description = "Vibear API: garment detection (YOLO), visual search (SerpApi Google Lens) and CLIP re-ranking"
+requires-python = ">=3.11"
+
+# Dependencies live in requirements.txt / requirements-dev.txt (this is an app, not a library).
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

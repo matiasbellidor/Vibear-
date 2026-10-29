@@ -1,0 +1,16 @@
+# MVP: a single service. Postgres + pgvector join in milestone 2 (own catalog), not before.
+services:
+  api:
+    build: ./apps/api
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    volumes:
+      - api-data:/app/data      # uploaded photos, crops and the search cache
+      - model-cache:/models     # YOLO + CLIP weights (~600 MB), downloaded once
+
+volumes:
+  api-data:
+  model-cache:

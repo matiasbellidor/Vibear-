@@ -1,0 +1,88 @@
+from conftest import BLUE, GRAY, LENS_MATCHES, RED, FakeLens, png_bytes
+
+from app.ml.detector import Detection
+
+TOP_AND_BOTTOM = [
+    Detection("long_sleeved_shirt", 0.91, (20, 10, 280, 220)),
+    Detection("trousers", 0.84, (40, 230, 260, 440)),
+]
+
+
+def upload(client, data, **fields):
+    return client.post("/v1/detect", files={"file": ("photo.png", data, "image/png")}, data=fields)
+
+
+def test_health_reports_search_disabled_without_key(make_client):
+    with make_client() as client:
+        assert client.get("/health").json() == {"status": "ok", "search_enabled": False}
+
+
+def test_detect_returns_one_servable_crop_per_garment(make_client):
+    with make_client(detections=TOP_AND_BOTTOM) as client:
+        response = upload(client, png_bytes(RED))
+        assert response.status_code == 200
+        body = response.json()
+        assert (body["width"], body["height"]) == (300, 450)
+        assert [item["label"] for item in body["items"]] == ["long_sleeved_shirt", "trousers"]
+
+        crop = client.get(body["items"][0]["crop_url"])
+        assert crop.status_code == 200
+        assert crop.headers["content-type"] == "image/jpeg"
+
+
+def test_detect_falls_back_to_full_image(make_client):
+    with make_client(detections=[]) as client:
+        items = upload(client, png_bytes(RED)).json()["items"]
+        assert len(items) == 1
+        assert items[0]["label"] == "full_image"
+        assert items[0]["confidence"] is None
+        assert items[0]["box"] == [0, 0, 300, 450]
+
+
+def test_detect_needs_exactly_one_input(make_client):
+    with make_client() as client:
+        assert client.post("/v1/detect").status_code == 400
+        both = upload(client, png_bytes(RED), image_url="https://img.test/red.png")
+        assert both.status_code == 400
+
+
+def test_detect_rejects_non_images_and_private_urls(make_client):
+    with make_client() as client:
+        assert upload(client, b"not an image").status_code == 422
+        private = client.post("/v1/detect", data={"image_url": "http://127.0.0.1/admin.png"})
+        assert private.status_code == 422
+        assert "private" in private.json()["detail"]
+
+
+def test_search_ranks_by_similarity_and_caches(make_client):
+    lens = FakeLens(LENS_MATCHES)
+    with make_client(detections=[], lens=lens) as client:
+        crop_id = upload(client, png_bytes(RED)).json()["items"][0]["crop_id"]
+
+        first = client.post("/v1/search", json={"crop_id": crop_id}).json()
+        assert first["cached"] is False
+        assert [r["title"] for r in first["results"]] == ["red", "gray", "blue", "broken"]
+        assert first["results"][0]["similarity"] > 0.99
+        assert first["results"][-1]["similarity"] is None  # thumbnail 404 -> kept, unscored, last
+
+        second = client.post("/v1/search", json={"crop_id": crop_id, "limit": 2}).json()
+        assert second["cached"] is True
+        assert [r["title"] for r in second["results"]] == ["red", "gray"]
+        assert lens.calls == 1  # the cache saved a SerpApi search
+
+
+def test_search_errors(make_client):
+    with make_client(detections=[]) as client:
+        assert client.post("/v1/search", json={"crop_id": "../../etc/passwd"}).status_code == 422
+        assert client.post("/v1/search", json={"crop_id": "0" * 16}).status_code == 404
+
+        crop_id = upload(client, png_bytes(GRAY)).json()["items"][0]["crop_id"]
+        disabled = client.post("/v1/search", json={"crop_id": crop_id})
+        assert disabled.status_code == 503
+
+
+def test_same_photo_gets_same_crop_id(make_client):
+    with make_client(detections=[]) as client:
+        first = upload(client, png_bytes(BLUE)).json()["items"][0]["crop_id"]
+        second = upload(client, png_bytes(BLUE)).json()["items"][0]["crop_id"]
+        assert first == second
