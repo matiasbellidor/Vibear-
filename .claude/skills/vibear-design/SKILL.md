@@ -19,7 +19,9 @@ Two strands of DNA, and one rule that decides which applies where:
 
 **Chrome is sharp, media is soft.** If you are unsure whether something is chrome or content, ask: is it a picture of clothing? Then it is content.
 
-This is an original identity. It borrows moods, not marks: never use another brand's logo, typeface, colour (no Pinterest red) or name in the UI.
+This is an original identity. It borrows moods, not marks: never use another brand's typeface or colour (no Pinterest red) as part of Vibear's look.
+
+The one exception is naming where the clothes come from. The hero's "La ropa que viste en" strip shows the Pinterest, Instagram and TikTok glyphs (`components/landing/SocialLogos.tsx`, paths from Simple Icons, CC0). Rules: monochrome in `currentColor`, never their brand colours; same size as the text around them; `role="img"` with the network's name; never suggest a partnership. The footer carries the disclaimer "Pinterest, Instagram y TikTok son marcas de sus respectivos dueños. Vibear no está afiliado a ellas.", and any new network logo needs it too.
 
 ## Tokens
 
@@ -39,9 +41,9 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 | `cream` | `#f7f0e8` | text and buttons on wine sections (14:1 on wine) |
 | `font-display` | Bodoni Moda | wordmark, page titles, big numbers. Nothing else |
 | `font-sans` | Inter Tight | body copy (the default) |
-| `font-mono` | Geist Mono | the HUD voice: `text-micro` uses it; terminal lines and counters too |
+| `font-mono` | Geist Mono | the HUD voice: `text-micro` uses it; terminal lines and readouts too |
 | `text-micro` | 11px mono, uppercase, 0.08em tracking, 500 | nav, buttons, labels, metadata, readouts (an `@utility`) |
-| `text-terminal` | `clamp(1.05rem, 2.4vw, 1.875rem)` | terminal lines and big counters (with `font-mono`) |
+| `text-terminal` | `clamp(1.05rem, 2.4vw, 1.875rem)` | terminal lines (with `font-mono`) |
 | `bg-grid` | 56px, 1px lines | the measuring grid behind scanner areas (hero, drop zone) |
 | `text-small` / `text-body` | 13px / 15px | captions and help text / body copy |
 | `text-title` | `clamp(2.25rem, 5vw, 3.75rem)` | page and results titles (display face) |
@@ -60,7 +62,7 @@ Wine is what gives the page life, and it works because it is rare. On black, tex
 - what is selected or saved: the chosen garment, a saved bookmark, the active nav underline;
 - the garment hotspots on pins;
 - one accent word in a display heading: "*Encontralo.*", "se puede *buscar*";
-- at most two full-bleed wine sections per page, as story beats (on the landing: the problem and the closing CTA).
+- one full-bleed wine section per page, as the last story beat (on the landing: the closing CTA).
 
 Never use it for body text or decoration, and never for two competing things in one view. On a wine section, text is cream (secondary at `cream/70-80`) and the button is `creamButton`.
 
@@ -68,11 +70,20 @@ Never use it for body text or decoration, and never for two competing things in 
 
 What makes Vibear cool is the scanner personality, applied with restraint:
 - monospace micro labels everywhere (`VIBEAR/SCAN v1.0`, `● EN VIVO`, `01 / INPUT`);
-- real readouts only: the live clock, pin and garment counts, YOLO confidences, FashionCLIP similarities. Never fake stats;
+- real readouts only: the live clock, YOLO confidences next to the garment they belong to ("Abrigo · 93%"), FashionCLIP similarities. Never fake stats;
+- a number must say what it counts where it stands. The hero once showed `PINS 29 · PRENDAS 49 · CLASES 13`, and the user could not tell what they meant; they were removed. If a number needs a sentence to explain it, write the sentence or drop the number;
 - one terminal joke per page where it makes the point (`¿dónde_comprarlo? ... ERROR 404`, then "Vibear arregla ese *404*.");
 - the measuring grid and corner brackets around areas that get scanned.
 
-One theme, dark, on purpose: the scanner is the personality, and photos glow on black. A second theme would double the QA for little gain. Lines drawn over photos are white with a dark halo (or white with `mix-blend-difference`), so they read on any picture. The wine closing section is the one colour beat.
+Lines drawn over photos are white with a dark halo (or white with `mix-blend-difference`), so they read on any picture.
+
+### Black stage, white pages
+
+The stage is black: the scanner is the personality and photos glow on it. The landing alternates it with white sections, so scrolling feels like turning pages: story (black) → problem (white) → pin wall (black) → benefits (white) → Pinterest (black) → CTA (wine).
+- A white section is `className="page theme-light …"`. `.theme-light` redefines the same colour tokens (ink black, paper white, `wine-bright` becomes `#a3203a`, 7.4:1 on white), so every component and utility works inside it unchanged. Never hard-code a white background or black text instead.
+- `.page` gives any section the page-opening motion (see vibear-motion). Black sections use `page` without `theme-light`.
+- Photo-heavy sections stay black; text-led ones (problem, spec sheet) go white. Never put two white sections next to each other.
+- The tool screens (`/scan`, `/look`, `/saved`) stay on the black stage.
 
 ## Typography
 
@@ -86,7 +97,9 @@ One theme, dark, on purpose: the scanner is the personality, and photos glow on 
 
 - Gutters: `px-4` on mobile, `lg:px-8` from 1024px. No horizontal scroll at any width, ever.
 - Grids go full-bleed inside the gutters. Text blocks get a max width.
-- Header (`components/Header.tsx`): sticky, white, one hairline, wordmark left, micro-label nav right, 56px tall. The active link is underlined with a 6px offset.
+- Header (`components/Header.tsx`): sticky, on the black stage, one hairline, wordmark left, micro-label nav right, 56px tall. The active link is underlined with a 6px offset.
+- Responsive means phones, iPads in both orientations, laptops and desktop. Check 390×844, 768×1024, 820×1180, 1180×820, 844×390, 1366×768 and 1440×900. Short, wide screens (a landscape iPad, a laptop) are where big display type breaks: cap a `cqw`-sized headline by height too.
+- Multi-column text grids switch at `lg`, not `md`: three columns of display headings at 768px wrap to one word per line.
 - The look page (`components/LookView.tsx`) splits on `lg`: a sticky left column (5/12) with the photo and the garment rail, which scrolls on its own if it is taller than the window, and results on the right (7/12). On mobile: photo (max 55vh), then a horizontal rail, then results.
 - Vertical rhythm comes from space, not boxes. Prefer a hairline or a gap over a bordered card.
 
@@ -125,7 +138,7 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 ## Motion
 
 Motion has its own skill, **vibear-motion**: read it before touching any animation. The split it defines:
-- The landing (`/`) tells the story with expressive motion: kinetic type, drifting photo columns, marquees and the scan explainer.
+- The landing (`/`) tells the story with expressive motion: the Apple-style scroll story in the hero, kinetic type, the pin wall sliding with the scroll and sections opening like pages.
 - The tool screens (`/scan`, `/look`, `/saved`) stay restrained: 150-250ms (500ms for image fade-in), `ease-out-soft`, opacity and transform only, no bounce, no parallax, no hover lift on cards. The restraint is the luxury.
 - Tailwind's `hover:` already applies only on devices that can hover. Put loops behind `motion-safe:` or the `.motion-loop` class.
 
@@ -162,5 +175,5 @@ Design every screen in four states before calling it done: loading (skeleton or 
 
 ## Before you call a UI change done
 
-1. `npm run check` from the repo root: API tests, typecheck, lint with zero warnings, production build, and the Playwright suite (flows plus no horizontal overflow at 360, 768, 1024 and 1440px).
+1. `npm run check` from the repo root: API tests, typecheck, lint with zero warnings, production build, and the Playwright suite (flows plus no horizontal overflow at 360, 768, 820, 1024, 1180, 1440 and 1920px).
 2. Look at the screenshots the layout test leaves in `apps/web/test-results/`, or run the app (`npm run dev`) and check the changed screen at mobile and desktop width. A passing build says nothing about whether it looks right, and the mock images in the tests are flat colour: check real photos too.

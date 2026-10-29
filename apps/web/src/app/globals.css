@@ -71,10 +71,7 @@
   background-size: 56px 56px;
 }
 
-/* Soft edges for moving photo walls. */
-@utility mask-fade-y {
-  mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
-}
+/* Soft bottom edge for the pin wall (its columns end at uneven heights). */
 @utility mask-fade-b {
   mask-image: linear-gradient(#000 78%, transparent);
 }
@@ -132,31 +129,8 @@
   display: inline-block;
 }
 
-/* Loops: drift columns, marquees, tickers, the explainer. Every infinite animation carries
-   .motion-loop, which is what pausing (off-screen or by the user) and reduced motion target. */
-.marquee {
-  overflow: hidden;
-  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-}
-.marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: marquee var(--marquee-duration, 60s) linear infinite;
-}
-.marquee[data-direction="reverse"] .marquee-track {
-  animation-direction: reverse;
-}
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
-}
-.drift-track {
-  will-change: transform;
-  animation: drift var(--drift-duration, 60s) linear infinite;
-}
-.drift-track[data-direction="reverse"] {
-  animation-direction: reverse;
-}
+/* Loops: the scan line, live dot, hotspots, floating pins, the explainer. Every infinite animation
+   carries .motion-loop, which is what pausing (off-screen or by the user) and reduced motion target. */
 
 /* A scan line sweeping down the photo field. */
 .sweep {
@@ -193,13 +167,6 @@
 @keyframes float-pin {
   from { transform: translateY(-7px) rotate(var(--tilt, 0deg)); }
   to { transform: translateY(9px) rotate(var(--tilt, 0deg)); }
-}
-
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
-@keyframes drift {
-  to { transform: translateY(-50%); }
 }
 
 /* Scan explainer: one 6 s timeline shared by every part.
@@ -332,11 +299,202 @@
   animation-play-state: paused;
 }
 
+/* ─── Light sections: the same tokens, inverted, so a page alternates black and white ─────────── */
+.theme-light {
+  --color-ink: #0a0a0b;
+  --color-paper: #ffffff;
+  --color-surface: #f2f1ee;
+  --color-surface-strong: #e8e6e1;
+  --color-line: #e4e2dd;
+  --color-muted: #64646a;
+  --color-blush: #f6e8e9;
+  /* On white the readable wine is the deep one (7.4:1). */
+  --color-wine-bright: #a3203a;
+  color-scheme: light;
+  color: var(--color-ink);
+}
+
+/* Sections stack like pages: each one's background starts inset and rounded, and opens to full
+   bleed as it scrolls in. The background is a pseudo-element, so the text never scales. */
+.page {
+  position: relative;
+  isolation: isolate;
+}
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-paper);
+}
+
+/* Reading progress under the header (landing). */
+.scroll-progress {
+  display: none;
+}
+
+/* ─── Scroll story: the hero is a tall section whose sticky stage plays with the scroll ───────────
+   0-16% the headline leaves · 0-34% the photo rises to the centre and pins fly in ·
+   36-56% scan line · 44-66% garment boxes · 62-82% readouts · captions follow the three beats.
+   Without scroll timelines (or with reduced motion) it is a plain, complete column. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .scroll-progress {
+      display: block;
+      position: fixed;
+      inset: 3.5rem 0 auto 0;
+      z-index: 40;
+      height: 2px;
+      background-color: var(--color-wine-bright);
+      transform-origin: left;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+    }
+
+    .page::before {
+      transform-origin: top center;
+      animation: page-open linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+
+    /* The pin wall slides sideways with the scroll instead of looping on its own. */
+    .scroll-row-wrap {
+      overflow: hidden;
+    }
+    .scroll-row {
+      animation: scroll-row linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* The sticky stage needs room: a phone held sideways gets the static column instead. */
+@media (prefers-reduced-motion: no-preference) and (min-height: 600px) {
+  @supports (animation-timeline: view()) {
+    .story {
+      height: 330svh;
+      view-timeline-name: --story;
+    }
+    .story-stage {
+      position: sticky;
+      top: 3.5rem;
+      height: calc(100svh - 3.5rem);
+      overflow: hidden;
+    }
+    .story-intro {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      animation: story-intro linear both;
+      animation-timeline: --story;
+      animation-range: contain 0% contain 16%;
+    }
+    .story-visual {
+      position: absolute;
+      inset: 0;
+    }
+    .story-card {
+      animation: story-card linear both;
+      animation-timeline: --story;
+      animation-range: contain 0% contain 34%;
+    }
+    .story-side {
+      animation: story-side linear both;
+      animation-timeline: --story;
+      animation-range: contain 6% contain 34%;
+    }
+    .story-scan {
+      animation: story-scan linear both;
+      animation-timeline: --story;
+      animation-range: contain 36% contain 56%;
+    }
+    .story-box {
+      animation: story-box linear both;
+      animation-timeline: --story;
+      animation-range: contain calc(44% + var(--i, 0) * 8%) contain calc(56% + var(--i, 0) * 8%);
+    }
+    .story-chip {
+      animation: story-chip linear both;
+      animation-timeline: --story;
+      animation-range: contain calc(62% + var(--i, 0) * 8%) contain calc(70% + var(--i, 0) * 8%);
+    }
+    .story-captions {
+      position: absolute;
+      inset: auto 0 0 0;
+      z-index: 2;
+      pointer-events: none; /* text only, and it overlaps the intro's button on short screens */
+    }
+    .story-caption-stack {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr); /* the captions take turns in one cell */
+      max-width: 28rem;
+      margin-inline: auto;
+    }
+    .story-caption,
+    .story-caption-title {
+      animation: var(--caption, caption-title) linear both;
+      animation-timeline: --story;
+      animation-range: contain 0% contain 100%;
+    }
+    .story-caption {
+      grid-area: 1 / 1;
+    }
+  }
+}
+
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes page-open {
+  from { transform: scaleX(0.9); border-radius: 2.5rem 2.5rem 0 0; }
+}
+@keyframes story-intro {
+  to { opacity: 0; transform: translateY(-8svh) scale(0.94); visibility: hidden; }
+}
+@keyframes story-card {
+  /* Starts below the fold, so the headline has the stage to itself. */
+  from { transform: translateY(115%) scale(0.5) rotate(-4deg); }
+}
+@keyframes story-side {
+  from { opacity: 0; transform: translateX(var(--from-x, 0)) rotate(var(--from-r, 0deg)); }
+}
+@keyframes story-scan {
+  from { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; }
+  to { opacity: 0; transform: translateY(1000%); }
+}
+@keyframes story-box {
+  from { opacity: 0; clip-path: inset(0 100% 100% 0); }
+}
+@keyframes story-chip {
+  from { opacity: 0; transform: translateY(0.5rem) scale(0.9); }
+}
+@keyframes caption-title {
+  0%, 22% { opacity: 0; }
+  27%, 100% { opacity: 1; }
+}
+@keyframes caption-1 {
+  0%, 22% { opacity: 0; transform: translateY(0.75rem); }
+  27%, 42% { opacity: 1; transform: none; }
+  47%, 100% { opacity: 0; transform: translateY(-0.75rem); }
+}
+@keyframes caption-2 {
+  0%, 44% { opacity: 0; transform: translateY(0.75rem); }
+  49%, 64% { opacity: 1; transform: none; }
+  69%, 100% { opacity: 0; transform: translateY(-0.75rem); }
+}
+@keyframes caption-3 {
+  0%, 66% { opacity: 0; transform: translateY(0.75rem); }
+  71%, 100% { opacity: 1; transform: none; }
+}
+@keyframes scroll-row {
+  to { transform: translateX(calc(-100% + 100vw)); }
+}
 @media (prefers-reduced-motion: reduce) {
   .motion-loop {
     animation: none !important;
-  }
-  .marquee {
-    overflow-x: auto;
   }
 }

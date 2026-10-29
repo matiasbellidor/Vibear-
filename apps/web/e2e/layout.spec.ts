@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { LOOK, matches, mockApi } from "./mock-api";
 
-const WIDTHS = [360, 768, 1024, 1440, 1920];
+// Phones, iPad mini / Air portrait, iPad landscape, laptops, desktop.
+const WIDTHS = [360, 768, 820, 1024, 1180, 1440, 1920];
 
 const ROUTES: { name: string; path: string; ready: (page: Page) => Promise<void> }[] = [
   {

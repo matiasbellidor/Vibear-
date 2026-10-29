@@ -41,6 +41,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <span>Resultados visuales vía Google Lens</span>
             </span>
           </div>
+          <p className="mt-4 text-micro normal-case tracking-normal text-muted">
+            Pinterest, Instagram y TikTok son marcas de sus respectivos dueños. Vibear no está afiliado a ellas.
+          </p>
         </footer>
       </body>
     </html>

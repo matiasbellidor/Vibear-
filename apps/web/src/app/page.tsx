@@ -1,26 +1,19 @@
-import {
-  Benefits,
-  Carousels,
-  FinalCta,
-  FromPinterest,
-  Hero,
-  HowItWorks,
-  Problem,
-} from "@/components/landing/Sections";
+import { Benefits, Carousels, FinalCta, FromPinterest, Problem } from "@/components/landing/Sections";
+import { Story } from "@/components/landing/Story";
 import { getLanding } from "@/lib/landing-data";
 
-// The story, top to bottom: the promise, the problem, the feed, straight from Pinterest,
-// how it works, why it helps, your turn.
+// The story, page after page, alternating black and white: the promise and how it works (scroll
+// story), the problem, the feed, why it helps, straight from Pinterest, your turn.
 export default function Landing() {
   const { pins, explainer } = getLanding();
   return (
     <>
-      <Hero pins={pins} />
+      <div aria-hidden="true" className="scroll-progress" />
+      <Story pins={pins} explainer={explainer} />
       <Problem />
       <Carousels pins={pins} />
-      <FromPinterest />
-      <HowItWorks explainer={explainer} />
       <Benefits />
+      <FromPinterest />
       <FinalCta pins={pins} />
     </>
   );

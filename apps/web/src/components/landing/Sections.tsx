@@ -1,87 +1,16 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import type { Explainer, Pin } from "@/lib/landing";
+import type { Pin } from "@/lib/landing";
 import { pad } from "@/lib/labels";
-import { Brackets, LiveClock, ScanField } from "../motion/Hud";
-import { InView } from "../motion/InView";
-import { KineticText } from "../motion/KineticText";
-import { DriftColumns, PinWall } from "../motion/Loops";
-import { MotionToggle } from "../motion/MotionToggle";
-import { cx, creamButton, primaryButton, textButton } from "../ui";
-import { PinCard } from "./Pin";
 import { pinterestConfig } from "@/lib/pinterest";
+import { Brackets, ScanField } from "../motion/Hud";
+import { InView } from "../motion/InView";
+import { PinWall } from "../motion/Loops";
+import { cx, creamButton } from "../ui";
+import { PinCard } from "./Pin";
 import { PinterestEmbeds } from "./PinterestEmbeds";
-import { ScanExplainer } from "./ScanExplainer";
 
-const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
 const GARMENT_CLASSES = 13; // DeepFashion2, the detector's training set
-
-export function Hero({ pins }: { pins: Pin[] }) {
-  // Pins arrive interleaved (women, men, products, boards), so slicing keeps every column mixed.
-  const columns = [0, 1, 2, 3].map((c) => pins.filter((_, i) => i % 4 === c));
-  const garments = pins.reduce((count, pin) => count + pin.hotspots.length, 0);
-  const counters: [string, number][] = [
-    ["Pins", pins.length],
-    ["Prendas", garments],
-    ["Clases", GARMENT_CLASSES],
-  ];
-
-  return (
-    <section className="relative overflow-hidden bg-grid">
-      <div className="px-4 lg:grid lg:min-h-[calc(100svh-3.5rem)] lg:grid-cols-12 lg:gap-10 lg:px-8">
-        <div className="flex flex-col justify-center pt-8 lg:col-span-6 lg:py-14">
-          <p className="enter flex flex-wrap items-center gap-x-4 gap-y-1 text-micro text-muted" style={delay(0.1)}>
-            <span className="text-ink">Vibear/scan</span>
-            <span>v1.0</span>
-            <span className="flex items-center gap-1.5 text-wine-bright">
-              <span aria-hidden="true" className="blink motion-loop h-1.5 w-1.5 rounded-full bg-wine-bright" /> En vivo
-            </span>
-            <LiveClock />
-          </p>
-          <h1 className="@container mt-6 font-display">
-            <span className="block text-display tracking-[-0.03em]">
-              <KineticText lines={[{ text: "Lo viste." }, { text: "Encontralo.", className: "italic text-wine-bright" }]} />
-            </span>
-          </h1>
-          <p className="enter mt-8 max-w-[42ch] text-body text-muted" style={delay(0.7)}>
-            Subí la captura de un Reel, un TikTok o un pin. Vibear escanea el look, reconoce cada prenda y te muestra
-            dónde comprarla: online o en un local cerca tuyo.
-          </p>
-          <div className="enter mt-8 flex flex-wrap items-center gap-x-8 gap-y-4" style={delay(0.85)}>
-            <Link href="/scan" className={primaryButton}>
-              Empezá a escanear
-            </Link>
-            <a href="#como-funciona" className={textButton}>
-              Cómo funciona
-            </a>
-          </div>
-          <dl className="enter mt-10 grid max-w-md grid-cols-3 border-y border-line" style={delay(1)}>
-            {counters.map(([label, value]) => (
-              <div key={label} className="py-3 pr-3">
-                <dt className="text-micro text-muted">{label}</dt>
-                <dd className="mt-1 font-mono text-terminal tabular-nums">{pad(value)}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="enter mt-6" style={delay(1.1)}>
-            <MotionToggle />
-          </div>
-        </div>
-
-        <ScanField className="mt-12 lg:col-span-6 lg:mt-0">
-          <DriftColumns columns={columns} className="h-[64svh] md:h-[72svh] lg:h-[calc(100svh-3.5rem)]" />
-          <div aria-hidden="true" className="sweep motion-loop pointer-events-none absolute inset-x-0 top-0 h-[10%]">
-            <span className="block h-px w-full bg-wine-bright shadow-[0_0_18px_2px_rgb(232_84_108/0.6)]" />
-          </div>
-          <Brackets className="m-1" />
-          <span aria-hidden="true" className="absolute left-3 top-3 bg-paper/85 px-1.5 py-0.5 text-micro text-wine-bright">
-            ● Escaneando
-          </span>
-        </ScanField>
-      </div>
-    </section>
-  );
-}
 
 const LOG = [
   { command: "lo_viste_en_un_reel", status: "OK" },
@@ -91,7 +20,7 @@ const LOG = [
 
 export function Problem() {
   return (
-    <section aria-labelledby="problem-title" className="border-y border-line px-4 py-24 lg:px-8 lg:py-36">
+    <section aria-labelledby="problem-title" className="page theme-light px-4 py-24 lg:px-8 lg:py-36">
       <h2 id="problem-title" className="text-micro text-muted">
         El problema
       </h2>
@@ -118,7 +47,7 @@ export function Problem() {
 
 export function Carousels({ pins }: { pins: Pin[] }) {
   return (
-    <section aria-labelledby="carousel-title" className="overflow-hidden py-20 lg:py-28">
+    <section aria-labelledby="carousel-title" className="page overflow-hidden py-20 lg:py-28">
       <div className="flex flex-wrap items-end justify-between gap-6 px-4 lg:px-8">
         <h2 id="carousel-title" className="reveal max-w-[13ch] font-display text-title tracking-tight">
           Todo lo que ves se puede <span className="italic text-wine-bright">buscar</span>.
@@ -130,11 +59,13 @@ export function Carousels({ pins }: { pins: Pin[] }) {
           </p>
           <p className="flex items-center gap-2 text-micro">
             <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full border-2 border-ink bg-wine-bright" />
-            Prenda detectada · pasá el mouse para ver la confianza
+            Cada punto es una prenda que Vibear detectó
           </p>
         </div>
       </div>
-      <PinWall pins={pins} seconds={95} className="mt-12 h-[30rem] sm:h-[36rem] md:h-[42rem]" />
+      <ScanField className="mt-12">
+        <PinWall pins={pins} labels={false} className="h-[30rem] sm:h-[36rem] md:h-[42rem]" />
+      </ScanField>
     </section>
   );
 }
@@ -145,7 +76,7 @@ export function FromPinterest() {
   if (!configured && process.env.NODE_ENV !== "development") return null;
 
   return (
-    <section aria-labelledby="pinterest-title" className="px-4 py-20 lg:px-8 lg:py-28">
+    <section aria-labelledby="pinterest-title" className="page px-4 py-20 lg:px-8 lg:py-28">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
         <h2 id="pinterest-title" className="text-micro">
           Desde Pinterest
@@ -179,29 +110,6 @@ export function FromPinterest() {
   );
 }
 
-export function HowItWorks({ explainer }: { explainer: Explainer }) {
-  return (
-    <section id="como-funciona" aria-labelledby="how-title" className="scroll-mt-16 border-t border-line px-4 py-20 lg:px-8 lg:py-28">
-      <div className="flex items-baseline justify-between border-b border-line pb-3">
-        <h2 id="how-title" className="text-micro">
-          Cómo funciona
-        </h2>
-        <span className="text-micro tabular-nums text-muted">3 pasos · 6 segundos</span>
-      </div>
-      <div className="mt-10 lg:mt-14">
-        <ScanExplainer
-          explainer={explainer}
-          heading={
-            <p className="reveal max-w-[14ch] font-display text-title tracking-tight">
-              De la captura a la <span className="italic text-wine-bright">tienda</span>.
-            </p>
-          }
-        />
-      </div>
-    </section>
-  );
-}
-
 const SPECS = [
   { key: "Input", title: "Solo una foto", text: "No hace falta describirla ni saber cómo se llama. La captura alcanza." },
   { key: "Output", title: "Prenda por prenda", text: "Del look completo buscás solo lo que te gustó, ordenado por parecido." },
@@ -210,13 +118,13 @@ const SPECS = [
 
 export function Benefits() {
   return (
-    <section aria-labelledby="benefits-title" className="px-4 py-20 lg:px-8 lg:py-28">
+    <section aria-labelledby="benefits-title" className="page theme-light px-4 py-20 lg:px-8 lg:py-28">
       <h2 id="benefits-title" className="text-micro text-muted">
         Para qué sirve
       </h2>
-      <ul className="mt-6 grid border-t border-line md:grid-cols-3">
+      <ul className="mt-6 grid border-t border-line lg:grid-cols-3">
         {SPECS.map((spec, index) => (
-          <li key={spec.key} className="reveal relative border-b border-line py-10 md:border-b-0 md:border-r md:px-8 md:first:pl-0 md:last:border-r-0 md:last:pr-0">
+          <li key={spec.key} className="reveal relative border-b border-line py-10 lg:border-b-0 lg:border-r lg:px-8 lg:first:pl-0 lg:last:border-r-0 lg:last:pr-0">
             <span className="text-micro tabular-nums text-wine-bright">
               {pad(index + 1)} / {spec.key}
             </span>

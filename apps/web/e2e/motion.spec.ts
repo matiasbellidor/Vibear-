@@ -16,7 +16,7 @@ test("the landing tells the story and ends in a button to the scanner", async ({
   for (const name of ["El problema", "Todo lo que ves se puede buscar.", "Cómo funciona", "Para qué sirve", "¿Qué viste hoy?"]) {
     await expect(page.getByRole("heading", { name, exact: true })).toBeAttached();
   }
-  await expect(page.getByRole("list").filter({ hasText: "Subí una captura" })).toContainText("Elegí la prenda");
+  await expect(page.getByRole("list").filter({ hasText: "Subí una captura" })).toContainText("Detectamos cada prenda");
 
   const finalCta = page.getByRole("link", { name: "Empezá a escanear" }).last();
   await finalCta.scrollIntoViewIfNeeded();
@@ -38,13 +38,34 @@ test("loops run, and the pause button stops them (and is remembered)", async ({ 
   await expect.poll(() => runningLoops(page)).toBe(0);
 });
 
-test("reduced motion: nothing animates and the explainer shows its final state", async ({ page }) => {
+test("reduced motion: nothing animates and the scroll story shows its final state", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await page.getByRole("heading", { name: "Cómo funciona" }).scrollIntoViewIfNeeded();
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
-  const card = page.locator(".x-card").first();
-  await expect(card).toHaveCSS("opacity", "1");
+  // Static column: headline, photo with its garment boxes and readouts, and the three steps.
+  await expect(page.locator(".story-box").first()).toHaveCSS("opacity", "1");
+  await expect(page.locator(".story-chip").first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Lo viste. Encontralo." })).toBeVisible();
+});
+
+test("the hero names the networks where you find the clothes", async ({ page }) => {
+  await page.goto("/");
+  for (const name of ["Pinterest", "Instagram", "TikTok"]) {
+    await expect(page.getByRole("img", { name, exact: true })).toBeVisible();
+  }
+});
+
+test("scrolling drives the story: the headline leaves and the readouts appear", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  const intro = page.locator(".story-intro");
+  await expect(intro).toHaveCSS("opacity", "1");
+  // Scroll most of the way through the story's sticky stage.
+  const height = await page.locator(".story").evaluate((el) => el.getBoundingClientRect().height);
+  await page.mouse.wheel(0, height * 0.75);
+  await expect.poll(() => intro.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.05);
+  await expect.poll(() => page.locator(".story-chip").first().evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
 });
 
 test("a visitor without a screenshot can try an example", async ({ page }) => {

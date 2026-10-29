@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import type { Explainer } from "@/lib/landing";
 import { labelFor, pad, shortLabelFor } from "@/lib/labels";
 import { InView } from "../motion/InView";
@@ -16,43 +16,10 @@ const SELECTED = "border-2 border-wine-bright shadow-[0_0_0_1px_rgb(10_10_11/0.6
 const at = (i: number, extra: Record<string, string | number> = {}) => ({ "--i": i, ...extra }) as CSSProperties;
 
 /**
- * The product in six seconds, on a loop (timeline in globals.css, .x-*):
+ * The scan in six seconds, on a loop (timeline in globals.css, .x-*), for the scanner page:
  * 0-33% the photo arrives and gets scanned · 33-66% garments are boxed and one is tapped ·
  * 66-100% matches rise in, similarity counting up. Boxes and numbers are real model output.
- * The written steps carry the meaning; the stage is decorative.
  */
-export function ScanExplainer({ heading, explainer }: { heading: ReactNode; explainer: Explainer }) {
-  return (
-    // Mobile reads heading → stage → steps; desktop puts heading + steps left and the stage right.
-    <InView restart className="x-root grid gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-10">
-      <div className="order-1 lg:order-none lg:col-span-5">{heading}</div>
-      <ol className="order-3 divide-y divide-line border-y border-line lg:order-none lg:col-span-5 lg:row-start-2 lg:self-start">
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="x-anim x-step motion-loop relative flex gap-6 py-6" style={at(i)}>
-            <span aria-hidden="true" className="w-16 shrink-0 font-display text-numeral tabular-nums">
-              {pad(i + 1)}
-            </span>
-            <div className="pt-1.5">
-              <h3 className="text-micro">{step.title}</h3>
-              <p className="mt-2 max-w-[40ch] text-small text-muted">{step.text}</p>
-            </div>
-            <span
-              aria-hidden="true"
-              className="x-anim x-step-bar motion-loop absolute inset-x-0 -bottom-px h-px bg-wine-bright"
-              style={at(i)}
-            />
-          </li>
-        ))}
-      </ol>
-      <ScanStage
-        explainer={explainer}
-        className="order-2 mx-auto w-full max-w-[36rem] lg:order-none lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:mr-0 lg:self-center"
-      />
-    </InView>
-  );
-}
-
-/** The stage alone, looping, for screens that only need the picture (the scanner page). */
 export function ScanDemo({ explainer, className }: { explainer: Explainer; className?: string }) {
   return (
     <InView restart className={cx("x-root", className)}>
