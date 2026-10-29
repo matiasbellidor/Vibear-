@@ -28,6 +28,8 @@ class Match(BaseModel):
     link: str
     source: str | None
     thumbnail: str | None
+    thumbnail_width: int | None = None
+    thumbnail_height: int | None = None
     price: str | None
     similarity: float | None
 

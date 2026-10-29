@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Vibear design tokens. Source of truth for .claude/skills/vibear-design: change values here, not in components. */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-paper: #ffffff;
+  --color-surface: #f3f2ef;
+  --color-surface-strong: #e9e7e2;
+  --color-line: #e6e5e1;
+  --color-muted: #6b6b6b;
+
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bodoni), "Bodoni 72", Didot, serif;
+
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.4;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.55;
+  --text-logo: 1.375rem;
+  --text-logo--line-height: 1;
+  --text-title: clamp(2.25rem, 5vw, 3.75rem);
+  --text-title--line-height: 0.95;
+  --text-numeral: clamp(2.5rem, 4vw, 3.5rem);
+  --text-numeral--line-height: 1;
+  /* Fills its @container edge to edge: "VIBEAR" in Bodoni Moda at -0.045em tracking is ~3.65em wide. */
+  --text-hero: calc(100cqw / 3.7);
+  --text-hero--line-height: 0.78;
+
+  --radius-media: 12px;
+
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-scan: scan 1.8s var(--ease-out-soft) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes scan {
+    0% { top: 0%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+  }
+}
+
+/* Editorial micro label: nav, buttons, metadata. */
+@utility text-micro {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}

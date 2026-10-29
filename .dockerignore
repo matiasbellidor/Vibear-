@@ -1,0 +1,8 @@
+# Context for apps/web/Dockerfile (the API builds from apps/api with its own .dockerignore).
+.git
+**/node_modules
+**/.next
+**/test-results
+**/playwright-report
+apps/api
+.claude

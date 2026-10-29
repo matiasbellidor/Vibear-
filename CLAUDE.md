@@ -1,0 +1,19 @@
+# Vibear
+
+Find the clothes you saw on social media: upload a photo → YOLO detects garments → Google Lens (SerpApi) finds products → FashionCLIP orders them by similarity.
+
+## Layout
+- `apps/api`: FastAPI (Python). `create_app()` in `app/main.py` takes injectable fakes; tests never load models or call SerpApi.
+- `apps/web`: Next.js 16 App Router + Tailwind 4. The browser calls `/api/*`, proxied to the API by `next.config.ts`.
+- `scripts/`: cross-platform Node scripts behind `npm run setup` / `npm run dev`.
+
+## Commands (repo root)
+- `npm run dev`: API :8000 + web :3000. `scripts/api.mjs` restarts the API on `.py` changes. Don't switch it to `uvicorn --reload`: on Windows that sends CTRL_C_EVENT to the whole console and kills Next too.
+- `npm run check`: run before any commit. API tests, typecheck, lint (`--max-warnings 0`), build, Playwright.
+- Search without a SerpApi key: `DEMO_SEARCH=true` in `apps/api/.env`.
+
+## Conventions
+- Front-end work: use the `vibear-design` skill (`.claude/skills/vibear-design/`). Tokens live in `apps/web/src/app/globals.css`.
+- Code, comments and README in English; UI copy in Rioplatense Spanish (`lib/labels.ts`, `MESSAGES` in `lib/api.ts`).
+- Image ids are 16 hex characters of the JPEG's sha256 (content-addressed, so caching works).
+- Next 16 differs from older versions: check `apps/web/node_modules/next/dist/docs/` before using an API you're unsure of (see `apps/web/AGENTS.md`).

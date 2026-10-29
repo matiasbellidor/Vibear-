@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#0a0a0a"/>
+  <!-- A didone V: heavy left stroke, hairline right stroke, flat serifs. -->
+  <path fill="#ffffff" d="M5 7h9v1.2h-2.1L17 22.6 21.3 8.2h-2.2V7h6.4v1.2h-1.6L17.7 26h-1.3L9.9 8.2H5z"/>
+</svg>

@@ -1,4 +1,5 @@
-# MVP: a single service. Postgres + pgvector join in milestone 2 (own catalog), not before.
+# Full stack in containers: http://localhost:3000 (web) and http://localhost:8000/docs (API).
+# No database yet: Postgres + pgvector join in milestone 2 (own catalog), not before.
 services:
   api:
     build: ./apps/api
@@ -8,8 +9,24 @@ services:
       - path: ./apps/api/.env
         required: false
     volumes:
-      - api-data:/app/data      # uploaded photos, crops and the search cache
+      - api-data:/app/data      # uploaded photos, crops, looks and the search cache
       - model-cache:/models     # YOLO + CLIP weights (~600 MB), downloaded once
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 300s        # the first start downloads the models
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   api-data:

@@ -6,8 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # SerpApi Google Lens. Without a key, /v1/search answers 503 and /v1/detect still works.
+    # SerpApi Google Lens. Without a key, /v1/search answers 503 (or fake results if demo_search is on).
     serpapi_api_key: str = ""
+    demo_search: bool = False
     serpapi_country: str = "ar"
     serpapi_hl: str = "es-419"
     search_cache_hours: int = 72

@@ -1,0 +1,21 @@
+{
+  "name": "vibear",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "concurrently -k -n api,web -c gray,blue \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node scripts/api.mjs dev",
+    "dev:web": "npm run dev -w apps/web",
+    "test:api": "node scripts/api.mjs test",
+    "check": "npm run test:api && npm run check -w apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  },
+  "engines": {
+    "node": ">=20.9"
+  }
+}
