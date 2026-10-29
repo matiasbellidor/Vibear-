@@ -2,7 +2,7 @@
 // Hotspots, explainer boxes and similarities are real YOLO / FashionCLIP output.
 
 export type Credit = { title: string; author: string; license: string; url: string };
-export type Hotspot = { label: string; x: number; y: number };
+export type Hotspot = { label: string; confidence: number | null; x: number; y: number };
 export type Pin = { src: string; width: number; height: number; kind: "woman" | "man" | "product" | "board"; hotspots: Hotspot[]; credits: Credit[] };
 export type Match = { src: string; width: number; height: number; label: string; similarity: number };
 export type Explainer = { src: string; width: number; height: number; credit: Credit; matches: Match[];
@@ -17,11 +17,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.909,
         "x": 0.528,
         "y": 0.506
       },
       {
         "label": "trousers",
+        "confidence": 0.897,
         "x": 0.588,
         "y": 0.805
       }
@@ -43,6 +45,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.683,
         "x": 0.45,
         "y": 0.633
       }
@@ -64,11 +67,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.791,
         "x": 0.51,
         "y": 0.596
       },
       {
         "label": "trousers",
+        "confidence": 0.709,
         "x": 0.512,
         "y": 0.751
       }
@@ -90,11 +95,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.908,
         "x": 0.418,
         "y": 0.644
       },
       {
         "label": "trousers",
+        "confidence": 0.808,
         "x": 0.492,
         "y": 0.898
       }
@@ -116,11 +123,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.961,
         "x": 0.514,
         "y": 0.664
       },
       {
         "label": "vest",
+        "confidence": 0.936,
         "x": 0.511,
         "y": 0.24
       }
@@ -142,11 +151,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.823,
         "x": 0.534,
         "y": 0.606
       },
       {
         "label": "trousers",
+        "confidence": 0.728,
         "x": 0.484,
         "y": 0.907
       }
@@ -168,11 +179,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.935,
         "x": 0.454,
         "y": 0.537
       },
       {
         "label": "trousers",
+        "confidence": 0.895,
         "x": 0.411,
         "y": 0.838
       }
@@ -194,11 +207,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.914,
         "x": 0.536,
         "y": 0.671
       },
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.903,
         "x": 0.504,
         "y": 0.385
       }
@@ -220,11 +235,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.929,
         "x": 0.441,
         "y": 0.132
       },
       {
         "label": "trousers",
+        "confidence": 0.913,
         "x": 0.52,
         "y": 0.49
       }
@@ -246,6 +263,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.883,
         "x": 0.5,
         "y": 0.58
       }
@@ -267,6 +285,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.635,
         "x": 0.558,
         "y": 0.713
       }
@@ -288,16 +307,19 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": null,
         "x": 0.294,
         "y": 0.298
       },
       {
         "label": "trousers",
+        "confidence": null,
         "x": 0.76,
         "y": 0.402
       },
       {
         "label": "shoes",
+        "confidence": null,
         "x": 0.311,
         "y": 0.798
       }
@@ -331,11 +353,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.888,
         "x": 0.5,
         "y": 0.622
       },
       {
         "label": "trousers",
+        "confidence": 0.7,
         "x": 0.479,
         "y": 0.84
       }
@@ -357,6 +381,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.898,
         "x": 0.507,
         "y": 0.617
       }
@@ -378,6 +403,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "shoes",
+        "confidence": null,
         "x": 0.5,
         "y": 0.5
       }
@@ -399,11 +425,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.918,
         "x": 0.613,
         "y": 0.642
       },
       {
         "label": "skirt",
+        "confidence": 0.692,
         "x": 0.653,
         "y": 0.908
       }
@@ -425,11 +453,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.896,
         "x": 0.556,
         "y": 0.709
       },
       {
         "label": "trousers",
+        "confidence": 0.612,
         "x": 0.494,
         "y": 0.936
       }
@@ -451,6 +481,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.881,
         "x": 0.5,
         "y": 0.688
       }
@@ -472,11 +503,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.925,
         "x": 0.5,
         "y": 0.774
       },
       {
         "label": "short_sleeved_shirt",
+        "confidence": 0.865,
         "x": 0.54,
         "y": 0.458
       }
@@ -498,11 +531,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "skirt",
+        "confidence": 0.653,
         "x": 0.687,
         "y": 0.855
       },
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.541,
         "x": 0.62,
         "y": 0.634
       }
@@ -524,11 +559,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.871,
         "x": 0.424,
         "y": 0.763
       },
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.575,
         "x": 0.439,
         "y": 0.584
       }
@@ -550,11 +587,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.905,
         "x": 0.552,
         "y": 0.822
       },
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.903,
         "x": 0.545,
         "y": 0.562
       }
@@ -576,6 +615,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.855,
         "x": 0.5,
         "y": 0.671
       }
@@ -592,11 +632,12 @@ export const PINS: Pin[] = [
   {
     "src": "/landing/pin-24.webp",
     "width": 400,
-    "height": 628,
+    "height": 584,
     "kind": "product",
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": null,
         "x": 0.5,
         "y": 0.5
       }
@@ -618,11 +659,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": null,
         "x": 0.312,
         "y": 0.322
       },
       {
         "label": "trousers",
+        "confidence": null,
         "x": 0.74,
         "y": 0.653
       }
@@ -650,6 +693,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_outwear",
+        "confidence": 0.932,
         "x": 0.529,
         "y": 0.695
       }
@@ -671,11 +715,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.856,
         "x": 0.294,
         "y": 0.576
       },
       {
         "label": "short_sleeved_shirt",
+        "confidence": 0.844,
         "x": 0.189,
         "y": 0.219
       }
@@ -697,11 +743,13 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "trousers",
+        "confidence": 0.914,
         "x": 0.478,
         "y": 0.539
       },
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.837,
         "x": 0.484,
         "y": 0.116
       }
@@ -723,6 +771,7 @@ export const PINS: Pin[] = [
     "hotspots": [
       {
         "label": "long_sleeved_shirt",
+        "confidence": 0.913,
         "x": 0.5,
         "y": 0.595
       }

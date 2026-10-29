@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bodoni_Moda, Inter_Tight } from "next/font/google";
+import { Bodoni_Moda, Geist_Mono, Inter_Tight } from "next/font/google";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import "./globals.css";
@@ -11,17 +11,18 @@ const display = Bodoni_Moda({
   display: "swap",
 });
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-inter-tight", display: "swap" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Vibear — Encontrá la ropa que viste", template: "%s — Vibear" },
   description: "Subí la foto de un look y encontrá dónde comprar cada prenda, ordenado por parecido.",
 };
 
-export const viewport: Viewport = { themeColor: "#ffffff" };
+export const viewport: Viewport = { themeColor: "#0a0a0b" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-AR" className={`${display.variable} ${sans.variable}`}>
+    <html lang="es-AR" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
       <body className="flex min-h-dvh flex-col">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-paper focus:p-3 focus:text-micro">
           Saltar al contenido

@@ -144,7 +144,7 @@ export function NearbyPanel({ brands }: { brands: string[] }) {
             type="button"
             aria-pressed={radius === value}
             onClick={() => changeRadius(value)}
-            className={cx("text-micro decoration-1 underline-offset-[6px]", radius === value ? "text-wine underline" : "hover:underline")}
+            className={cx("text-micro decoration-1 underline-offset-[6px]", radius === value ? "text-wine-bright underline" : "hover:underline")}
           >
             {distance(value)}
           </button>
@@ -186,7 +186,7 @@ export function NearbyPanel({ brands }: { brands: string[] }) {
                         {shop.address && ` · ${shop.address}`}
                       </p>
                       {shop.brand_match && (
-                        <p className="mt-1 inline-block bg-blush px-2 py-0.5 text-micro text-wine">Marca de tus resultados</p>
+                        <p className="mt-1 inline-block bg-blush px-2 py-0.5 text-micro text-wine-bright">Marca de tus resultados</p>
                       )}
                     </div>
                     <a

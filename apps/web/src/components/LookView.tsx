@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, api, type Look, type SearchMode, type SearchResult } from "@/lib/api";
 import { labelFor } from "@/lib/labels";
@@ -29,7 +29,6 @@ function isAbort(error: unknown): boolean {
 
 /** Results are stored with the key they answer, so a stale response never shows for a new selection. */
 export function LookView({ id }: { id: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [look, setLook] = useState<{ id: string; result: Loaded<Look> } | null>(null);
   const [search, setSearch] = useState<{ key: string; result: Loaded<SearchResult> } | null>(null);
@@ -81,7 +80,8 @@ export function LookView({ id }: { id: string }) {
   if (current.status === "error") return <LookMissing message={current.message} />;
 
   const results = search?.key === searchKey ? search.result : null;
-  const select = (cropId: string) => router.replace(`/look/${id}?item=${cropId}`, { scroll: false });
+  // Native history (synced with useSearchParams by Next): switching garments needs no server round-trip.
+  const select = (cropId: string) => window.history.replaceState(null, "", `/look/${id}?item=${cropId}`);
 
   return (
     <div className="px-4 pb-10 pt-4 lg:grid lg:grid-cols-12 lg:gap-10 lg:px-8 lg:pt-6">

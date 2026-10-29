@@ -2,20 +2,23 @@
 
 /* Vibear design tokens. Source of truth for .claude/skills/vibear-design: change values here, not in components. */
 @theme {
-  --color-ink: #0a0a0a;
-  --color-paper: #ffffff;
-  --color-surface: #f3f2ef;
-  --color-surface-strong: #e9e7e2;
-  --color-line: #e6e5e1;
-  --color-muted: #6b6b6b;
-  /* The signal colour: primary actions, selection, saved state, garment hotspots, story beats. */
+  /* Scanner theme: a black stage where the photos glow, white ink, wine as the signal. */
+  --color-ink: #f2efe9;
+  --color-paper: #0a0a0b;
+  --color-surface: #141416;
+  --color-surface-strong: #1f1f22;
+  --color-line: #2a2a2e;
+  --color-muted: #8f8f96;
+  /* wine fills sections and badges; wine-bright is the readable wine for text and strokes on black. */
   --color-wine: #6b1523;
   --color-wine-deep: #4e0e19;
-  --color-blush: #f4e7e5;
+  --color-wine-bright: #e8546c;
+  --color-blush: #2a1418;
   --color-cream: #f7f0e8;
 
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bodoni), "Bodoni 72", Didot, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --text-small: 0.8125rem;
   --text-small--line-height: 1.4;
@@ -35,8 +38,8 @@
   --text-display--line-height: 0.92;
   --text-statement: clamp(2.5rem, 6.5vw, 6.75rem);
   --text-statement--line-height: 1;
-  --text-ticker: clamp(4rem, 13vw, 12rem);
-  --text-ticker--line-height: 1;
+  --text-terminal: clamp(1.05rem, 2.4vw, 1.875rem);
+  --text-terminal--line-height: 1.55;
 
   --radius-media: 12px;
 
@@ -60,6 +63,14 @@
   }
 }
 
+/* The scanner's measuring grid. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(242 239 233 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(242 239 233 / 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
 /* Soft edges for moving photo walls. */
 @utility mask-fade-y {
   mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
@@ -70,15 +81,17 @@
 
 /* Editorial micro label: nav, buttons, metadata. */
 @utility text-micro {
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1.4;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   font-weight: 500;
   text-transform: uppercase;
 }
 
 @layer base {
   html {
+    color-scheme: dark;
     background-color: var(--color-paper);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
@@ -143,6 +156,24 @@
 }
 .drift-track[data-direction="reverse"] {
   animation-direction: reverse;
+}
+
+/* A scan line sweeping down the photo field. */
+.sweep {
+  animation: sweep 7s linear infinite;
+}
+@keyframes sweep {
+  0% { transform: translateY(-10%); opacity: 0; }
+  8%, 88% { opacity: 1; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+
+/* Terminal caret and the live dot. */
+.blink {
+  animation: blink 1.1s steps(1, end) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
 }
 
 /* Garment hotspots: a wine dot whose ring breathes out. */

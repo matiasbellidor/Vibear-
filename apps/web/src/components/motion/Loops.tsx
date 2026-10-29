@@ -20,7 +20,7 @@ export function DriftColumns({ columns, className }: { columns: Pin[][]; classNa
             {/* Duplicated once, with the gap on each item, so -50% lands exactly where it started. */}
             {[...pins, ...pins].map((pin, i) => (
               <div key={i} className="pb-3">
-                <PinCard pin={pin} caption={false} eager={i < 2} />
+                <PinCard pin={pin} caption={false} labels={false} eager={i < 2} />
               </div>
             ))}
           </div>

@@ -43,7 +43,7 @@ export function RecentLooks() {
               <FadeImage src={imageUrl(look.image_id)} alt="Look buscado" className="h-full w-full object-cover" />
               <span
                 aria-hidden="true"
-                className="absolute inset-0 bg-ink/20 opacity-0 transition-opacity duration-200 ease-out-soft group-hover:opacity-100"
+                className="absolute inset-0 bg-paper/35 opacity-0 transition-opacity duration-200 ease-out-soft group-hover:opacity-100"
               />
             </div>
             <p className="pt-2 text-micro text-muted" style={{ height: CAPTION }}>

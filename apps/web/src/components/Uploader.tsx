@@ -3,19 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
 import { ApiError, api, type Look } from "@/lib/api";
-import { PINS } from "@/lib/landing";
+import type { Pin } from "@/lib/landing";
 import { downscale } from "@/lib/resize";
 import { rememberLook } from "@/lib/storage";
 import { FadeImage } from "./FadeImage";
+import { Brackets } from "./motion/Hud";
 import { Icon, cx, icons, primaryButton } from "./ui";
 
-// Sample looks for visitors without a screenshot at hand: two womenswear, two menswear outfits
-// with at least two detected garments (landing photos, freely licensed).
-const outfits = PINS.filter((pin) => pin.hotspots.length >= 2);
-const EXAMPLES = [
-  ...outfits.filter((pin) => pin.kind === "woman").slice(0, 2),
-  ...outfits.filter((pin) => pin.kind === "man").slice(0, 2),
-];
 
 type Phase = { kind: "idle" } | { kind: "detecting"; preview: string } | { kind: "error"; message: string };
 
@@ -24,7 +18,7 @@ function messageOf(error: unknown): string {
 }
 
 /** The drop target: file picker, drag and drop, paste (Ctrl/Cmd+V) or an image link. */
-export function Uploader() {
+export function Uploader({ examples = [] }: { examples?: Pin[] }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
@@ -117,10 +111,11 @@ export function Uploader() {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={cx(
-          "relative flex min-h-[22rem] flex-col items-center justify-center border border-ink px-6 py-10 text-center transition-colors duration-200 ease-out-soft lg:min-h-[28rem]",
+          "relative flex min-h-[22rem] flex-col items-center justify-center border border-line bg-grid px-6 py-10 text-center transition-colors duration-200 ease-out-soft lg:min-h-[28rem]",
           dragging && "bg-surface",
         )}
       >
+        <Brackets className="m-2" />
         {phase.kind === "detecting" ? (
           <Scanning preview={phase.preview} />
         ) : (
@@ -137,7 +132,7 @@ export function Uploader() {
             <div className="mt-8 flex flex-col items-center gap-3">
               <p className="text-micro text-muted">¿No tenés una a mano? Probá con un ejemplo</p>
               <div className="flex gap-2">
-                {EXAMPLES.map((photo, index) => (
+                {examples.map((photo, index) => (
                   <button
                     key={photo.src}
                     type="button"
@@ -212,11 +207,11 @@ function Scanning({ preview }: { preview: string }) {
         <FadeImage src={preview} alt="Tu foto" className="block max-h-[18rem] w-auto lg:max-h-[22rem]" />
         <span
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-0.5 bg-paper mix-blend-difference motion-safe:animate-scan"
+          className="absolute inset-x-0 top-0 h-0.5 bg-ink mix-blend-difference motion-safe:animate-scan"
         />
       </div>
       <p role="status" className="mt-6 text-micro">
-        Detectando prendas…
+        Analizando prendas<span aria-hidden="true" className="blink motion-loop">_</span>
       </p>
     </div>
   );

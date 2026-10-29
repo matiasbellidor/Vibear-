@@ -4,9 +4,9 @@ export function cx(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
-/** Filled, sharp, uppercase, wine: the only primary action style in Vibear. */
+/** Filled, sharp, uppercase: white on the black stage, wine on hover. The only primary action style. */
 export const primaryButton =
-  "inline-flex h-12 items-center justify-center gap-3 bg-wine px-7 text-micro text-cream transition-colors duration-200 ease-out-soft hover:bg-wine-deep disabled:bg-muted";
+  "inline-flex h-12 items-center justify-center gap-3 bg-ink px-7 text-micro text-paper transition-colors duration-200 ease-out-soft hover:bg-wine-bright disabled:bg-muted";
 
 /** The primary action on a wine section: cream with wine text. */
 export const creamButton =

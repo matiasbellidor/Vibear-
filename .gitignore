@@ -10,3 +10,7 @@ next-env.d.ts
 *.tsbuildinfo
 test-results/
 playwright-report/
+# Your own landing photos (npm run photos): local only, never published
+apps/web/local-photos/**
+!apps/web/local-photos/README.md
+apps/web/public/landing-local/

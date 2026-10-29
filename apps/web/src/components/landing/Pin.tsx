@@ -8,23 +8,32 @@ export function captionFor(pin: Pin): string {
   return [...new Set(pin.hotspots.map((spot) => shortLabelFor(spot.label)))].join(" + ") || "Outfit";
 }
 
+function readout(label: string, confidence: number | null): string {
+  return confidence === null ? labelFor(label) : `${shortLabelFor(label)} · ${Math.round(confidence * 100)}%`;
+}
+
 /**
- * A Pinterest-style pin: the photo with wine hotspots on each garment Vibear recognises
- * (real YOLO output), and a short caption. Decorative: the section text carries the meaning.
+ * A Pinterest-style pin: the photo with a wine hotspot on each garment Vibear recognised (real
+ * YOLO output, confidence included), and a short caption. Decorative: the section text carries
+ * the meaning. `data-garment` feeds the ScanField crosshair.
  */
 export function PinCard({
   pin,
   caption = true,
+  labels = true,
   eager = false,
   className,
 }: {
   pin: Pin;
   caption?: boolean;
+  /** Hover chips per hotspot; off where a ScanField crosshair already reads the garment. */
+  labels?: boolean;
   eager?: boolean;
   className?: string;
 }) {
+  const top = pin.hotspots[0];
   return (
-    <figure className={cx("group/pin", className)}>
+    <figure className={cx("group/pin", className)} data-garment={top ? readout(top.label, top.confidence) : undefined}>
       <div className="relative">
         <Photo photo={pin} eager={eager} />
         {pin.hotspots.map((spot) => (
@@ -34,12 +43,14 @@ export function PinCard({
             style={{ left: `${spot.x * 100}%`, top: `${spot.y * 100}%` }}
           >
             <span className="relative block h-3 w-3">
-              <span className="hotspot-ring motion-loop absolute inset-0 rounded-full bg-wine" />
-              <span className="absolute inset-0 rounded-full border-2 border-paper bg-wine" />
+              <span className="hotspot-ring motion-loop absolute inset-0 rounded-full bg-wine-bright" />
+              <span className="absolute inset-0 rounded-full border-2 border-ink bg-wine-bright" />
             </span>
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 whitespace-nowrap bg-paper px-2 py-1 text-micro text-ink opacity-0 transition-opacity duration-200 ease-out-soft group-hover/pin:opacity-100">
-              {labelFor(spot.label)}
-            </span>
+            {labels && (
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 whitespace-nowrap bg-paper/90 px-2 py-1 text-micro tabular-nums text-ink opacity-0 transition-opacity duration-200 ease-out-soft group-hover/pin:opacity-100">
+                {readout(spot.label, spot.confidence)}
+              </span>
+            )}
           </span>
         ))}
       </div>

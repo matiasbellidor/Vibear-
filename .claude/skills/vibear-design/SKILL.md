@@ -5,7 +5,7 @@ description: Vibear's visual design system and UI rules. Editorial fashion minim
 
 # Vibear design
 
-Vibear is "magazine meets moodboard": the restraint of a fashion editorial wrapped around the density of a visual discovery feed. Every screen should feel calm, expensive and fast, with the photos doing the talking.
+Vibear is "a fashion scanner": the restraint of a fashion editorial (Bodoni display type, white space, sharp chrome) on a black stage, with the HUD of a scanning tool (monospace labels, measuring grid, crosshair, live readouts) and the density of a Pinterest feed. Photos glow on black; wine is the signal. It should feel cool, precise and fast, never cluttered.
 
 Two strands of DNA, and one rule that decides which applies where:
 
@@ -27,18 +27,22 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 
 | Utility | Value | Use |
 |---|---|---|
-| `text-ink` / `bg-ink` | `#0a0a0a` | text, borders that matter, filled buttons |
-| `bg-paper` | `#ffffff` | page background (white makes product colours read true) |
-| `bg-surface` | `#f3f2ef` | image placeholders, skeletons |
-| `surface-strong` | `#e9e7e2` | the bright band of the skeleton shimmer |
-| `border-line` | `#e6e5e1` | hairline dividers |
-| `text-muted` | `#6b6b6b` | secondary text (5.3:1 on white, passes AA) |
-| `wine` / `wine-deep` | `#6b1523` / `#4e0e19` | the signal: primary buttons (hover deep), selection, saved state, garment hotspots, one accent word in display type, full-bleed story sections |
-| `blush` | `#f4e7e5` | quiet wine tint: badges like "Marca de tus resultados" |
+| `text-ink` / `bg-ink` | `#f2efe9` | text (near white), borders that matter, the primary button |
+| `bg-paper` | `#0a0a0b` | the black stage (page background) |
+| `bg-surface` | `#141416` | image placeholders, skeletons |
+| `surface-strong` | `#1f1f22` | the bright band of the skeleton shimmer |
+| `border-line` | `#2a2a2e` | hairline dividers |
+| `text-muted` | `#8f8f96` | secondary text (~6:1 on the stage, passes AA) |
+| `wine` / `wine-deep` | `#6b1523` / `#4e0e19` | wine fills: the closing story section, deep hovers |
+| `wine-bright` | `#e8546c` | the readable wine on black (5.5:1): accent words, hotspots, selection glow, live dot, HUD keys, button hover |
+| `blush` | `#2a1418` | quiet wine tint on black: badges like "Marca de tus resultados" |
 | `cream` | `#f7f0e8` | text and buttons on wine sections (14:1 on wine) |
 | `font-display` | Bodoni Moda | wordmark, page titles, big numbers. Nothing else |
-| `font-sans` | Inter Tight | everything else (the default) |
-| `text-micro` | 11px, uppercase, 0.14em tracking, 500 | nav, buttons, labels, metadata (an `@utility`) |
+| `font-sans` | Inter Tight | body copy (the default) |
+| `font-mono` | Geist Mono | the HUD voice: `text-micro` uses it; terminal lines and counters too |
+| `text-micro` | 11px mono, uppercase, 0.08em tracking, 500 | nav, buttons, labels, metadata, readouts (an `@utility`) |
+| `text-terminal` | `clamp(1.05rem, 2.4vw, 1.875rem)` | terminal lines and big counters (with `font-mono`) |
+| `bg-grid` | 56px, 1px lines | the measuring grid behind scanner areas (hero, drop zone) |
 | `text-small` / `text-body` | 13px / 15px | captions and help text / body copy |
 | `text-title` | `clamp(2.25rem, 5vw, 3.75rem)` | page and results titles (display face) |
 | `text-numeral` | `clamp(2.5rem, 4vw, 3.5rem)` | editorial step numbers `01 02 03` |
@@ -47,12 +51,12 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 | `ease-out-soft` | `cubic-bezier(.2,.8,.2,1)` | all transitions |
 | `animate-scan` / `animate-shimmer` | | detecting line / skeletons |
 
-Shared class strings live in `components/ui.tsx`: `primaryButton` (wine, the only filled action style), `creamButton` (the primary action on a wine section), `outlineButton` (secondary: 1px ink frame), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`.
+Shared class strings live in `components/ui.tsx`: `primaryButton` (white on black, wine-bright on hover: the only filled action style), `creamButton` (the primary action on a wine section), `outlineButton` (secondary: 1px ink frame), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`. HUD pieces live in `components/motion/Hud.tsx`: `Brackets` (corner marks around a scanned area), `LiveClock`, `ScanField` (the crosshair).
 
 ### Using wine
 
-Wine is what gives the page life, and it works because it is rare. Use it for:
-- the primary action;
+Wine is what gives the page life, and it works because it is rare. On black, text and strokes use `wine-bright`; `wine` is for fills. Use it for:
+- the primary button's hover (the button itself is white on the stage);
 - what is selected or saved: the chosen garment, a saved bookmark, the active nav underline;
 - the garment hotspots on pins;
 - one accent word in a display heading: "*Encontralo.*", "se puede *buscar*";
@@ -60,7 +64,15 @@ Wine is what gives the page life, and it works because it is rare. Use it for:
 
 Never use it for body text or decoration, and never for two competing things in one view. On a wine section, text is cream (secondary at `cream/70-80`) and the button is `creamButton`.
 
-Light theme only, on purpose: fashion imagery is judged on white, and a second theme doubles the QA for little gain at this stage. Wine sections are the exception that proves it: colour as a beat, not as a theme.
+### The HUD voice
+
+What makes Vibear cool is the scanner personality, applied with restraint:
+- monospace micro labels everywhere (`VIBEAR/SCAN v1.0`, `● EN VIVO`, `01 / INPUT`);
+- real readouts only: the live clock, pin and garment counts, YOLO confidences, FashionCLIP similarities. Never fake stats;
+- one terminal joke per page where it makes the point (`¿dónde_comprarlo? ... ERROR 404`, then "Vibear arregla ese *404*.");
+- the measuring grid and corner brackets around areas that get scanned.
+
+One theme, dark, on purpose: the scanner is the personality, and photos glow on black. A second theme would double the QA for little gain. Lines drawn over photos are white with a dark halo (or white with `mix-blend-difference`), so they read on any picture. The wine closing section is the one colour beat.
 
 ## Typography
 
@@ -99,7 +111,8 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 - **FadeImage**: every image goes through it. It fades in on load, degrades to a "Sin imagen" placeholder and sets `loading="lazy"` and `referrerPolicy="no-referrer"`. It is plain `<img>` on purpose: thumbnails come from hundreds of shop domains, which `next/image` remote patterns can't list.
 - **Notice** (in ui.tsx): one line between hairlines, for the demo banner and recoverable errors. Pass `urgent` for `role="alert"`.
 - **NearbyPanel**: "Buscar en mi zona" on the look page. Location comes from the device, typed text or a Google Maps link; it shows OpenStreetMap shops with the brands of the results first (`blush` badge), each linking to Google Maps directions. It credits OpenStreetMap and says the location stays in the browser.
-- **Pins** (`components/landing/Pin.tsx`): landing photos with wine hotspot dots on each detected garment and a one-word caption (`shortLabelFor`). The landing, `/scan` and the empty `/saved` reuse them as representative images of what happens on each screen.
+- **Pins** (`components/landing/Pin.tsx`): landing photos with wine hotspot dots on each detected garment and a one-word caption (`shortLabelFor`). Hover chips show label and confidence; pass `labels={false}` inside a ScanField. The landing, `/scan` and the empty `/saved` reuse pins as representative images; pages read them with `getLanding()` (`lib/landing-data.ts`) and pass them down as props.
+- **Photos you don't own** (Pinterest, Instagram): never copy them into the site or the repo. Show them with Pinterest's official embed (`PinterestEmbeds`, configured by `NEXT_PUBLIC_PINTEREST_BOARD` or `NEXT_PUBLIC_PINTEREST_PINS`), or keep them in `apps/web/local-photos/` (gitignored), built by `npm run photos` and shown by `npm run dev` only.
 - **Skeletons**: `ResultsSkeleton` and `LookSkeleton` are `bg-surface` shapes of the real layout with a slow shimmer.
 - **RecentLooks** / **SavedBoard**: the masonry reused for the user's history and board.
 

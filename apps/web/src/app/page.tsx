@@ -1,15 +1,27 @@
-import { Benefits, Carousels, FinalCta, Hero, HowItWorks, Problem } from "@/components/landing/Sections";
+import {
+  Benefits,
+  Carousels,
+  FinalCta,
+  FromPinterest,
+  Hero,
+  HowItWorks,
+  Problem,
+} from "@/components/landing/Sections";
+import { getLanding } from "@/lib/landing-data";
 
-// The story, top to bottom: the promise, the problem, the feed, how it works, why it helps, your turn.
+// The story, top to bottom: the promise, the problem, the feed, straight from Pinterest,
+// how it works, why it helps, your turn.
 export default function Landing() {
+  const { pins, explainer } = getLanding();
   return (
     <>
-      <Hero />
+      <Hero pins={pins} />
       <Problem />
-      <Carousels />
-      <HowItWorks />
+      <Carousels pins={pins} />
+      <FromPinterest />
+      <HowItWorks explainer={explainer} />
       <Benefits />
-      <FinalCta />
+      <FinalCta pins={pins} />
     </>
   );
 }

@@ -28,6 +28,7 @@ Open http://localhost:3000: the landing tells the story, and **Empezá a escanea
 | `npm run dev` | API + web with reload |
 | `npm run check` | API tests, typecheck, lint (zero warnings), production build, Playwright end-to-end and layout tests |
 | `npm run test:api` | API tests only (offline, fakes instead of models) |
+| `npm run photos` | Build the landing from your own photos in `apps/web/local-photos/` (see below) |
 | `docker compose up --build` | The full stack in containers (web :3000, API :8000) |
 
 ## Architecture
@@ -97,11 +98,16 @@ Interactive docs at http://localhost:8000/docs.
 
 ## Design and motion
 
-Editorial fashion minimalism crossed with a Pinterest-style discovery grid: an oversized didone wordmark, monochrome sharp chrome, uppercase micro labels, and a ranked masonry of rounded image cards with save-to-board. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md).
+A fashion scanner: Bodoni display type and sharp editorial chrome on a black stage, a monospace HUD (live clock, real counters, measuring grid, a crosshair that reads the garment under the mouse), wine as the signal colour, and a Pinterest-style feed of pins with a hotspot on every detected garment. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md).
 
 The landing tells the story with motion graphics: a kinetic headline, Pinterest-style photo columns drifting in opposite directions, lines that light up as you scroll, marquee carousels, and a 10-second explainer of the scan built on real model output (YOLO boxes and FashionCLIP similarities on a real photo). It is all CSS (transform and opacity, scroll-driven timelines), pauses off-screen, has a visible "Pausar movimiento" control and turns static with reduced motion. Rules in [`.claude/skills/vibear-motion/SKILL.md`](.claude/skills/vibear-motion/SKILL.md). Claude Code loads both skills when you change the front end.
 
-The landing photos are freely licensed photos from Wikimedia Commons (mostly CC0 imports from Unsplash, plus CC BY / CC BY-SA), balanced between menswear and womenswear, with flat-lay boards composed from product cutouts. They are credited on `/creditos`. To change them, edit the lists in `apps/api/scripts/build_landing_assets.py` and run it with the API's venv: it also rebuilds the demo catalog and the explainer from real YOLO and FashionCLIP output.
+### Your own photos and Pinterest
+
+- **Your folder:** put outfits in `apps/web/local-photos/mujer/` and `hombre/` and garments in `productos/`, then run `npm run photos` and `npm run dev`. The landing uses them in development only, and both the folder and the generated files are gitignored. Photos you don't own (for example from Pinterest) never reach GitHub or a published build.
+- **Pinterest, the official way:** set `NEXT_PUBLIC_PINTEREST_BOARD` (or `NEXT_PUBLIC_PINTEREST_PINS`) in `apps/web/.env.local` (see `apps/web/.env.example`). The landing then shows a "Desde Pinterest" section with Pinterest's own embed, so the pins stay their authors' and link back.
+
+The published landing photos are freely licensed photos from Wikimedia Commons (mostly CC0 imports from Unsplash, plus CC BY / CC BY-SA), balanced between menswear and womenswear, with flat-lay boards composed from product cutouts. They are credited on `/creditos`. To change them, edit the lists in `apps/api/scripts/build_landing_assets.py` and run it with the API's venv: it also rebuilds the demo catalog and the explainer from real YOLO and FashionCLIP output.
 
 ## Costs and limits
 

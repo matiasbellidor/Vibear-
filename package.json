@@ -10,7 +10,8 @@
     "dev:api": "node scripts/api.mjs dev",
     "dev:web": "npm run dev -w apps/web",
     "test:api": "node scripts/api.mjs test",
-    "check": "npm run test:api && npm run check -w apps/web"
+    "check": "npm run test:api && npm run check -w apps/web",
+    "photos": "node scripts/api.mjs photos"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"

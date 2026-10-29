@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { PINS, type Credit } from "@/lib/landing";
+import type { Credit } from "@/lib/landing";
+import { creditsOf, getLanding } from "@/lib/landing-data";
 import { pad } from "@/lib/labels";
 
 export const metadata: Metadata = { title: "Créditos de fotos" };
 
-// Every photo once, even when it appears in a composed board and on its own.
-const credits = [...new Map(PINS.flatMap((pin) => pin.credits).map((credit) => [credit.url, credit])).values()];
-
 export default function CreditsPage() {
+  const credits = creditsOf(getLanding().pins);
   return (
     <div className="px-4 pb-10 pt-8 lg:px-8">
       <header className="flex items-end justify-between border-b border-line pb-4">
@@ -21,11 +20,15 @@ export default function CreditsPage() {
       </p>
       <ol className="mt-8 divide-y divide-line border-y border-line">
         {credits.map((credit: Credit, index) => (
-          <li key={credit.url} className="flex flex-wrap items-baseline gap-x-6 gap-y-1 py-3 text-small">
+          <li key={credit.url || credit.title} className="flex flex-wrap items-baseline gap-x-6 gap-y-1 py-3 text-small">
             <span className="w-8 shrink-0 text-micro tabular-nums text-muted">{pad(index + 1)}</span>
-            <a href={credit.url} className="min-w-0 flex-1 underline-offset-4 hover:underline">
-              {credit.title}
-            </a>
+            {credit.url ? (
+              <a href={credit.url} className="min-w-0 flex-1 underline-offset-4 hover:underline">
+                {credit.title}
+              </a>
+            ) : (
+              <span className="min-w-0 flex-1">{credit.title}</span>
+            )}
             <span className="text-muted">
               {credit.author} · {credit.license}
             </span>

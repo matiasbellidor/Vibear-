@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
-import { EXPLAINER } from "@/lib/landing";
-import { labelFor, pad } from "@/lib/labels";
+import type { Explainer } from "@/lib/landing";
+import { labelFor, pad, shortLabelFor } from "@/lib/labels";
 import { InView } from "../motion/InView";
 import { cx } from "../ui";
 
@@ -10,8 +10,8 @@ export const STEPS = [
   { title: "Encontrala", text: "Te mostramos dónde comprarla, de la más parecida a la menos, y qué locales hay cerca tuyo." },
 ];
 
-const BOX_LINE = "border border-paper shadow-[0_0_0_1px_rgb(10_10_10/0.45)]";
-const SELECTED = "border-2 border-paper shadow-[0_0_0_1px_var(--color-wine),inset_0_0_0_1px_var(--color-wine)]";
+const BOX_LINE = "border border-ink/90 shadow-[0_0_0_1px_rgb(10_10_11/0.5)]";
+const SELECTED = "border-2 border-wine-bright shadow-[0_0_0_1px_rgb(10_10_11/0.6),0_0_24px_rgb(232_84_108/0.45)]";
 
 const at = (i: number, extra: Record<string, string | number> = {}) => ({ "--i": i, ...extra }) as CSSProperties;
 
@@ -21,7 +21,7 @@ const at = (i: number, extra: Record<string, string | number> = {}) => ({ "--i":
  * 66-100% matches rise in, similarity counting up. Boxes and numbers are real model output.
  * The written steps carry the meaning; the stage is decorative.
  */
-export function ScanExplainer({ heading }: { heading: ReactNode }) {
+export function ScanExplainer({ heading, explainer }: { heading: ReactNode; explainer: Explainer }) {
   return (
     // Mobile reads heading → stage → steps; desktop puts heading + steps left and the stage right.
     <InView restart className="x-root grid gap-10 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-10">
@@ -38,28 +38,37 @@ export function ScanExplainer({ heading }: { heading: ReactNode }) {
             </div>
             <span
               aria-hidden="true"
-              className="x-anim x-step-bar motion-loop absolute inset-x-0 -bottom-px h-px bg-wine"
+              className="x-anim x-step-bar motion-loop absolute inset-x-0 -bottom-px h-px bg-wine-bright"
               style={at(i)}
             />
           </li>
         ))}
       </ol>
-      <ScanStage className="order-2 mx-auto w-full max-w-[36rem] lg:order-none lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:mr-0 lg:self-center" />
+      <ScanStage
+        explainer={explainer}
+        className="order-2 mx-auto w-full max-w-[36rem] lg:order-none lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1 lg:mr-0 lg:self-center"
+      />
     </InView>
   );
 }
 
 /** The stage alone, looping, for screens that only need the picture (the scanner page). */
-export function ScanDemo({ className }: { className?: string }) {
+export function ScanDemo({ explainer, className }: { explainer: Explainer; className?: string }) {
   return (
     <InView restart className={cx("x-root", className)}>
-      <ScanStage />
+      <ScanStage explainer={explainer} />
     </InView>
   );
 }
 
-function ScanStage({ className }: { className?: string }) {
-  const { src, width, height, boxes, matches, credit } = EXPLAINER;
+function ScanStage({ explainer, className }: { explainer: Explainer; className?: string }) {
+  const { src, width, height, boxes, matches, credit } = explainer;
+  // The scanner's log, one line per phase, highlighted in sync with the stage (real numbers).
+  const log = [
+    `upload · ${width}×${height} px`,
+    `yolo · ${boxes.map((b) => `${shortLabelFor(b.label).toLowerCase()} ${b.confidence.toFixed(2)}`).join(" · ")}`,
+    `fashionclip · ${matches.length} matches · top ${Math.round((matches[0]?.similarity ?? 0) * 100)}%`,
+  ];
 
   return (
     <figure className={className}>
@@ -81,7 +90,7 @@ function ScanStage({ className }: { className?: string }) {
             className="x-anim x-photo motion-loop absolute inset-0 h-full w-full object-cover"
           />
           <div className="x-anim x-scan motion-loop absolute inset-0">
-            <span className="block h-0.5 bg-paper mix-blend-difference" />
+            <span className="block h-0.5 bg-ink mix-blend-difference" />
           </div>
           {boxes.map((item, i) => {
             const [x1, y1, x2, y2] = item.box;
@@ -102,7 +111,7 @@ function ScanStage({ className }: { className?: string }) {
                 {i === 0 && (
                   <>
                     <span className={cx("x-anim x-select motion-loop absolute -inset-px", SELECTED)} />
-                    <span className="x-anim x-tap motion-loop absolute left-1/2 top-1/2 -ml-5 -mt-5 h-10 w-10 rounded-full border-2 border-paper bg-wine/40" />
+                    <span className="x-anim x-tap motion-loop absolute left-1/2 top-1/2 -ml-5 -mt-5 h-10 w-10 rounded-full border-2 border-ink bg-wine-bright/40" />
                   </>
                 )}
               </div>
@@ -125,7 +134,7 @@ function ScanStage({ className }: { className?: string }) {
               />
               <p className="mt-1.5 text-micro tabular-nums">
                 <span
-                  className="x-anim x-count motion-loop text-wine"
+                  className="x-anim x-count motion-loop text-wine-bright"
                   style={at(i, { "--target": Math.round(match.similarity * 100) })}
                 />
                 <span className="hidden text-muted sm:inline"> similitud</span>
@@ -134,7 +143,14 @@ function ScanStage({ className }: { className?: string }) {
           ))}
         </div>
       </div>
-      <figcaption className="mt-4 text-micro text-muted">
+      <ol aria-hidden="true" className="mt-4 space-y-1 border-l border-line pl-3 text-micro normal-case">
+        {log.map((line, i) => (
+          <li key={line} className="x-anim x-step motion-loop" style={at(i)}>
+            <span className="text-wine-bright">&gt;</span> {line}
+          </li>
+        ))}
+      </ol>
+      <figcaption className="mt-3 text-micro text-muted">
         Ejemplo real: cajas del detector YOLO y similitud de FashionCLIP. Foto:{" "}
         <a href={credit.url} className="underline underline-offset-4 hover:no-underline">
           {credit.author}

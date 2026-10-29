@@ -24,7 +24,7 @@ export function ProductCard({ match }: { match: Match }) {
           )}
           <span
             aria-hidden="true"
-            className="absolute inset-0 bg-ink/20 opacity-0 transition-opacity duration-200 ease-out-soft group-hover:opacity-100"
+            className="absolute inset-0 bg-paper/35 opacity-0 transition-opacity duration-200 ease-out-soft group-hover:opacity-100"
           />
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-paper px-2.5 py-2 text-micro opacity-0 transition-opacity duration-200 ease-out-soft group-hover:opacity-100 group-has-[a:focus-visible]:opacity-100">
             Ver en tienda <Icon path={icons.arrowUpRight} />
@@ -57,7 +57,7 @@ export function SaveButton({ match, className }: { match: Match; className?: str
       aria-label={saved ? `Quitar de guardados: ${match.title}` : `Guardar: ${match.title}`}
       className={cx(
         "grid h-10 w-10 place-items-center transition-[opacity,background-color] duration-200 ease-out-soft",
-        saved ? "bg-wine text-cream" : "bg-paper text-ink",
+        saved ? "bg-wine-bright text-paper" : "bg-paper text-ink",
         // Pinterest-style: hidden until hover on mouse devices, always there on touch and once saved.
         !saved && "pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100",
         className,

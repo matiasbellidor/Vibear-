@@ -10,8 +10,8 @@ import { join } from "node:path";
 import { apiDir, findPython } from "./python.mjs";
 
 const mode = process.argv[2];
-if (mode !== "dev" && mode !== "test") {
-  console.error("Usage: node scripts/api.mjs dev|test");
+if (!["dev", "test", "photos"].includes(mode)) {
+  console.error("Usage: node scripts/api.mjs dev|test|photos");
   process.exit(2);
 }
 
@@ -21,9 +21,14 @@ if (!python) {
   process.exit(1);
 }
 
-if (mode === "test") {
-  const tests = spawn(python, ["-m", "pytest", "-q"], { cwd: apiDir, stdio: "inherit" });
-  tests.on("exit", (code) => process.exit(code ?? 1));
+if (mode === "test" || mode === "photos") {
+  // photos: build the landing from apps/web/local-photos (shown by `npm run dev` only).
+  const args =
+    mode === "test"
+      ? ["-m", "pytest", "-q"]
+      : ["scripts/build_landing_assets.py", "--local", join(apiDir, "..", "web", "local-photos")];
+  const child = spawn(python, args, { cwd: apiDir, stdio: "inherit" });
+  child.on("exit", (code) => process.exit(code ?? 1));
 } else {
   const port = process.env.API_PORT || "8000";
   const args = ["-m", "uvicorn", "app.main:create_app", "--factory", "--port", port];
