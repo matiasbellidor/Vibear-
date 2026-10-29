@@ -10,6 +10,7 @@ import { forgetLook, rememberLook } from "@/lib/storage";
 import { GarmentRail } from "./GarmentRail";
 import { LookCanvas } from "./LookCanvas";
 import { MasonryGrid } from "./MasonryGrid";
+import { NearbyPanel, brandsFrom } from "./NearbyPanel";
 import { CARD_CAPTION, ProductCard } from "./ProductCard";
 import { LookSkeleton, ResultsSkeleton } from "./Skeletons";
 import { Icon, Notice, icons, primaryButton, textButton } from "./ui";
@@ -106,11 +107,19 @@ export function LookView({ id }: { id: string }) {
           </p>
         </header>
 
+        <div className="mt-4">
+          <NearbyPanel
+            brands={results?.status === "ready" ? brandsFrom(results.data.results.map((match) => match.source)) : []}
+          />
+        </div>
+
         {mode === "demo" && (
-          <Notice>
-            Modo demo: los resultados son tus propias fotos, no productos reales. Agregá tu key de SerpApi para ver
-            tiendas.
-          </Notice>
+          <div className="mt-4">
+            <Notice>
+              Modo demo: los resultados salen de un catálogo de ejemplo con fotos libres, no de tiendas. Agregá tu key
+              de SerpApi para ver productos reales.
+            </Notice>
+          </div>
         )}
 
         <div className="mt-6">
@@ -130,7 +139,7 @@ export function LookView({ id }: { id: string }) {
           {results?.status === "ready" && results.data.results.length === 0 && (
             <p className="py-16 text-center text-small text-muted">
               {mode === "demo"
-                ? "En modo demo los resultados salen de tus otras fotos. Subí un par más y volvé a probar."
+                ? "El catálogo de ejemplo no tiene nada parecido a esta prenda. Probá con otra."
                 : "Google Lens no encontró nada para esta prenda. Probá con otra."}
             </p>
           )}

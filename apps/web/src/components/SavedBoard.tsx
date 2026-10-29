@@ -5,8 +5,13 @@ import { pad } from "@/lib/labels";
 import { ratioOf } from "@/lib/masonry";
 import { useSaved } from "@/lib/storage";
 import { MasonryGrid } from "./MasonryGrid";
+import { PINS } from "@/lib/landing";
+import { Photo } from "./landing/Photo";
 import { CARD_CAPTION, ProductCard } from "./ProductCard";
-import { primaryButton } from "./ui";
+import { Icon, icons, primaryButton } from "./ui";
+
+// Mixed preview: menswear, womenswear and a composed board.
+const PREVIEW = [PINS[1], PINS[2], PINS[11], PINS[3], PINS[0], PINS[7]];
 
 /** The moodboard: everything the user bookmarked, newest first. Lives in this browser only. */
 export function SavedBoard() {
@@ -20,14 +25,33 @@ export function SavedBoard() {
       </header>
 
       {items.length === 0 ? (
-        <div className="mx-auto max-w-md py-24 text-center">
-          <p className="text-body">Todavía no guardaste nada.</p>
-          <p className="mt-2 text-small text-muted">
-            Tocá el marcador de cualquier resultado y armá tu moodboard acá.
-          </p>
-          <Link href="/scan" className={`${primaryButton} mt-8`}>
-            Escanear un look
-          </Link>
+        <div className="grid items-center gap-12 py-12 lg:grid-cols-12 lg:gap-10 lg:py-16">
+          <div className="lg:col-span-5">
+            <p className="font-display text-title tracking-tight">
+              Tu <span className="italic text-wine">moodboard</span>
+            </p>
+            <p className="mt-5 text-body">Todavía no guardaste nada.</p>
+            <p className="mt-2 max-w-[40ch] text-small text-muted">
+              Tocá el marcador de cualquier resultado y armá tu tablero acá: queda guardado en este navegador.
+            </p>
+            <Link href="/scan" className={`${primaryButton} mt-8`}>
+              Escanear un look
+            </Link>
+          </div>
+          <figure aria-hidden="true" className="lg:col-span-7">
+            {/* A preview of what a board looks like (decorative, so CSS columns are fine here). */}
+            <div className="columns-3 gap-3 opacity-90 sm:gap-4">
+              {PREVIEW.map((pin) => (
+                <div key={pin.src} className="relative mb-3 break-inside-avoid sm:mb-4">
+                  <Photo photo={pin} />
+                  <span className="absolute right-2 top-2 grid h-8 w-8 place-items-center bg-wine text-cream">
+                    <Icon path={icons.bookmark} filled />
+                  </span>
+                </div>
+              ))}
+            </div>
+            <figcaption className="mt-3 text-micro text-muted">Así se va a ver tu tablero</figcaption>
+          </figure>
         </div>
       ) : (
         <div className="mt-6">

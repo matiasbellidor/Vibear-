@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { LOOK, PNG, mockApi } from "./mock-api";
+import { LOOK, PNG, mockApi, nearbyCalls } from "./mock-api";
 
 test("upload, pick a garment, see ranked results and save one to the board", async ({ page }) => {
   const searched = await mockApi(page);
@@ -33,6 +33,42 @@ test("upload, pick a garment, see ranked results and save one to the board", asy
 
   await page.getByRole("button", { name: "Quitar de guardados: pantalon 1", exact: true }).click();
   await expect(page.getByText("Todavía no guardaste nada.")).toBeVisible();
+});
+
+test("search my area by typing a place: shops of result brands first, with directions", async ({ page }) => {
+  await mockApi(page);
+  await page.goto(`/look/${LOOK.image_id}`);
+  await page.getByRole("button", { name: "Buscar en mi zona" }).click();
+  await page.getByLabel("Barrio, dirección o link de Google Maps").fill("Palermo");
+  await page.getByRole("button", { name: "Buscar locales" }).click();
+
+  const shops = page.getByRole("list", { name: "Locales cercanos" });
+  await expect(shops.getByRole("listitem")).toHaveCount(2);
+  await expect(shops.getByRole("listitem").first()).toContainText("Marca de tus resultados");
+  await expect(page.getByRole("link", { name: "Cómo llegar a Shop Test Palermo" })).toHaveAttribute(
+    "href",
+    /google\.com\/maps\/dir\/\?api=1&destination=-34\.589,-58\.43/,
+  );
+  expect(nearbyCalls.at(-1)).toEqual({ lat: "-34.5888", lng: "-58.4302", radius: "2000" });
+
+  // Changing the radius searches the same place again.
+  await page.getByRole("button", { name: "5 km" }).click();
+  await expect.poll(() => nearbyCalls.at(-1)?.radius).toBe("5000");
+});
+
+test("search my area with the device location, and explain unknown places", async ({ page, context }) => {
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: -34.6037, longitude: -58.3816 });
+  await mockApi(page);
+  await page.goto(`/look/${LOOK.image_id}`);
+  await page.getByRole("button", { name: "Buscar en mi zona" }).click();
+  await page.getByRole("button", { name: "Usar mi ubicación" }).click();
+  await expect(page.getByRole("list", { name: "Locales cercanos" }).getByRole("listitem")).toHaveCount(2);
+  expect(nearbyCalls.at(-1)).toMatchObject({ lat: "-34.6037", lng: "-58.3816" });
+
+  await page.getByLabel("Barrio, dirección o link de Google Maps").fill("nowhere at all");
+  await page.getByRole("button", { name: "Buscar locales" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "No encontramos esa ubicación" })).toBeVisible();
 });
 
 test("a searched look shows up in the home page history", async ({ page }) => {

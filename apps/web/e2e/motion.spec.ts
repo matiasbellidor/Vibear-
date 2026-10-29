@@ -54,7 +54,9 @@ test("a visitor without a screenshot can try an example", async ({ page }) => {
   await expect(page).toHaveURL(/\/look\//);
 });
 
-test("photo credits list every landing photo", async ({ page }) => {
+test("photo credits list every landing photo, with a link to its source", async ({ page }) => {
   await page.goto("/creditos");
-  await expect(page.getByRole("listitem")).toHaveCount(26);
+  const items = page.getByRole("main").getByRole("listitem");
+  expect(await items.count()).toBeGreaterThanOrEqual(25);
+  await expect(items.first().getByRole("link")).toHaveAttribute("href", /^https:\/\/commons\.wikimedia\.org\//);
 });

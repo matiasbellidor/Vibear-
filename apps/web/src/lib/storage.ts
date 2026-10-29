@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import type { Look, Match } from "./api";
+import type { Look, Match, Place } from "./api";
 
 // Per-browser state (saved products, recent looks). localStorage can be missing or throw
 // (private windows, blocked storage), so every access is guarded and an in-memory copy backs it.
@@ -93,6 +93,15 @@ export function rememberLook(look: Look) {
   };
   const others = recentStore.read().filter((item) => item.image_id !== look.image_id);
   recentStore.write([entry, ...others].slice(0, MAX_RECENT));
+}
+
+const locationStore = createStore<Place | null>("vibear:location", null);
+
+/** The last place the visitor searched shops around. Stays in this browser only. */
+export function useSavedLocation() {
+  const value = useSyncExternalStore(locationStore.subscribe, locationStore.read, locationStore.serverSnapshot);
+  const set = useCallback((next: Place | null) => locationStore.write(next), []);
+  return [value, set] as const;
 }
 
 export type MotionPreference = "running" | "paused";

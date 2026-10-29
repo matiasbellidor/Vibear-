@@ -1,0 +1,443 @@
+[
+ {
+  "file": "item-01.webp",
+  "width": 320,
+  "height": 438,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 01",
+  "link": "https://commons.wikimedia.org/wiki/File:Yacht_Club_Chic_(Unsplash).jpg",
+  "credit": "Pete Bellis petebellis, CC0"
+ },
+ {
+  "file": "item-02.webp",
+  "width": 320,
+  "height": 430,
+  "label": "trousers",
+  "title": "Pantalón · foto 01",
+  "link": "https://commons.wikimedia.org/wiki/File:Yacht_Club_Chic_(Unsplash).jpg",
+  "credit": "Pete Bellis petebellis, CC0"
+ },
+ {
+  "file": "item-03.webp",
+  "width": 320,
+  "height": 307,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 02",
+  "link": "https://commons.wikimedia.org/wiki/File:Confidence_is_key_(Unsplash).jpg",
+  "credit": "Dami Adebayo dammypayne, CC0"
+ },
+ {
+  "file": "item-04.webp",
+  "width": 286,
+  "height": 325,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 03",
+  "link": "https://commons.wikimedia.org/wiki/File:Woman_in_ripped_jeans_(Unsplash).jpg",
+  "credit": "Elijah Henderson elijahhenderson, CC0"
+ },
+ {
+  "file": "item-05.webp",
+  "width": 155,
+  "height": 364,
+  "label": "trousers",
+  "title": "Pantalón · foto 03",
+  "link": "https://commons.wikimedia.org/wiki/File:Woman_in_ripped_jeans_(Unsplash).jpg",
+  "credit": "Elijah Henderson elijahhenderson, CC0"
+ },
+ {
+  "file": "item-06.webp",
+  "width": 320,
+  "height": 424,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 04",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_looking_at_ocean_(Unsplash).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-07.webp",
+  "width": 320,
+  "height": 197,
+  "label": "trousers",
+  "title": "Pantalón · foto 04",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_looking_at_ocean_(Unsplash).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-08.webp",
+  "width": 320,
+  "height": 508,
+  "label": "trousers",
+  "title": "Pantalón · foto 05",
+  "link": "https://commons.wikimedia.org/wiki/File:Puffa_Jeans_BW_(3213392471).jpg",
+  "credit": "THOR, CC BY 2.0"
+ },
+ {
+  "file": "item-09.webp",
+  "width": 320,
+  "height": 406,
+  "label": "vest",
+  "title": "Musculosa · foto 05",
+  "link": "https://commons.wikimedia.org/wiki/File:Puffa_Jeans_BW_(3213392471).jpg",
+  "credit": "THOR, CC BY 2.0"
+ },
+ {
+  "file": "item-10.webp",
+  "width": 320,
+  "height": 596,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 06",
+  "link": "https://commons.wikimedia.org/wiki/File:Brooke_Cagle_2017-01-30_(Unsplash_emlKHDEydhg).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-11.webp",
+  "width": 320,
+  "height": 134,
+  "label": "trousers",
+  "title": "Pantalón · foto 06",
+  "link": "https://commons.wikimedia.org/wiki/File:Brooke_Cagle_2017-01-30_(Unsplash_emlKHDEydhg).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-12.webp",
+  "width": 320,
+  "height": 455,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 07",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_with_palm_tree_(Unsplash).jpg",
+  "credit": "onur ozkardes onurozkardes, CC0"
+ },
+ {
+  "file": "item-13.webp",
+  "width": 320,
+  "height": 358,
+  "label": "trousers",
+  "title": "Pantalón · foto 07",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_with_palm_tree_(Unsplash).jpg",
+  "credit": "onur ozkardes onurozkardes, CC0"
+ },
+ {
+  "file": "item-14.webp",
+  "width": 320,
+  "height": 316,
+  "label": "trousers",
+  "title": "Pantalón · foto 08",
+  "link": "https://commons.wikimedia.org/wiki/File:Ocean_Blue_Outfit_(Unsplash).jpg",
+  "credit": "Levi Guzman homeschool, CC0"
+ },
+ {
+  "file": "item-15.webp",
+  "width": 320,
+  "height": 344,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 08",
+  "link": "https://commons.wikimedia.org/wiki/File:Ocean_Blue_Outfit_(Unsplash).jpg",
+  "credit": "Levi Guzman homeschool, CC0"
+ },
+ {
+  "file": "item-16.webp",
+  "width": 320,
+  "height": 145,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 09",
+  "link": "https://commons.wikimedia.org/wiki/File:Men%27s_Fall_Fashion_(Unsplash).jpg",
+  "credit": "Redd Angelo reddangelo16, CC0"
+ },
+ {
+  "file": "item-17.webp",
+  "width": 320,
+  "height": 578,
+  "label": "trousers",
+  "title": "Pantalón · foto 09",
+  "link": "https://commons.wikimedia.org/wiki/File:Men%27s_Fall_Fashion_(Unsplash).jpg",
+  "credit": "Redd Angelo reddangelo16, CC0"
+ },
+ {
+  "file": "item-18.webp",
+  "width": 320,
+  "height": 309,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 10",
+  "link": "https://commons.wikimedia.org/wiki/File:Woman_knitwear_car_(Unsplash).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-19.webp",
+  "width": 320,
+  "height": 455,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 11",
+  "link": "https://commons.wikimedia.org/wiki/File:Street_portrait_(Unsplash).jpg",
+  "credit": "Clem Onojeghuo clemono2, CC0"
+ },
+ {
+  "file": "item-20.webp",
+  "width": 320,
+  "height": 384,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 12",
+  "link": "https://commons.wikimedia.org/wiki/File:Coat,_evening,_man%27s_(AM_1996.220.1-1).jpg",
+  "credit": "J H Dalton, CC BY 4.0"
+ },
+ {
+  "file": "item-21.webp",
+  "width": 320,
+  "height": 479,
+  "label": "trousers",
+  "title": "Pantalón · foto 12",
+  "link": "https://commons.wikimedia.org/wiki/File:Stretch_Jeans_from_AKINGS.jpg",
+  "credit": "CMFong2, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-22.webp",
+  "width": 320,
+  "height": 320,
+  "label": "shoes",
+  "title": "Zapatos · foto 12",
+  "link": "https://commons.wikimedia.org/wiki/File:Loafer_shoes_for_men.jpg",
+  "credit": "Arun114, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-23.webp",
+  "width": 320,
+  "height": 364,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 13",
+  "link": "https://commons.wikimedia.org/wiki/File:Rita_(37).jpg",
+  "credit": "Carla Laranjeira, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-24.webp",
+  "width": 320,
+  "height": 209,
+  "label": "trousers",
+  "title": "Pantalón · foto 13",
+  "link": "https://commons.wikimedia.org/wiki/File:Rita_(37).jpg",
+  "credit": "Carla Laranjeira, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-25.webp",
+  "width": 320,
+  "height": 381,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 14",
+  "link": "https://commons.wikimedia.org/wiki/File:Fashion_Time,_Modeling_Photography_in_Tbilisi_-_Iranian_Model_-_Jorj_Barber_26.jpg",
+  "credit": "Mostafameraji, CC0"
+ },
+ {
+  "file": "item-26.webp",
+  "width": 320,
+  "height": 320,
+  "label": "shoes",
+  "title": "Zapatos · foto 15",
+  "link": "https://commons.wikimedia.org/wiki/File:Loafer_shoes_for_men.jpg",
+  "credit": "Arun114, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-27.webp",
+  "width": 320,
+  "height": 444,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 16",
+  "link": "https://commons.wikimedia.org/wiki/File:Young_woman_in_a_cardigan_at_Art_Fair_on_the_Square.jpg",
+  "credit": "John Benson, CC BY 2.0"
+ },
+ {
+  "file": "item-28.webp",
+  "width": 320,
+  "height": 128,
+  "label": "skirt",
+  "title": "Pollera · foto 16",
+  "link": "https://commons.wikimedia.org/wiki/File:Young_woman_in_a_cardigan_at_Art_Fair_on_the_Square.jpg",
+  "credit": "John Benson, CC BY 2.0"
+ },
+ {
+  "file": "item-29.webp",
+  "width": 320,
+  "height": 344,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 17",
+  "link": "https://commons.wikimedia.org/wiki/File:Yellow_hoodie_in_streetwear_outfit_(52774092506).jpg",
+  "credit": "Hoodype, CC BY-SA 2.0"
+ },
+ {
+  "file": "item-30.webp",
+  "width": 320,
+  "height": 119,
+  "label": "trousers",
+  "title": "Pantalón · foto 17",
+  "link": "https://commons.wikimedia.org/wiki/File:Yellow_hoodie_in_streetwear_outfit_(52774092506).jpg",
+  "credit": "Hoodype, CC BY-SA 2.0"
+ },
+ {
+  "file": "item-31.webp",
+  "width": 320,
+  "height": 299,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 18",
+  "link": "https://commons.wikimedia.org/wiki/File:Jokul_(Unsplash).jpg",
+  "credit": "Ren QingTao cloudyuny, CC0"
+ },
+ {
+  "file": "item-32.webp",
+  "width": 320,
+  "height": 203,
+  "label": "trousers",
+  "title": "Pantalón · foto 19",
+  "link": "https://commons.wikimedia.org/wiki/File:02.17.Independence.WDC.4jul05_(24120370).jpg",
+  "credit": "Elvert Barnes, CC BY 2.0"
+ },
+ {
+  "file": "item-33.webp",
+  "width": 320,
+  "height": 205,
+  "label": "short_sleeved_shirt",
+  "title": "Top manga corta · foto 19",
+  "link": "https://commons.wikimedia.org/wiki/File:02.17.Independence.WDC.4jul05_(24120370).jpg",
+  "credit": "Elvert Barnes, CC BY 2.0"
+ },
+ {
+  "file": "item-34.webp",
+  "width": 320,
+  "height": 223,
+  "label": "skirt",
+  "title": "Pollera · foto 20",
+  "link": "https://commons.wikimedia.org/wiki/File:Magdalena_4_(Unsplash).jpg",
+  "credit": "Valerie Elash elashv, CC0"
+ },
+ {
+  "file": "item-35.webp",
+  "width": 320,
+  "height": 462,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 20",
+  "link": "https://commons.wikimedia.org/wiki/File:Magdalena_4_(Unsplash).jpg",
+  "credit": "Valerie Elash elashv, CC0"
+ },
+ {
+  "file": "item-36.webp",
+  "width": 194,
+  "height": 395,
+  "label": "trousers",
+  "title": "Pantalón · foto 21",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_carrying_skateboard_(Unsplash).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-37.webp",
+  "width": 204,
+  "height": 352,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 21",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_carrying_skateboard_(Unsplash).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-38.webp",
+  "width": 320,
+  "height": 390,
+  "label": "trousers",
+  "title": "Pantalón · foto 22",
+  "link": "https://commons.wikimedia.org/wiki/File:Brooke_Cagle_2017-01-30_(Unsplash_HIEAVcz3CzU).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-39.webp",
+  "width": 320,
+  "height": 303,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 22",
+  "link": "https://commons.wikimedia.org/wiki/File:Brooke_Cagle_2017-01-30_(Unsplash_HIEAVcz3CzU).jpg",
+  "credit": "Brooke Cagle brookecagle, CC0"
+ },
+ {
+  "file": "item-40.webp",
+  "width": 320,
+  "height": 280,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 23",
+  "link": "https://commons.wikimedia.org/wiki/File:Faceless_(Unsplash).jpg",
+  "credit": "Isaac Castillejos chack622, CC0"
+ },
+ {
+  "file": "item-41.webp",
+  "width": 320,
+  "height": 502,
+  "label": "trousers",
+  "title": "Pantalón · foto 24",
+  "link": "https://commons.wikimedia.org/wiki/File:Jeans_Gul%26Bl%C3%A5_i_modellen_Dallas.jpg",
+  "credit": "Eriksson Elisabeth, CC BY-SA 4.0"
+ },
+ {
+  "file": "item-42.webp",
+  "width": 320,
+  "height": 375,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 25",
+  "link": "https://commons.wikimedia.org/wiki/File:Coat,_evening,_man%27s_(AM_1996.220.1-5).jpg",
+  "credit": "J H Dalton, CC BY 4.0"
+ },
+ {
+  "file": "item-43.webp",
+  "width": 320,
+  "height": 453,
+  "label": "trousers",
+  "title": "Pantalón · foto 25",
+  "link": "https://commons.wikimedia.org/wiki/File:Jeans_BW_2_(3213391837).jpg",
+  "credit": "THOR, CC BY 2.0"
+ },
+ {
+  "file": "item-44.webp",
+  "width": 320,
+  "height": 361,
+  "label": "long_sleeved_outwear",
+  "title": "Abrigo manga larga · foto 26",
+  "link": "https://commons.wikimedia.org/wiki/File:Serge_2017_(Unsplash).jpg",
+  "credit": "serge sergevorobets, CC0"
+ },
+ {
+  "file": "item-45.webp",
+  "width": 320,
+  "height": 486,
+  "label": "trousers",
+  "title": "Pantalón · foto 27",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_and_cellphone_(Unsplash).jpg",
+  "credit": "Derick Anies dcanies, CC0"
+ },
+ {
+  "file": "item-46.webp",
+  "width": 320,
+  "height": 446,
+  "label": "short_sleeved_shirt",
+  "title": "Top manga corta · foto 27",
+  "link": "https://commons.wikimedia.org/wiki/File:Man_and_cellphone_(Unsplash).jpg",
+  "credit": "Derick Anies dcanies, CC0"
+ },
+ {
+  "file": "item-47.webp",
+  "width": 320,
+  "height": 465,
+  "label": "trousers",
+  "title": "Pantalón · foto 28",
+  "link": "https://commons.wikimedia.org/wiki/File:Skinny_Jeans_(Unsplash).jpg",
+  "credit": "Pete Bellis petebellis, CC0"
+ },
+ {
+  "file": "item-48.webp",
+  "width": 320,
+  "height": 127,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 28",
+  "link": "https://commons.wikimedia.org/wiki/File:Skinny_Jeans_(Unsplash).jpg",
+  "credit": "Pete Bellis petebellis, CC0"
+ },
+ {
+  "file": "item-49.webp",
+  "width": 320,
+  "height": 273,
+  "label": "long_sleeved_shirt",
+  "title": "Top manga larga · foto 29",
+  "link": "https://commons.wikimedia.org/wiki/File:Zelfgebreide_trui_met_v-hals_-_Home_knitted_V-necked_sweater_(4106588198).jpg",
+  "credit": "Nationaal Archief, No restrictions"
+ }
+]

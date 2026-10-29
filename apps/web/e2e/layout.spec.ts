@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { LOOK, matches, mockApi } from "./mock-api";
 
-const WIDTHS = [360, 768, 1024, 1440];
+const WIDTHS = [360, 768, 1024, 1440, 1920];
 
 const ROUTES: { name: string; path: string; ready: (page: Page) => Promise<void> }[] = [
   {
@@ -53,6 +53,14 @@ for (const route of ROUTES) {
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, "page is wider than the viewport").toBeLessThanOrEqual(0);
+
+      // The scan explainer photo must have a real size at every width (it once collapsed to 0×0).
+      const stage = page.locator(".x-photo").first();
+      if (await stage.count()) {
+        const box = await stage.evaluate((img) => img.parentElement!.getBoundingClientRect().toJSON());
+        expect(box.width, "explainer photo width").toBeGreaterThan(120);
+        expect(box.height, "explainer photo height").toBeGreaterThan(180);
+      }
 
       await page.screenshot({ path: testInfo.outputPath(`${route.name}-${width}.png`), fullPage: true });
     });

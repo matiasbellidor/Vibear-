@@ -1,3 +1,5 @@
+import json
+
 from conftest import BLUE, GRAY, LENS_MATCHES, RED, FakeLens, png_bytes
 
 from app.ml.detector import Detection
@@ -87,20 +89,36 @@ def test_search_ranks_by_similarity_and_caches(make_client):
         assert lens.calls == 1  # the cache saved a SerpApi search
 
 
-def test_demo_search_uses_local_images_and_never_caches(make_client):
-    with make_client(detections=[], demo_search=True) as client:
-        red = upload(client, png_bytes(RED)).json()["items"][0]["crop_id"]
-        upload(client, png_bytes(BLUE))
-        upload(client, png_bytes((190, 40, 35)))  # another red photo: should rank first
+def test_demo_search_ranks_the_catalog_and_never_caches(make_client, tmp_path):
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    items = []
+    for name, color in [("blue", BLUE), ("red", (190, 40, 35)), ("gray", GRAY)]:
+        (catalog / f"{name}.png").write_bytes(png_bytes(color))
+        items.append({"file": f"{name}.png", "label": "trousers", "title": f"{name} item", "link": f"https://src.test/{name}"})
+    (catalog / "catalog.json").write_text(json.dumps(items), encoding="utf-8")
 
+    with make_client(detections=[], demo_search=True, demo_catalog_dir=catalog) as client:
+        red = upload(client, png_bytes(RED)).json()["items"][0]["crop_id"]
+
+        # The very first search already has products: no other uploads needed.
         results = client.post("/v1/search", json={"crop_id": red}).json()
         assert results["cached"] is False
-        assert len(results["results"]) == 2  # the query image itself is excluded
-        assert all(r["source"] == "Vibear demo" for r in results["results"])
-        assert results["results"][0]["similarity"] > results["results"][1]["similarity"]
+        assert [r["title"] for r in results["results"]] == ["red item", "gray item", "blue item"]
+        assert all(r["source"] == "Catálogo demo" for r in results["results"])
+        assert results["results"][0]["link"] == "https://src.test/red"
         assert client.get(results["results"][0]["thumbnail"]).status_code == 200
 
         assert client.post("/v1/search", json={"crop_id": red}).json()["cached"] is False
+
+
+def test_bundled_demo_catalog_is_valid():
+    from app.config import Settings
+
+    catalog_dir = Settings(_env_file=None).demo_catalog_dir
+    items = json.loads((catalog_dir / "catalog.json").read_text(encoding="utf-8"))
+    assert len(items) >= 20
+    assert all((catalog_dir / item["file"]).is_file() and item["link"].startswith("https://") for item in items)
 
 
 def test_search_errors(make_client):

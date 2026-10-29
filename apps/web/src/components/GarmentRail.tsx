@@ -37,7 +37,7 @@ export function GarmentRail({
                 <span
                   className={cx(
                     "block aspect-[3/4] overflow-hidden rounded-media bg-surface outline-offset-2 transition-[outline-color] duration-200",
-                    active ? "outline-2 outline-ink" : "outline-1 outline-transparent group-hover:outline-line",
+                    active ? "outline-2 outline-wine" : "outline-1 outline-transparent group-hover:outline-line",
                   )}
                 >
                   <FadeImage src={mediaUrl(item.crop_url)} alt={labelFor(item.label)} className="h-full w-full object-cover" />

@@ -48,9 +48,17 @@ const PREFIX: Record<string, string> = { "1111111111111111": "abrigo", "22222222
 
 type Options = { mode?: SearchMode; search?: "ok" | "empty" | 503; detect?: "ok" | 422 };
 
+export const SHOPS = [
+  { name: "Shop Test Palermo", lat: -34.589, lng: -58.43, distance_m: 120, address: "Honduras 4800", kind: "clothes", brand_match: true },
+  { name: "Tienda Cerca", lat: -34.588, lng: -58.431, distance_m: 340, address: null, kind: "clothes", brand_match: false },
+];
+
+export const nearbyCalls: { lat: string | null; lng: string | null; radius: string | null }[] = [];
+
 /** Mock every /api call the browser makes. Returns the crop ids that were searched, in order. */
 export async function mockApi(page: Page, { mode = "serpapi", search = "ok", detect = "ok" }: Options = {}) {
   const searched: string[] = [];
+  nearbyCalls.length = 0;
   const image = { body: PNG, contentType: "image/png" };
 
   await page.route("**/api/health", (route) => route.fulfill({ json: { status: "ok", search: mode } }));
@@ -66,6 +74,17 @@ export async function mockApi(page: Page, { mode = "serpapi", search = "ok", det
       ? route.fulfill({ json: LOOK })
       : route.fulfill({ status: 404, json: { detail: "Unknown look" } }),
   );
+  await page.route("**/api/v1/places/geocode**", (route) => {
+    const q = new URL(route.request().url()).searchParams.get("q") ?? "";
+    return q.toLowerCase().includes("nowhere")
+      ? route.fulfill({ status: 404, json: { detail: "Location not found" } })
+      : route.fulfill({ json: { lat: -34.5888, lng: -58.4302, label: "Palermo" } });
+  });
+  await page.route("**/api/v1/places/nearby**", (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    nearbyCalls.push({ lat: params.get("lat"), lng: params.get("lng"), radius: params.get("radius") });
+    return route.fulfill({ json: { radius: Number(params.get("radius")), shops: SHOPS } });
+  });
   await page.route("**/api/v1/search", (route) => {
     const { crop_id: cropId } = route.request().postDataJSON() as { crop_id: string };
     searched.push(cropId);

@@ -1,8 +1,9 @@
-import type { Photo as PhotoData } from "@/lib/landing";
 import { cx } from "../ui";
 
+type Sized = { src: string; width: number; height: number };
+
 /** A pre-sized WebP from /public/landing. Decorative (the meaning is in the text next to it). */
-export function Photo({ photo, eager = false, className }: { photo: PhotoData; eager?: boolean; className?: string }) {
+export function Photo({ photo, eager = false, className }: { photo: Sized; eager?: boolean; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- already resized WebP, no optimizer needed
     <img

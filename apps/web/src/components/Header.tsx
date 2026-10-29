@@ -36,7 +36,7 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
       aria-current={active ? "page" : undefined}
       className={cx(
         "py-3 text-micro decoration-1 underline-offset-[6px] hover:underline",
-        active && "underline",
+        active && "underline decoration-wine",
       )}
     >
       {children}

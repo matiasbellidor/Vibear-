@@ -8,6 +8,11 @@
   --color-surface-strong: #e9e7e2;
   --color-line: #e6e5e1;
   --color-muted: #6b6b6b;
+  /* The signal colour: primary actions, selection, saved state, garment hotspots, story beats. */
+  --color-wine: #6b1523;
+  --color-wine-deep: #4e0e19;
+  --color-blush: #f4e7e5;
+  --color-cream: #f7f0e8;
 
   --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bodoni), "Bodoni 72", Didot, serif;
@@ -55,9 +60,12 @@
   }
 }
 
-/* Soft top/bottom edges for drifting photo columns. */
+/* Soft edges for moving photo walls. */
 @utility mask-fade-y {
   mask-image: linear-gradient(transparent, #000 9%, #000 91%, transparent);
+}
+@utility mask-fade-b {
+  mask-image: linear-gradient(#000 78%, transparent);
 }
 
 /* Editorial micro label: nav, buttons, metadata. */
@@ -137,6 +145,25 @@
   animation-direction: reverse;
 }
 
+/* Garment hotspots: a wine dot whose ring breathes out. */
+.hotspot-ring {
+  animation: hotspot 2.6s var(--ease-out-soft) infinite;
+}
+@keyframes hotspot {
+  0% { transform: scale(1); opacity: 0.55; }
+  70%, 100% { transform: scale(2.8); opacity: 0; }
+}
+
+/* Pins that float gently in place (keeps their --tilt). */
+.float-pin {
+  transform: rotate(var(--tilt, 0deg));
+  animation: float-pin var(--float, 7s) var(--ease-in-out-soft) infinite alternate;
+}
+@keyframes float-pin {
+  from { transform: translateY(-7px) rotate(var(--tilt, 0deg)); }
+  to { transform: translateY(9px) rotate(var(--tilt, 0deg)); }
+}
+
 @keyframes marquee {
   to { transform: translateX(-50%); }
 }
@@ -144,10 +171,10 @@
   to { transform: translateY(-50%); }
 }
 
-/* Scan explainer: one 10 s timeline shared by every part.
+/* Scan explainer: one 6 s timeline shared by every part.
    0-33% upload + scan line · 33-66% boxes + tap + selection · 66-100% results. */
 .x-root {
-  --loop: 10s;
+  --loop: 6s;
 }
 .x-anim {
   animation-duration: var(--loop);
@@ -157,10 +184,10 @@
 }
 .x-photo { animation-name: x-photo; }
 .x-scan { animation-name: x-scan; animation-timing-function: linear; }
-.x-box { animation-name: x-box; animation-delay: calc(var(--i, 0) * 0.4s); }
+.x-box { animation-name: x-box; animation-delay: calc(var(--i, 0) * var(--loop) * 0.04); }
 .x-tap { animation-name: x-tap; }
 .x-select { animation-name: x-select; }
-.x-card { animation-name: x-card; animation-delay: calc(var(--i, 0) * 0.25s); }
+.x-card { animation-name: x-card; animation-delay: calc(var(--i, 0) * var(--loop) * 0.025); }
 /* Step n is active during its third of the loop: a negative delay shifts the same keyframes. */
 .x-step { animation-name: x-step; animation-delay: calc((var(--i, 0) * var(--loop) / 3) - var(--loop)); }
 .x-step-bar {
@@ -181,7 +208,7 @@
   --pct: var(--target);
   counter-reset: pct var(--pct);
   animation-name: x-count;
-  animation-delay: calc(var(--i, 0) * 0.25s);
+  animation-delay: calc(var(--i, 0) * var(--loop) * 0.025);
   animation-timing-function: var(--ease-expo);
 }
 .x-count::after {

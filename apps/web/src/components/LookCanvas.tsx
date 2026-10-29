@@ -5,8 +5,8 @@ import { pad } from "@/lib/labels";
 import { FadeImage } from "./FadeImage";
 import { cx } from "./ui";
 
-// Double line (paper + ink) so a box reads on both dark and light photos.
-const ACTIVE = "border-2 border-paper shadow-[0_0_0_1px_var(--color-ink),inset_0_0_0_1px_var(--color-ink)]";
+// Double line (paper + wine / paper + ink) so a box reads on both dark and light photos.
+const ACTIVE = "border-2 border-paper shadow-[0_0_0_1px_var(--color-wine),inset_0_0_0_1px_var(--color-wine)]";
 const IDLE = "border border-paper/80 shadow-[0_0_0_1px_rgb(10_10_10/0.35)] opacity-80 hover:opacity-100";
 
 /** The uploaded photo with one numbered box per garment. The GarmentRail is the accessible control. */
@@ -51,7 +51,7 @@ export function LookCanvas({
               <span
                 className={cx(
                   "absolute left-0 top-0 px-1.5 py-0.5 text-micro tabular-nums",
-                  active ? "bg-ink text-paper" : "bg-paper text-ink",
+                  active ? "bg-wine text-cream" : "bg-paper text-ink",
                 )}
               >
                 {pad(index + 1)}

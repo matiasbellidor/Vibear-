@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # SerpApi Google Lens. Without a key, /v1/search answers 503 (or fake results if demo_search is on).
     serpapi_api_key: str = ""
     demo_search: bool = False
+    demo_catalog_dir: Path = Path(__file__).parent / "demo_catalog"
     serpapi_country: str = "ar"
     serpapi_hl: str = "es-419"
     search_cache_hours: int = 72

@@ -3,14 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
 import { ApiError, api, type Look } from "@/lib/api";
-import { PHOTOS } from "@/lib/landing";
+import { PINS } from "@/lib/landing";
 import { downscale } from "@/lib/resize";
 import { rememberLook } from "@/lib/storage";
 import { FadeImage } from "./FadeImage";
 import { Icon, cx, icons, primaryButton } from "./ui";
 
-// Sample looks for visitors without a screenshot at hand (landing photos, freely licensed).
-const EXAMPLES = [PHOTOS[0], PHOTOS[1], PHOTOS[2], PHOTOS[8]];
+// Sample looks for visitors without a screenshot at hand: two womenswear, two menswear outfits
+// with at least two detected garments (landing photos, freely licensed).
+const outfits = PINS.filter((pin) => pin.hotspots.length >= 2);
+const EXAMPLES = [
+  ...outfits.filter((pin) => pin.kind === "woman").slice(0, 2),
+  ...outfits.filter((pin) => pin.kind === "man").slice(0, 2),
+];
 
 type Phase = { kind: "idle" } | { kind: "detecting"; preview: string } | { kind: "error"; message: string };
 

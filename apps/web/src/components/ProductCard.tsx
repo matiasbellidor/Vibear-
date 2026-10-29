@@ -56,7 +56,8 @@ export function SaveButton({ match, className }: { match: Match; className?: str
       aria-pressed={saved}
       aria-label={saved ? `Quitar de guardados: ${match.title}` : `Guardar: ${match.title}`}
       className={cx(
-        "grid h-10 w-10 place-items-center bg-paper text-ink transition-opacity duration-200 ease-out-soft",
+        "grid h-10 w-10 place-items-center transition-[opacity,background-color] duration-200 ease-out-soft",
+        saved ? "bg-wine text-cream" : "bg-paper text-ink",
         // Pinterest-style: hidden until hover on mouse devices, always there on touch and once saved.
         !saved && "pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100",
         className,

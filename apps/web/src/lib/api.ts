@@ -32,6 +32,18 @@ export type SearchResult = { crop_id: string; cached: boolean; results: Match[] 
 
 export type SearchMode = "serpapi" | "demo" | "off";
 
+export type Place = { lat: number; lng: number; label: string };
+
+export type Shop = {
+  name: string;
+  lat: number;
+  lng: number;
+  distance_m: number;
+  address: string | null;
+  kind: string;
+  brand_match: boolean;
+};
+
 const BASE = "/api";
 const SEARCH_LIMIT = 48;
 
@@ -54,7 +66,13 @@ const MESSAGES: Record<number, string> = {
   503: "La búsqueda está apagada. Agregá tu key de SerpApi en apps/api/.env o activá DEMO_SEARCH=true.",
 };
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const PLACE_MESSAGES: Record<number, string> = {
+  404: "No encontramos esa ubicación. Probá con barrio y ciudad, o pegá un link de Google Maps.",
+  422: "Ese link no tiene una ubicación. Abrí el lugar en Google Maps, tocá Compartir y pegá ese link.",
+  502: "El mapa de locales no respondió. Probá de nuevo en un rato.",
+};
+
+async function request<T>(path: string, init?: RequestInit, messages: Record<number, string> = {}): Promise<T> {
   let response: Response;
   try {
     response = await fetch(BASE + path, init);
@@ -63,7 +81,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(MESSAGES[0], 0);
   }
   if (!response.ok) {
-    throw new ApiError(MESSAGES[response.status] ?? MESSAGES[500], response.status);
+    const status = response.status;
+    throw new ApiError(messages[status] ?? MESSAGES[status] ?? MESSAGES[500], status);
   }
   return (await response.json()) as T;
 }
@@ -87,11 +106,18 @@ export const api = {
       body: JSON.stringify({ crop_id: cropId, limit: SEARCH_LIMIT }),
       signal,
     }),
+  geocode: (query: string) =>
+    request<Place>(`/v1/places/geocode?q=${encodeURIComponent(query)}`, undefined, PLACE_MESSAGES),
+  nearby: (place: Pick<Place, "lat" | "lng">, radius: number, brands: string[]) => {
+    const params = new URLSearchParams({ lat: String(place.lat), lng: String(place.lng), radius: String(radius) });
+    for (const brand of brands) params.append("brands", brand);
+    return request<{ radius: number; shops: Shop[] }>(`/v1/places/nearby?${params}`, undefined, PLACE_MESSAGES);
+  },
 };
 
-/** API media paths (/media/x.jpg) go through the proxy; external URLs stay as they are. */
+/** API paths (/media/..., /demo/...) go through the proxy; external URLs stay as they are. */
 export function mediaUrl(path: string): string {
-  return path.startsWith("/media/") ? BASE + path : path;
+  return path.startsWith("/media/") || path.startsWith("/demo/") ? BASE + path : path;
 }
 
 export function imageUrl(imageId: string): string {

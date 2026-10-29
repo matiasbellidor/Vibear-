@@ -4,9 +4,17 @@ export function cx(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
-/** Filled, sharp, uppercase: the only primary action style in Vibear. */
+/** Filled, sharp, uppercase, wine: the only primary action style in Vibear. */
 export const primaryButton =
-  "inline-flex h-12 items-center justify-center gap-3 bg-ink px-7 text-micro text-paper transition-colors duration-200 ease-out-soft hover:bg-ink/85 disabled:bg-muted";
+  "inline-flex h-12 items-center justify-center gap-3 bg-wine px-7 text-micro text-cream transition-colors duration-200 ease-out-soft hover:bg-wine-deep disabled:bg-muted";
+
+/** The primary action on a wine section: cream with wine text. */
+export const creamButton =
+  "inline-flex h-12 items-center justify-center gap-3 bg-cream px-7 text-micro text-wine transition-colors duration-200 ease-out-soft hover:bg-paper";
+
+/** Secondary action: a sharp 1px ink frame. */
+export const outlineButton =
+  "inline-flex h-11 items-center justify-center gap-2 border border-ink px-5 text-micro transition-colors duration-200 ease-out-soft hover:bg-ink hover:text-paper disabled:border-line disabled:text-muted disabled:hover:bg-transparent";
 
 export const textButton = "text-micro underline decoration-1 underline-offset-[6px] hover:no-underline";
 
@@ -55,4 +63,7 @@ export const icons = {
   arrowRight: "M3 12h17M14 6l6 6-6 6",
   arrowLeft: "M21 12H4M10 6l-6 6 6 6",
   arrowUpRight: "M7 17 17 7M8 7h9v9",
+  pin: "M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21zM12 12.3a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
+  target: "M12 3v3M12 18v3M3 12h3M18 12h3M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z",
+  close: "M6 6l12 12M18 6 6 18",
 };

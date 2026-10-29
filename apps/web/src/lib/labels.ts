@@ -13,8 +13,31 @@ const LABELS: Record<string, string> = {
   long_sleeved_dress: "Vestido manga larga",
   vest_dress: "Vestido sin mangas",
   sling_dress: "Vestido de breteles",
+  shoes: "Zapatos",
   full_image: "Foto completa",
 };
+
+// One word per garment, for tight places (pin captions).
+const SHORT: Record<string, string> = {
+  short_sleeved_shirt: "Top",
+  long_sleeved_shirt: "Top",
+  short_sleeved_outwear: "Abrigo",
+  long_sleeved_outwear: "Abrigo",
+  vest: "Musculosa",
+  sling: "Top",
+  shorts: "Short",
+  trousers: "Pantalón",
+  skirt: "Pollera",
+  short_sleeved_dress: "Vestido",
+  long_sleeved_dress: "Vestido",
+  vest_dress: "Vestido",
+  sling_dress: "Vestido",
+  shoes: "Zapatos",
+};
+
+export function shortLabelFor(label: string): string {
+  return SHORT[label] ?? labelFor(label);
+}
 
 export function labelFor(label: string): string {
   if (LABELS[label]) return LABELS[label];

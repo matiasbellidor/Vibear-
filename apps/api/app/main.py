@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 
 import httpx
-from fastapi import FastAPI, File, Form, HTTPException, Path, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Path, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
@@ -16,6 +16,7 @@ from app.images import ImageError, decode_image, encode_jpeg, fetch_image
 from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError
 from app.ml.detector import YoloGarmentDetector, crop_detections
 from app.ml.embedder import ClipEmbedder
+from app.places import PlaceError, geocode, nearby
 from app.rerank import http_loader, rank_by_similarity
 from app.schemas import DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
 from app.storage import ID_PATTERN, MediaStore
@@ -55,7 +56,7 @@ def create_app(
                 settings.serpapi_api_key, settings.serpapi_country, settings.serpapi_hl, state.http
             )
         elif lens is None and settings.demo_search:
-            state.lens = DemoLens(store)
+            state.lens = DemoLens(settings.demo_catalog_dir)
         if state.lens is None:
             state.search_mode = "off"
         else:
@@ -69,6 +70,8 @@ def create_app(
         CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"]
     )
     app.mount("/media", StaticFiles(directory=store.images_dir), name="media")
+    if settings.demo_catalog_dir.is_dir():
+        app.mount("/demo", StaticFiles(directory=settings.demo_catalog_dir), name="demo")
 
     @app.get("/health")
     async def health(request: Request):
@@ -163,5 +166,29 @@ def create_app(
                 store.write_cache(cache_key, {"results": results})
 
         return SearchResponse(crop_id=body.crop_id, cached=cached is not None, results=results[: body.limit])
+
+    @app.get("/v1/places/geocode")
+    async def places_geocode(request: Request, q: str = Query(min_length=2, max_length=500)):
+        """Coordinates for an address, neighbourhood, "lat, lng" or a Google Maps link."""
+        try:
+            location = await geocode(q, request.app.state.http)
+        except PlaceError as exc:
+            raise HTTPException(exc.status, str(exc)) from exc
+        return asdict(location)
+
+    @app.get("/v1/places/nearby")
+    async def places_nearby(
+        request: Request,
+        lat: float = Query(ge=-90, le=90),
+        lng: float = Query(ge=-180, le=180),
+        radius: int = Query(default=1500, ge=300, le=5000),
+        brands: list[str] = Query(default=[]),
+    ):
+        """Clothing shops nearby (OpenStreetMap); shops of brands seen in the results come first."""
+        try:
+            shops = await nearby(lat, lng, radius, brands[:30], request.app.state.http)
+        except PlaceError as exc:
+            raise HTTPException(exc.status, str(exc)) from exc
+        return {"radius": radius, "shops": [asdict(shop) for shop in shops]}
 
     return app

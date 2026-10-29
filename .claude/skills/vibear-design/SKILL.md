@@ -13,7 +13,7 @@ Two strands of DNA, and one rule that decides which applies where:
 |---|---|---|
 | Applies to | header, type, buttons, inputs, labels, page structure | photos, crops, product cards, grids |
 | Shape | sharp corners, 1px hairlines | `rounded-media` (12px) |
-| Colour | ink on paper, nothing else | the photos bring all the colour |
+| Colour | ink on paper, with wine as the one signal colour | the photos bring the colour |
 | Rhythm | generous white space, few elements | dense masonry, many items |
 | Motion | almost none | soft fade-in, hover overlays |
 
@@ -33,6 +33,9 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 | `surface-strong` | `#e9e7e2` | the bright band of the skeleton shimmer |
 | `border-line` | `#e6e5e1` | hairline dividers |
 | `text-muted` | `#6b6b6b` | secondary text (5.3:1 on white, passes AA) |
+| `wine` / `wine-deep` | `#6b1523` / `#4e0e19` | the signal: primary buttons (hover deep), selection, saved state, garment hotspots, one accent word in display type, full-bleed story sections |
+| `blush` | `#f4e7e5` | quiet wine tint: badges like "Marca de tus resultados" |
+| `cream` | `#f7f0e8` | text and buttons on wine sections (14:1 on wine) |
 | `font-display` | Bodoni Moda | wordmark, page titles, big numbers. Nothing else |
 | `font-sans` | Inter Tight | everything else (the default) |
 | `text-micro` | 11px, uppercase, 0.14em tracking, 500 | nav, buttons, labels, metadata (an `@utility`) |
@@ -44,9 +47,20 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 | `ease-out-soft` | `cubic-bezier(.2,.8,.2,1)` | all transitions |
 | `animate-scan` / `animate-shimmer` | | detecting line / skeletons |
 
-Shared class strings live in `components/ui.tsx`: `primaryButton` (the only filled action style), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`.
+Shared class strings live in `components/ui.tsx`: `primaryButton` (wine, the only filled action style), `creamButton` (the primary action on a wine section), `outlineButton` (secondary: 1px ink frame), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`.
 
-Light theme only, on purpose: fashion imagery is judged on white, and a second theme doubles the QA for little gain at this stage.
+### Using wine
+
+Wine is what gives the page life, and it works because it is rare. Use it for:
+- the primary action;
+- what is selected or saved: the chosen garment, a saved bookmark, the active nav underline;
+- the garment hotspots on pins;
+- one accent word in a display heading: "*Encontralo.*", "se puede *buscar*";
+- at most two full-bleed wine sections per page, as story beats (on the landing: the problem and the closing CTA).
+
+Never use it for body text or decoration, and never for two competing things in one view. On a wine section, text is cream (secondary at `cream/70-80`) and the button is `creamButton`.
+
+Light theme only, on purpose: fashion imagery is judged on white, and a second theme doubles the QA for little gain at this stage. Wine sections are the exception that proves it: colour as a beat, not as a theme.
 
 ## Typography
 
@@ -84,6 +98,8 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 - **SaveButton** (in ProductCard): a 40px white square with an ink bookmark, filled when saved. Hidden until hover only on `pointer-fine` devices, so it is always visible on touch and once saved. Saved items live in localStorage (`lib/storage.ts`) and feed `/saved`, the moodboard.
 - **FadeImage**: every image goes through it. It fades in on load, degrades to a "Sin imagen" placeholder and sets `loading="lazy"` and `referrerPolicy="no-referrer"`. It is plain `<img>` on purpose: thumbnails come from hundreds of shop domains, which `next/image` remote patterns can't list.
 - **Notice** (in ui.tsx): one line between hairlines, for the demo banner and recoverable errors. Pass `urgent` for `role="alert"`.
+- **NearbyPanel**: "Buscar en mi zona" on the look page. Location comes from the device, typed text or a Google Maps link; it shows OpenStreetMap shops with the brands of the results first (`blush` badge), each linking to Google Maps directions. It credits OpenStreetMap and says the location stays in the browser.
+- **Pins** (`components/landing/Pin.tsx`): landing photos with wine hotspot dots on each detected garment and a one-word caption (`shortLabelFor`). The landing, `/scan` and the empty `/saved` reuse them as representative images of what happens on each screen.
 - **Skeletons**: `ResultsSkeleton` and `LookSkeleton` are `bg-surface` shapes of the real layout with a slow shimmer.
 - **RecentLooks** / **SavedBoard**: the masonry reused for the user's history and board.
 
