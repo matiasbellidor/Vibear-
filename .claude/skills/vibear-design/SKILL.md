@@ -95,9 +95,10 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 
 ## Motion
 
-- 150-250ms (500ms for image fade-in), `ease-out-soft`, opacity and transform only.
-- No bounce, no parallax, no hover lift on cards: the restraint is the luxury.
-- Tailwind's `hover:` already applies only on devices that can hover. Put loops (`animate-*`) behind `motion-safe:`.
+Motion has its own skill, **vibear-motion**: read it before touching any animation. The split it defines:
+- The landing (`/`) tells the story with expressive motion: kinetic type, drifting photo columns, marquees and the scan explainer.
+- The tool screens (`/scan`, `/look`, `/saved`) stay restrained: 150-250ms (500ms for image fade-in), `ease-out-soft`, opacity and transform only, no bounce, no parallax, no hover lift on cards. The restraint is the luxury.
+- Tailwind's `hover:` already applies only on devices that can hover. Put loops behind `motion-safe:` or the `.motion-loop` class.
 
 ## Voice and copy
 

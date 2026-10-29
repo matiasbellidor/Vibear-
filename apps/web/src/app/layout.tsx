@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Inter_Tight } from "next/font/google";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import "./globals.css";
 
-const display = Bodoni_Moda({ subsets: ["latin"], variable: "--font-bodoni", display: "swap" });
+const display = Bodoni_Moda({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-bodoni",
+  display: "swap",
+});
 const sans = Inter_Tight({ subsets: ["latin"], variable: "--font-inter-tight", display: "swap" });
 
 export const metadata: Metadata = {
@@ -25,9 +31,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <footer className="mt-24 border-t border-line px-4 py-6 lg:px-8">
-          <div className="flex flex-wrap justify-between gap-2 text-micro text-muted">
+          <div className="flex flex-wrap justify-between gap-x-6 gap-y-2 text-micro text-muted">
             <span>Vibear · MVP</span>
-            <span>Resultados visuales vía Google Lens</span>
+            <span className="flex flex-wrap gap-x-6 gap-y-2">
+              <Link href="/creditos" className="hover:underline">
+                Créditos de fotos
+              </Link>
+              <span>Resultados visuales vía Google Lens</span>
+            </span>
           </div>
         </footer>
       </body>

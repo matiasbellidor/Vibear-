@@ -17,8 +17,8 @@ export function Header() {
           VIBEAR
         </Link>
         <nav aria-label="Principal" className="flex items-center gap-6">
-          <NavLink href="/" active={pathname === "/" || pathname.startsWith("/look")}>
-            Buscar
+          <NavLink href="/scan" active={pathname === "/scan" || pathname.startsWith("/look")}>
+            Escanear
           </NavLink>
           <NavLink href="/saved" active={pathname === "/saved"}>
             Guardados{items.length > 0 && <span className="tabular-nums"> ({items.length})</span>}

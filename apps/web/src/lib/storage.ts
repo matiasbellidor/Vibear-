@@ -95,6 +95,16 @@ export function rememberLook(look: Look) {
   recentStore.write([entry, ...others].slice(0, MAX_RECENT));
 }
 
+export type MotionPreference = "running" | "paused";
+const motionStore = createStore<MotionPreference>("vibear:motion", "running");
+
+/** The visitor's "Pausar movimiento" choice (WCAG 2.2.2), remembered in this browser. */
+export function useMotionPreference() {
+  const value = useSyncExternalStore(motionStore.subscribe, motionStore.read, motionStore.serverSnapshot);
+  const set = useCallback((next: MotionPreference) => motionStore.write(next), []);
+  return [value, set] as const;
+}
+
 export function forgetLook(imageId: string) {
   recentStore.write(recentStore.read().filter((item) => item.image_id !== imageId));
 }

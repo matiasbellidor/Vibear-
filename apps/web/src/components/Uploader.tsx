@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
 import { ApiError, api, type Look } from "@/lib/api";
+import { PHOTOS } from "@/lib/landing";
 import { downscale } from "@/lib/resize";
 import { rememberLook } from "@/lib/storage";
 import { FadeImage } from "./FadeImage";
 import { Icon, cx, icons, primaryButton } from "./ui";
+
+// Sample looks for visitors without a screenshot at hand (landing photos, freely licensed).
+const EXAMPLES = [PHOTOS[0], PHOTOS[1], PHOTOS[2], PHOTOS[8]];
 
 type Phase = { kind: "idle" } | { kind: "detecting"; preview: string } | { kind: "error"; message: string };
 
@@ -46,6 +50,15 @@ export function Uploader() {
     },
     [open],
   );
+
+  const tryExample = async (src: string) => {
+    try {
+      const blob = await (await fetch(src)).blob();
+      await detectFile(new File([blob], "ejemplo.webp", { type: blob.type || "image/webp" }));
+    } catch {
+      setPhase({ kind: "error", message: "No pudimos cargar el ejemplo. Probá con una foto tuya." });
+    }
+  };
 
   // Paste a screenshot anywhere on the page.
   useEffect(() => {
@@ -116,6 +129,23 @@ export function Uploader() {
             <button type="button" onClick={() => inputRef.current?.click()} className={cx(primaryButton, "mt-8")}>
               Elegir foto
             </button>
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <p className="text-micro text-muted">¿No tenés una a mano? Probá con un ejemplo</p>
+              <div className="flex gap-2">
+                {EXAMPLES.map((photo, index) => (
+                  <button
+                    key={photo.src}
+                    type="button"
+                    onClick={() => void tryExample(photo.src)}
+                    aria-label={`Probar con el ejemplo ${index + 1}`}
+                    className="h-16 w-12 overflow-hidden rounded-media bg-surface outline-offset-2 transition-opacity duration-200 ease-out-soft hover:opacity-80"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized local WebP */}
+                    <img src={photo.src} alt="" width={photo.width} height={photo.height} className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
         <input

@@ -5,9 +5,19 @@ const WIDTHS = [360, 768, 1024, 1440];
 
 const ROUTES: { name: string; path: string; ready: (page: Page) => Promise<void> }[] = [
   {
-    name: "home",
+    name: "landing",
     path: "/",
+    ready: (page) => expect(page.getByRole("heading", { level: 1, name: "Lo viste. Encontralo." })).toBeVisible(),
+  },
+  {
+    name: "scan",
+    path: "/scan",
     ready: (page) => expect(page.getByRole("list", { name: "Tus looks recientes" })).toBeVisible(),
+  },
+  {
+    name: "credits",
+    path: "/creditos",
+    ready: (page) => expect(page.getByRole("heading", { level: 1, name: "Créditos" })).toBeVisible(),
   },
   {
     name: "look",

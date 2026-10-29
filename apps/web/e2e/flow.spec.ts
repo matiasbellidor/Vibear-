@@ -3,7 +3,7 @@ import { LOOK, PNG, mockApi } from "./mock-api";
 
 test("upload, pick a garment, see ranked results and save one to the board", async ({ page }) => {
   const searched = await mockApi(page);
-  await page.goto("/");
+  await page.goto("/scan");
   await expect(page.getByRole("heading", { name: "Mostranos el look" })).toBeVisible();
 
   await page.locator('input[type="file"]').setInputFiles({ name: "look.png", mimeType: "image/png", buffer: PNG });
@@ -65,7 +65,7 @@ test("no results gets an empty state, not a blank page", async ({ page }) => {
 
 test("an unreadable image explains what to do", async ({ page }) => {
   await mockApi(page, { detect: 422 });
-  await page.goto("/");
+  await page.goto("/scan");
   await page.locator('input[type="file"]').setInputFiles({ name: "look.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByRole("alert").filter({ hasText: "No pudimos leer esa imagen" })).toBeVisible();
 });

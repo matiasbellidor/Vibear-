@@ -87,7 +87,7 @@ export function LookView({ id }: { id: string }) {
       {/* Sticky like a product page; scrolls on its own if photo + rail are taller than the window. */}
       <aside className="lg:sticky lg:top-20 lg:col-span-5 lg:-ml-1 lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto lg:pb-2 lg:pl-1 lg:pr-2">
 
-        <Link href="/" className="inline-flex items-center gap-2 py-2 text-micro hover:underline">
+        <Link href="/scan" className="inline-flex items-center gap-2 py-2 text-micro hover:underline">
           <Icon path={icons.arrowLeft} /> Nueva búsqueda
         </Link>
         <div className="mt-3">
@@ -157,7 +157,7 @@ function LookMissing({ message }: { message: string }) {
     <div className="mx-auto max-w-md px-4 py-28 text-center">
       <p className="font-display text-title tracking-tight">Ups</p>
       <p className="mt-4 text-small text-muted">{message}</p>
-      <Link href="/" className={`${primaryButton} mt-8`}>
+      <Link href="/scan" className={`${primaryButton} mt-8`}>
         Nueva búsqueda
       </Link>
     </div>

@@ -25,8 +25,8 @@ export function SavedBoard() {
           <p className="mt-2 text-small text-muted">
             Tocá el marcador de cualquier resultado y armá tu moodboard acá.
           </p>
-          <Link href="/" className={`${primaryButton} mt-8`}>
-            Buscar un look
+          <Link href="/scan" className={`${primaryButton} mt-8`}>
+            Escanear un look
           </Link>
         </div>
       ) : (

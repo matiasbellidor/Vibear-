@@ -13,7 +13,7 @@ npm run setup   # npm packages, the API's Python venv, apps/api/.env, the test b
 npm run dev     # API on :8000 + web on :3000, both reload on save
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000: the landing tells the story, and **Empezá a escanear** takes you to the scanner (`/scan`).
 
 - **No SerpApi key yet?** The default `.env` turns on demo search: your own uploaded photos play the role of products, so the whole UI works offline. A banner says so.
 - **Real products:** get a free key at [serpapi.com](https://serpapi.com), set `SERPAPI_API_KEY` in `apps/api/.env` and restart `npm run dev`.
@@ -70,12 +70,14 @@ apps/
     app/rerank.py       thumbnails + CLIP ranking
     tests/              pytest, offline
   web/                  Next.js 16 + Tailwind 4 (TypeScript)
-    src/app/            routes: /, /look/[id], /saved
-    src/components/     UI (see the design skill)
-    src/lib/            API client, masonry layout, storage, labels
-    e2e/                Playwright: flows + layout at 4 widths
+    src/app/            routes: / (landing), /scan, /look/[id], /saved, /creditos
+    src/components/     UI · landing/ (the story) · motion/ (kinetic type, loops, pause)
+    src/lib/            API client, masonry layout, storage, labels, landing data (generated)
+    public/landing/     landing photos (WebP, freely licensed, credited on /creditos)
+    e2e/                Playwright: flows, motion (pause, reduced motion), layout at 4 widths
+  api/scripts/build_landing_assets.py   rebuilds the landing photos and explainer data
 scripts/                setup, API runner (cross-platform Node)
-.claude/skills/vibear-design/   the design system, as a Claude Code skill
+.claude/skills/         vibear-design (design system) and vibear-motion (motion graphics)
 ```
 
 ## API
@@ -90,9 +92,13 @@ scripts/                setup, API runner (cross-platform Node)
 
 Interactive docs at http://localhost:8000/docs.
 
-## Design
+## Design and motion
 
-Editorial fashion minimalism crossed with a Pinterest-style discovery grid: an oversized didone wordmark, monochrome sharp chrome, uppercase micro labels, and a ranked masonry of rounded image cards with save-to-board. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md). Claude Code loads it automatically when you change the front end; the tokens themselves are in `apps/web/src/app/globals.css`.
+Editorial fashion minimalism crossed with a Pinterest-style discovery grid: an oversized didone wordmark, monochrome sharp chrome, uppercase micro labels, and a ranked masonry of rounded image cards with save-to-board. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md).
+
+The landing tells the story with motion graphics: a kinetic headline, Pinterest-style photo columns drifting in opposite directions, lines that light up as you scroll, marquee carousels, and a 10-second explainer of the scan built on real model output (YOLO boxes and FashionCLIP similarities on a real photo). It is all CSS (transform and opacity, scroll-driven timelines), pauses off-screen, has a visible "Pausar movimiento" control and turns static with reduced motion. Rules in [`.claude/skills/vibear-motion/SKILL.md`](.claude/skills/vibear-motion/SKILL.md). Claude Code loads both skills when you change the front end.
+
+The landing photos are freely licensed street-style photos from Wikimedia Commons (CC BY / CC BY-SA), credited on `/creditos`. To change them, edit the list in `apps/api/scripts/build_landing_assets.py` and run it with the API's venv.
 
 ## Costs and limits
 
@@ -102,6 +108,6 @@ Editorial fashion minimalism crossed with a Pinterest-style discovery grid: an o
 
 ## Roadmap
 
-1. **MVP (done):** detect → pick → search → ranked list → moodboard, demo mode, Docker.
+1. **MVP (done):** landing with motion storytelling, detect → pick → search → ranked list → moodboard, demo mode, Docker.
 2. **Own catalog:** ingest product feeds, embed with the same CLIP model, store in Postgres + pgvector, blend with Lens results.
 3. **Personalisation:** accounts and synced boards, a style profile, text refinement ("same but in black") with CLIP text embeddings, then an LLM layer once there is budget.
