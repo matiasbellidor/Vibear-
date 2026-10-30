@@ -11,7 +11,7 @@ declare global {
 const SCRIPT_SRC = "https://assets.pinterest.com/js/pinit.js";
 const BOARD_WIDTH = "300";
 
-/** "fits" from https://www.pinterest.com/anitaragoness/fits/: the link's text until the embed loads. */
+/** "tablero de usuario" from https://www.pinterest.com/usuario/tablero/: the link's text until the embed loads. */
 function boardName(url: string): string {
   const [, user, board] = new URL(url).pathname.split("/");
   return board ? `${decodeURIComponent(board)} de ${user}` : url;
