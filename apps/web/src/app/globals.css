@@ -503,6 +503,7 @@
     .story-visual {
       position: absolute;
       inset: 0;
+      pointer-events: none; /* decorative, and on 720px-tall screens it lies over the pause button */
     }
     .story-card {
       animation: story-card linear both;

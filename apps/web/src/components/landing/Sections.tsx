@@ -85,10 +85,11 @@ export function FromPinterest() {
         <span className="text-micro text-muted">Embed oficial · los pins son de sus autores</span>
       </div>
       <p className="reveal mt-10 max-w-[16ch] font-display text-title tracking-tight">
-        Tu tablero, <span className="italic text-wine-bright">escaneable</span>.
+        Inspo de <span className="italic text-wine-bright">tableros</span>.
       </p>
       <p className="mt-4 max-w-[46ch] text-small text-muted">
-        Guardás en Pinterest, encontrás con Vibear: sacale una captura a cualquier pin y escaneala.
+        Tableros reales para sacar ideas. Guardás en Pinterest, encontrás con Vibear: sacale una captura a cualquier pin y
+        escaneala.
       </p>
       <div className="mt-10">
         {configured ? (
