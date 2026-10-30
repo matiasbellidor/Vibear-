@@ -55,6 +55,17 @@ export const SHOPS = [
 
 export const nearbyCalls: { lat: string | null; lng: string | null; radius: string | null }[] = [];
 
+export const FRAGRANCE_BOARD = {
+  fragrance: { id: "erba-pura", name: "Erba Pura", house: "Xerjoff", notes: "Frutas cítricas, ámbar, vainilla y almizcle" },
+  offers: [
+    { shop: "Perfumería A", url: "https://a.test/erba-pura", price: 480000, currency: "ARS", title: "Xerjoff Erba Pura 100 ml", source: "shopping" },
+    { shop: "Perfumería B", url: "https://b.test/erba-pura", price: 520000, currency: "ARS", title: "Erba Pura EDP", source: "shopping" },
+    { shop: "Heinemann", url: "https://c.test/erba-pura", price: 259.99, currency: "EUR", title: "Erba Pura 100 ml", source: "page" },
+  ],
+  checked: 4,
+  updated_at: Math.floor(Date.now() / 1000),
+};
+
 /** The API's anonymous closet backup, as this test left it (newest copy wins, like the real one). */
 export const closetBackup: { items: Match[]; updated_at: number } = { items: [], updated_at: 0 };
 
@@ -90,6 +101,7 @@ export async function mockApi(page: Page, { mode = "serpapi", search = "ok", det
     nearbyCalls.push({ lat: params.get("lat"), lng: params.get("lng"), radius: params.get("radius") });
     return route.fulfill({ json: { radius: Number(params.get("radius")), shops: SHOPS } });
   });
+  await page.route("**/api/v1/fragrances/*/prices", (route) => route.fulfill({ json: FRAGRANCE_BOARD }));
   await page.route("**/api/v1/closet", (route) => {
     if (route.request().method() === "PUT") {
       const body = route.request().postDataJSON() as typeof closetBackup;

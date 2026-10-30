@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Pin } from "@/lib/landing";
-import { shortLabelFor } from "@/lib/labels";
+import { garmentKind } from "@/lib/labels";
 import { Icon, cx, icons } from "./ui";
 
 // What each tab does, shown the moment it opens. The animations are one-shot CSS (.tab-* in
@@ -34,7 +34,7 @@ export function ScanBanner({ pins }: { pins: Pin[] }) {
                   className="tab-chip absolute inset-x-1.5 bottom-1.5 truncate bg-paper/90 px-1.5 py-0.5 text-micro tabular-nums"
                   style={{ "--i": i } as CSSProperties}
                 >
-                  {shortLabelFor(spot.label)}
+                  {garmentKind(spot)}
                   <span className="hidden sm:inline">{pct(spot.confidence)}</span>
                 </span>
               </div>

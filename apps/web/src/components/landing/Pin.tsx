@@ -1,15 +1,16 @@
 import type { Pin } from "@/lib/landing";
-import { labelFor, shortLabelFor } from "@/lib/labels";
+import type { Hotspot } from "@/lib/landing";
+import { garmentKind, garmentName } from "@/lib/labels";
 import { Icon, cx, icons } from "../ui";
 import { Photo } from "./Photo";
 
 export function captionFor(pin: Pin): string {
   if (pin.kind === "board") return "Look armado";
-  return [...new Set(pin.hotspots.map((spot) => shortLabelFor(spot.label)))].join(" + ") || "Outfit";
+  return [...new Set(pin.hotspots.map((spot) => garmentKind(spot)))].join(" + ") || "Outfit";
 }
 
-function readout(label: string, confidence: number | null): string {
-  return confidence === null ? labelFor(label) : `${shortLabelFor(label)} · ${Math.round(confidence * 100)}%`;
+function readout(spot: Hotspot): string {
+  return spot.confidence === null ? garmentName(spot) : `${garmentKind(spot)} · ${Math.round(spot.confidence * 100)}%`;
 }
 
 /**
@@ -33,7 +34,7 @@ export function PinCard({
 }) {
   const top = pin.hotspots[0];
   return (
-    <figure className={cx("group/pin", className)} data-garment={top ? readout(top.label, top.confidence) : undefined}>
+    <figure className={cx("group/pin", className)} data-garment={top ? readout(top) : undefined}>
       <div className="relative">
         <Photo photo={pin} eager={eager} />
         {pin.hotspots.map((spot, i) => (
@@ -49,7 +50,7 @@ export function PinCard({
             </span>
             {labels && (
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 whitespace-nowrap bg-paper/90 px-2 py-1 text-micro tabular-nums text-ink opacity-0 transition-opacity duration-200 ease-out-soft group-hover/pin:opacity-100">
-                {readout(spot.label, spot.confidence)}
+                {readout(spot)}
               </span>
             )}
           </span>

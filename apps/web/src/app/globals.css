@@ -279,6 +279,29 @@
     animation-delay: calc(var(--i, 0) * -2.3s);
   }
 
+  /* A look arriving after a choice (the 404's moods): quick, so it never feels like waiting. */
+  .swap-in {
+    animation: reveal 0.5s var(--ease-expo) both;
+  }
+
+  /* Fragrance welcome (PerfumeBottles.tsx): the bottles float and the glow breathes, both loops. */
+  .fragrance-float {
+    animation: app-float 6s var(--ease-in-out-soft) infinite alternate;
+    animation-delay: calc(var(--i, 0) * -2s);
+  }
+  .fragrance-glow {
+    animation: fragrance-glow 4.5s var(--ease-in-out-soft) infinite alternate;
+  }
+  /* ...and as the part scrolls in, the bottles rise into it from below and the sides (like the
+     brand marks in the hero), the centre one first. */
+  @supports (animation-timeline: view()) {
+    .fragrance-bottle {
+      animation: fragrance-rise linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 8%) cover 42%;
+    }
+  }
+
   /* Tab banners (TabBanners.tsx): one-shot, replayed each time the tab opens. The beam crosses the
      strip in 1.6 s and each chip appears as it reaches its tile; cards drop like pins, 90 ms apart. */
   .tab-beam {
@@ -337,6 +360,13 @@
 }
 @keyframes tab-drop {
   from { opacity: 0; transform: translateY(-4rem) rotate(calc(var(--r, 0deg) - 20deg)); }
+}
+@keyframes fragrance-rise {
+  from { opacity: 0; transform: translateX(var(--from-x, 0%)) translateY(45%) scale(0.7); }
+}
+@keyframes fragrance-glow {
+  from { opacity: 0.65; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1.06); }
 }
 @keyframes app-float {
   from { transform: translateY(-3%); }

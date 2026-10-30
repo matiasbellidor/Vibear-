@@ -49,3 +49,13 @@ def test_the_cache_keeps_the_most_recently_used():
     cache.get("a")
     cache.put("c", (None, (1, 1)))
     assert cache.get("b") is None and cache.get("a") is not None and cache.get("c") is not None
+
+
+def test_results_of_another_kind_or_too_far_are_dropped():
+    query = Image.new("RGB", (64, 64), RED)
+    is_not_blue = lambda vector: vector[2] < 0.9  # stands in for "a pair of shoes" when scanning a top
+    ranked = asyncio.run(
+        rank_by_similarity(query, LENS_MATCHES, FakeEmbedder(), counting_loader([]), keep=is_not_blue, floor=0.5)
+    )
+    # blue: another kind (and far); gray: kept; red: kept; broken: no picture, so it can't be judged and stays last.
+    assert [r.match.title for r in ranked] == ["red", "gray", "broken"]

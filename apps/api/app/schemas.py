@@ -9,6 +9,10 @@ class DetectedItem(BaseModel):
     confidence: float | None
     box: tuple[int, int, int, int]
     crop_url: str
+    # What it really is, in Spanish (app/ml/describe.py): "Buzo polo de corderito negro" / "Buzo polo".
+    name: str | None = None
+    kind: str | None = None
+    brand: str | None = None  # a hint from the image alone, only when the model is very sure
 
 
 class DetectResponse(BaseModel):
@@ -21,6 +25,7 @@ class DetectResponse(BaseModel):
 class SearchRequest(BaseModel):
     crop_id: str = Field(pattern=ID_PATTERN)
     limit: int = Field(default=24, ge=1, le=60)
+    label: str | None = Field(default=None, max_length=40, pattern=r"^[a-z_]+$")  # the garment's YOLO class
 
 
 class Match(BaseModel):
@@ -34,10 +39,17 @@ class Match(BaseModel):
     similarity: float | None
 
 
+class BrandGuess(BaseModel):
+    name: str
+    count: int  # results that mention it
+    total: int  # results read
+
+
 class SearchResponse(BaseModel):
     crop_id: str
     cached: bool
     results: list[Match]
+    brand: BrandGuess | None = None  # the brand most results agree on (real search only)
 
 
 class SavedProduct(Match):

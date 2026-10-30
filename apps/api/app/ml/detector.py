@@ -10,6 +10,8 @@ class Detection:
     label: str
     confidence: float
     box: tuple[int, int, int, int]  # x1, y1, x2, y2 in pixels
+    # The garment's outline from the segmentation head, in image pixels (colour is read inside it).
+    polygon: tuple[tuple[float, float], ...] | None = None
 
 
 class YoloGarmentDetector:
@@ -27,9 +29,15 @@ class YoloGarmentDetector:
         # agnostic_nms: one box per region, even if two classes (shirt / outerwear) both fire on it.
         result = self._model.predict(image, conf=self._confidence, agnostic_nms=True, verbose=False)[0]
         boxes = result.boxes
+        outlines = result.masks.xy if result.masks is not None else [None] * len(boxes)
         return [
-            Detection(result.names[int(cls)], round(conf, 3), tuple(round(v) for v in xyxy))
-            for xyxy, conf, cls in zip(boxes.xyxy.tolist(), boxes.conf.tolist(), boxes.cls.tolist())
+            Detection(
+                result.names[int(cls)],
+                round(conf, 3),
+                tuple(round(v) for v in xyxy),
+                tuple((float(x), float(y)) for x, y in outline) if outline is not None and len(outline) else None,
+            )
+            for xyxy, conf, cls, outline in zip(boxes.xyxy.tolist(), boxes.conf.tolist(), boxes.cls.tolist(), outlines)
         ]
 
 
@@ -53,5 +61,5 @@ def crop_detections(
             min(width, round(x2 + dx)),
             min(height, round(y2 + dy)),
         )
-        kept.append((Detection(det.label, det.confidence, box), image.crop(box)))
+        kept.append((Detection(det.label, det.confidence, box, det.polygon), image.crop(box)))
     return kept[:MAX_ITEMS]

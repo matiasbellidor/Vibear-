@@ -1,17 +1,13 @@
-import Link from "next/link";
+import { LostAndFound } from "@/components/LostAndFound";
 import { PageTransition } from "@/components/motion/PageTransition";
-import { primaryButton } from "@/components/ui";
+import { PINS } from "@/lib/landing";
+import { getLanding } from "@/lib/landing-data";
 
 export default function NotFound() {
+  const { pins, local } = getLanding();
   return (
     <PageTransition>
-      <div className="@container mx-auto max-w-xs px-4 py-28 text-center">
-        <p className="font-display text-hero tracking-[-0.045em]">404</p>
-        <p className="mt-6 text-small text-muted">Esta página no existe.</p>
-        <Link href="/" className={`${primaryButton} mt-8`}>
-          Volver al inicio
-        </Link>
-      </div>
+      <LostAndFound pins={local ? [...pins, ...PINS] : pins} />
     </PageTransition>
   );
 }

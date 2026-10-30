@@ -58,6 +58,8 @@ Design decisions:
 - **Detect and search are two calls.** Detection is local and free; a search spends SerpApi quota. You pick one garment, so a photo with three garments costs one search, not three.
 - **No public image hosting.** Crops go to SerpApi's Image API (`POST /image`, max 500 KB, id valid 10 minutes).
 - **CLIP re-ranks, it doesn't search.** Google Lens finds candidates; FashionCLIP orders them by similarity to the crop, and the score is shown.
+- **Only results that really look alike.** Each result's picture is classified zero-shot (top, bottom, dress, shoes, bag, accessory) and dropped when it is clearly another kind of thing than the scanned garment, and results under a FashionCLIP similarity of 0.55 are dropped too. Calibrated on the demo catalog: for a trousers query, jackets and sweaters CLIP still rated 0.63-0.65 used to sit among the real trousers; now they go.
+- **Garments are named for what they are.** YOLO only knows 13 classes ("long sleeved shirt"), so each garment is also named in Spanish ("Buzo polo de corderito negro"): the type and material by FashionCLIP zero-shot over a catalogue of garments, the colour from the garment's own pixels (YOLO's segmentation mask), classified by hue first so shadows don't turn cream into grey. The brand comes from what the search results agree on (also brands we don't know, when several titles start with the same word), or, without a search, from the photo only when the model is very sure.
 - **Content-addressed images + cache.** The same crop always gets the same id, and its results are cached for 72 h. Looks are stored, so `/look/<id>` survives a refresh.
 - **One origin.** The browser only talks to Next; `/api/*` is proxied to FastAPI (no CORS, no API URL in the client).
 - **A closet without accounts.** Saved products live in the browser and are backed up in the API under a random id kept in an HttpOnly cookie (see below).
@@ -73,10 +75,12 @@ apps/
     app/main.py         routes and app factory
     app/ml/             YOLO detector, CLIP embedder
     app/lens.py         SerpApi client · app/demo.py offline stand-in
-    app/rerank.py       thumbnails + CLIP ranking
+    app/rerank.py       thumbnails + CLIP ranking (category filter, similarity floor, vector cache)
+    app/ml/describe.py  garment names, colours, styles and brands
+    app/prices.py       fragrance prices (SerpApi Google Shopping + shops' structured data)
     tests/              pytest, offline
   web/                  Next.js 16 + Tailwind 4 (TypeScript)
-    src/app/            routes: / (landing), /scan, /look/[id], /saved, /creditos
+    src/app/            routes: / (landing), /scan, /look/[id], /saved, /creditos, and the 404
     src/components/     UI · landing/ (the story) · motion/ (kinetic type, loops, pause)
     src/lib/            API client, masonry layout, storage, labels, landing data (generated)
     public/landing/     landing photos (WebP, freely licensed, credited on /creditos)
@@ -91,9 +95,10 @@ scripts/                setup, API runner (cross-platform Node)
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/health` | `{"status": "ok", "search": "serpapi" \| "demo" \| "off"}` |
-| `POST` | `/v1/detect` | multipart `file` **or** form field `image_url` → garments with `crop_id`, `label`, `confidence`, `box`, `crop_url` |
+| `POST` | `/v1/detect` | multipart `file` **or** form field `image_url` → garments with `crop_id`, `label`, `confidence`, `box`, `crop_url`, and `name` / `kind` / `brand` when the model can tell |
 | `GET` | `/v1/looks/{image_id}` | a look detected earlier |
-| `POST` | `/v1/search` | `{"crop_id": "...", "limit": 48}` → matches with `title`, `link`, `source`, `thumbnail` (+ size), `price`, `similarity` |
+| `POST` | `/v1/search` | `{"crop_id": "...", "limit": 48, "label": "trousers"}` → matches with `title`, `link`, `source`, `thumbnail` (+ size), `price`, `similarity`, plus the `brand` most results agree on. `label` lets it drop results of another kind |
+| `GET` | `/v1/fragrances/{id}/prices` | where to buy a fragrance, cheapest first, pesos first (see below) |
 | `GET` | `/v1/places/geocode?q=` | coordinates for an address, a neighbourhood, `lat, lng` or a Google Maps link (short `maps.app.goo.gl` links are resolved through Google hosts only) |
 | `GET` | `/v1/places/nearby?lat=&lng=&radius=&brands=` | clothing shops nearby from OpenStreetMap (Nominatim), the ones selling a brand from the results first |
 | `GET` / `PUT` | `/v1/closet` | this browser's saved products: `{"items": [...], "updated_at": <epoch ms>}`; the newest copy wins |
@@ -109,6 +114,13 @@ Saved products stay in the browser (localStorage) and the API keeps an anonymous
 - **Limits:** the closet is per browser (a phone and a laptop have different ones), and clearing the browser's data or using a private window loses it. A login would be the next step to share it across devices; the API's id can be attached to an account then.
 - **Nothing to administer.** Each closet is a JSON file in `apps/api/data/closets/<id>.json` (with Docker, in the `api-data` volume). To see how many there are, count the files; to erase one, delete its file; to erase all, delete the folder. They hold product links and thumbnails, no personal data.
 
+## Outfits of the week and fragrances
+
+- **Outfits de la semana** (on the landing): three looks for women and three for men, a different style each where possible (styles tagged by FashionCLIP: streetwear, old money, clean girl, university fit, tenis, pilates, casual), rotating every ISO week. Each garment shows its name and links to search it at Mercado Libre, Zara Argentina and Google Shopping: search pages on purpose, because a single product sells out and its link dies in days.
+- **Potenciá tu outfit con una fragancia** (inside that section): three bottles drawn for Vibear (suede-touch turquoise glass, gold cap and plaque, after an Erba Pura-like mood) rise into a warm glow as you scroll in. Below, where to buy Erba Pura (Xerjoff) at the best price, and a WhatsApp button straight to the supplier (`https://wa.me/5491168300606?text=...`, number in `apps/web/src/lib/contact.ts`).
+- **How prices are read** (`apps/api/app/prices.py`): Google Shopping through SerpApi when `SERPAPI_API_KEY` is set (many shops in one call, in pesos for Argentina, cached 24 h), plus the price shops publish as structured data on their product pages (schema.org JSON-LD or product meta tags), with an honest User-Agent, robots.txt respected and a 12 h cache. Shops that block bots or rate-limit just drop out; we never pretend to be a browser. Mercado Libre's API now needs an account and its pages ask bots to verify, so it isn't read. Prices in different currencies aren't compared (no exchange rate): the badge says "Mejor precio en EUR". To add a fragrance or a shop, edit `FRAGRANCES` in `prices.py`.
+- **The 404** is a detour, not a dead end: a giant 404 filled with a look's photo, and "¿cómo te querés sentir hoy?" with four moods (segura/o, tranqui, elegante, con energía), each picking a look of a matching style with where to buy every piece.
+
 ## Design and motion
 
 A fashion scanner: Bodoni display type and sharp editorial chrome on a black stage, a monospace HUD (live clock, real model readouts, measuring grid, a crosshair that reads the garment under the mouse), wine as the signal colour, and a Pinterest-style feed of pins with a hotspot on every detected garment. The landing alternates black and white sections, so it reads page after page. The rules (tokens, components, copy voice, accessibility, the checks to run) live in [`.claude/skills/vibear-design/SKILL.md`](.claude/skills/vibear-design/SKILL.md).
@@ -119,6 +131,7 @@ The landing tells the story with motion graphics. The hero is an Apple-style scr
 
 - **Your folder:** put outfits in `apps/web/local-photos/mujer/` and `hombre/` and garments in `productos/`, and the photo you want at the centre of the hero in `destacada/`, then run `npm run photos` and `npm run dev`. The hero photo gets real YOLO boxes, and your outfits are ordered by FashionCLIP likeness to it, so the pins around it share its look. The landing uses them in development only, and both the folder and the generated files are gitignored. Photos you don't own (for example from Pinterest) never reach GitHub or a published build.
 - **Pinterest, the official way:** set `NEXT_PUBLIC_PINTEREST_BOARD` (or `NEXT_PUBLIC_PINTEREST_PINS`) in `apps/web/.env.local` (see `apps/web/.env.example`). The landing then shows a "Desde Pinterest" section with Pinterest's own embed, so the pins stay their authors' and link back.
+- **Your board in your folder:** a public board's pins can be listed through the same public endpoint the embed uses (`https://widgets.pinterest.com/v3/pidgets/boards/<user>/<board>/pins/`), and the images saved into `local-photos/` for `npm run dev`. They stay on your computer: they belong to their authors.
 
 The published landing photos are freely licensed photos from Wikimedia Commons (mostly CC0 imports from Unsplash, plus CC BY / CC BY-SA), balanced between menswear and womenswear, with flat-lay boards composed from product cutouts. They are credited on `/creditos`. To change them, edit the lists in `apps/api/scripts/build_landing_assets.py` and run it with the API's venv: it also rebuilds the demo catalog and the explainer from real YOLO and FashionCLIP output.
 

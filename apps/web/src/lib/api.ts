@@ -8,6 +8,11 @@ export type DetectedItem = {
   confidence: number | null;
   box: Box;
   crop_url: string;
+  /** What it really is ("Buzo polo de corderito negro"), when the API could tell; see garmentName(). */
+  name?: string | null;
+  kind?: string | null;
+  /** A brand read from the photo alone, only when the model was very sure. */
+  brand?: string | null;
 };
 
 export type Look = {
@@ -28,9 +33,22 @@ export type Match = {
   similarity: number | null;
 };
 
-export type SearchResult = { crop_id: string; cached: boolean; results: Match[] };
+/** The brand most of the closest results agree on (real search only). */
+export type BrandGuess = { name: string; count: number; total: number };
+
+export type SearchResult = { crop_id: string; cached: boolean; results: Match[]; brand?: BrandGuess | null };
 
 export type SearchMode = "serpapi" | "demo" | "off";
+
+/** A shop's price for a fragrance (GET /v1/fragrances/{id}/prices), cheapest first, pesos first. */
+export type Offer = { shop: string; url: string; price: number; currency: string; title: string; source: "shopping" | "page" };
+
+export type FragranceBoard = {
+  fragrance: { id: string; name: string; house: string; notes: string };
+  offers: Offer[];
+  checked: number; // sources read this round
+  updated_at: number; // epoch seconds
+};
 
 export type Place = { lat: number; lng: number; label: string };
 
@@ -99,13 +117,17 @@ export const api = {
   detectFile: (file: Blob) => request<Look>("/v1/detect", { method: "POST", body: form("file", file) }),
   detectUrl: (url: string) => request<Look>("/v1/detect", { method: "POST", body: form("image_url", url) }),
   look: (id: string, signal?: AbortSignal) => request<Look>(`/v1/looks/${encodeURIComponent(id)}`, { signal }),
-  search: (cropId: string, signal?: AbortSignal) =>
+  /** `label` (the garment's class) lets the API drop results of another kind, like shoes for a sweater. */
+  search: (cropId: string, label: string | null, signal?: AbortSignal) =>
     request<SearchResult>("/v1/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ crop_id: cropId, limit: SEARCH_LIMIT }),
+      // "full_image" (nothing detected) has no category to filter by.
+      body: JSON.stringify({ crop_id: cropId, limit: SEARCH_LIMIT, label: label === "full_image" ? null : label }),
       signal,
     }),
+  fragrancePrices: (id: string, signal?: AbortSignal) =>
+    request<FragranceBoard>(`/v1/fragrances/${encodeURIComponent(id)}/prices`, { signal }),
   geocode: (query: string) =>
     request<Place>(`/v1/places/geocode?q=${encodeURIComponent(query)}`, undefined, PLACE_MESSAGES),
   nearby: (place: Pick<Place, "lat" | "lng">, radius: number, brands: string[]) => {

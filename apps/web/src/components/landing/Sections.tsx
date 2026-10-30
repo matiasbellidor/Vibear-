@@ -77,7 +77,7 @@ export function FromPinterest() {
   if (!configured && process.env.NODE_ENV !== "development") return null;
 
   return (
-    <section aria-labelledby="pinterest-title" className="page px-4 py-20 lg:px-8 lg:py-28">
+    <section aria-labelledby="pinterest-title" className="page theme-light px-4 py-20 lg:px-8 lg:py-28">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
         <h2 id="pinterest-title" className="text-micro">
           Desde Pinterest

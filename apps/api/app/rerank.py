@@ -56,8 +56,14 @@ async def rank_by_similarity(
     embedder: ClipEmbedder,
     load: ThumbnailLoader,
     cache: VectorCache | None = None,
+    keep: Callable[[np.ndarray], bool] | None = None,
+    floor: float | None = None,
 ) -> list[RankedMatch]:
-    """Order Lens matches by CLIP similarity to the crop. Matches without a usable thumbnail go last."""
+    """Order Lens matches by CLIP similarity to the crop. Matches without a usable thumbnail go last.
+
+    `keep` drops results whose picture is another kind of thing (shoes for a sweater), and `floor`
+    those less similar than that: both only judge results that have a picture.
+    """
     entries: list[Embedded | None] = [
         cache.get(m.thumbnail) if cache is not None and m.thumbnail else None for m in matches
     ]
@@ -78,6 +84,8 @@ async def rank_by_similarity(
         RankedMatch(m, round(float(entry[0] @ vectors[0]), 4), entry[1])
         for m, entry in zip(matches, entries)
         if entry is not None
+        and (keep is None or keep(entry[0]))
+        and (floor is None or float(entry[0] @ vectors[0]) >= floor)
     ]
     ranked.sort(key=lambda r: r.similarity, reverse=True)
     return ranked + [RankedMatch(m, None, None) for m, entry in zip(matches, entries) if entry is None]

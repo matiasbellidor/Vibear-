@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { Explainer, Pin } from "@/lib/landing";
-import { pad, shortLabelFor } from "@/lib/labels";
+import { garmentKind, pad } from "@/lib/labels";
 import { Brackets, LiveClock } from "../motion/Hud";
 import { KineticText } from "../motion/KineticText";
 import { MotionToggle } from "../motion/MotionToggle";
@@ -48,9 +48,12 @@ const APP_SPOTS: Record<Network, { place: string; tilt: string; glow: string; mo
 function sidePins(pins: Pin[], explainer: Explainer): Pin[] {
   const others = pins.filter((pin) => !pin.credits.some((credit) => credit.url && credit.url === explainer.credit.url));
   const first = (kind: Pin["kind"], skip = 0) => others.filter((pin) => pin.kind === kind)[skip];
-  return [first("woman"), first("man"), first("board") ?? first("woman", 1), first("woman", 1) ?? first("man", 1)].filter(
+  const chosen = [first("woman"), first("man"), first("board") ?? first("product"), first("woman", 1) ?? first("man", 1)].filter(
     (pin): pin is Pin => Boolean(pin),
   );
+  // A set without one kind (a board that's all menswear) still fills the four places.
+  for (const pin of others) if (chosen.length < 4 && !chosen.includes(pin)) chosen.push(pin);
+  return chosen;
 }
 
 /**
@@ -65,7 +68,7 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
     { title: "Subí una captura", text: "De un Reel, un TikTok o un pin. También desde tu galería." },
     {
       title: "Detectamos cada prenda",
-      text: boxes.map((box) => `${shortLabelFor(box.label)} ${pct(box.confidence)}`).join(" · "),
+      text: boxes.map((box) => `${garmentKind(box)} ${pct(box.confidence)}`).join(" · "),
     },
     { title: "Encontrala", text: "Online, de la más parecida a la menos, o en un local cerca tuyo." },
   ];
@@ -184,7 +187,7 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
                     className="story-chip absolute whitespace-nowrap bg-wine-bright px-2 py-1 text-micro tabular-nums text-paper"
                     style={{ left: area.left, top: `calc(${(y2 / height) * 100}% - 1.75rem)`, "--i": i } as CSSProperties}
                   >
-                    {shortLabelFor(box.label)} · {pct(box.confidence)}
+                    {garmentKind(box)} · {pct(box.confidence)}
                   </span>
                 </div>
               );

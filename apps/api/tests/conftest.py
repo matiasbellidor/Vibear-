@@ -73,12 +73,13 @@ def thumbnails_transport() -> httpx.MockTransport:
 
 @pytest.fixture
 def make_client(tmp_path):
-    def _make(detections=(), lens=None, **overrides) -> TestClient:
+    def _make(detections=(), lens=None, describer=None, **overrides) -> TestClient:
         settings = Settings(_env_file=None, data_dir=tmp_path, **overrides)
         app = create_app(
             settings,
             detector=FakeDetector(list(detections)),
             embedder=FakeEmbedder(),
+            describer=describer,
             lens=lens,
             client=httpx.AsyncClient(transport=thumbnails_transport()),
         )

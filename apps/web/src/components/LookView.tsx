@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ApiError, api, type Look, type SearchMode, type SearchResult } from "@/lib/api";
-import { labelFor } from "@/lib/labels";
+import { ApiError, api, type BrandGuess, type Look, type SearchMode, type SearchResult } from "@/lib/api";
+import { garmentName } from "@/lib/labels";
 import { ratioOf } from "@/lib/masonry";
 import { forgetLook, rememberLook } from "@/lib/storage";
 import { GarmentRail } from "./GarmentRail";
@@ -67,7 +67,7 @@ export function LookView({ id }: { id: string }) {
   useEffect(() => {
     if (!selected || !searchKey) return;
     const controller = new AbortController();
-    api.search(selected.crop_id, controller.signal).then(
+    api.search(selected.crop_id, selected.label, controller.signal).then(
       (data) => setSearch({ key: searchKey, result: { status: "ready", data } }),
       (error) => {
         if (!isAbort(error)) setSearch({ key: searchKey, result: failure(error) });
@@ -100,12 +100,15 @@ export function LookView({ id }: { id: string }) {
       <section aria-labelledby="results-title" className="mt-10 lg:col-span-7 lg:mt-0">
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
           <h1 id="results-title" className="font-display text-title tracking-tight">
-            {labelFor(selected.label)}
+            {garmentName(selected)}
           </h1>
           <p className="text-micro tabular-nums text-muted">
             {results?.status === "ready" ? `${results.data.results.length} resultados · por similitud` : "Buscando…"}
           </p>
         </header>
+        {results?.status === "ready" && (
+          <BrandLine guess={results.data.brand ?? null} hint={selected.brand ?? null} searched={mode === "serpapi"} />
+        )}
 
         <div className="mt-4">
           <NearbyPanel
@@ -140,13 +143,13 @@ export function LookView({ id }: { id: string }) {
             <p className="py-16 text-center text-small text-muted">
               {mode === "demo"
                 ? "El catálogo de ejemplo no tiene nada parecido a esta prenda. Probá con otra."
-                : "Google Lens no encontró nada para esta prenda. Probá con otra."}
+                : "No encontramos prendas que se parezcan de verdad. Probá con otra prenda o una foto más de cerca."}
             </p>
           )}
           {results?.status === "ready" && results.data.results.length > 0 && (
             <MasonryGrid
               items={results.data.results}
-              label={`Resultados para ${labelFor(selected.label)}`}
+              label={`Resultados para ${garmentName(selected)}`}
               itemKey={(match, index) => `${index}-${match.link}`}
               ratio={(match) => ratioOf(match.thumbnail_width, match.thumbnail_height)}
               caption={CARD_CAPTION}
@@ -158,6 +161,28 @@ export function LookView({ id }: { id: string }) {
         </div>
       </section>
     </div>
+  );
+}
+
+/** Which brand it is, when the results agree (or the photo says so); otherwise, honestly, none. */
+function BrandLine({ guess, hint, searched }: { guess: BrandGuess | null; hint: string | null; searched: boolean }) {
+  if (!guess && !hint && !searched) return null;
+  return (
+    <p className="mt-3 flex items-center gap-2 text-small text-muted">
+      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-wine-bright" />
+      {guess ? (
+        <span>
+          Marca probable: <span className="text-ink">{guess.name}</span> · la mencionan {guess.count} de {guess.total}{" "}
+          resultados
+        </span>
+      ) : hint ? (
+        <span>
+          Posible marca: <span className="text-ink">{hint}</span> (por la foto)
+        </span>
+      ) : (
+        <span>No identificamos la marca: te mostramos los diseños más parecidos.</span>
+      )}
+    </p>
   );
 }
 

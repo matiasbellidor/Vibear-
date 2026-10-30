@@ -26,3 +26,11 @@ class ClipEmbedder:
                 chunks.append(self._model.get_image_features(**inputs).pooler_output)
         features = torch.cat(chunks)
         return torch.nn.functional.normalize(features, dim=-1).numpy()
+
+    def embed_text(self, texts: list[str]) -> np.ndarray:
+        """Text vectors in the same space as the images (zero-shot naming, see describe.py)."""
+        torch = self._torch
+        with torch.inference_mode():
+            inputs = self._processor(text=texts, return_tensors="pt", padding=True)
+            features = self._model.get_text_features(**inputs).pooler_output
+        return torch.nn.functional.normalize(features, dim=-1).numpy()

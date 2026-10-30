@@ -1,7 +1,7 @@
 "use client";
 
 import { mediaUrl, type DetectedItem } from "@/lib/api";
-import { labelFor, pad } from "@/lib/labels";
+import { garmentName, pad } from "@/lib/labels";
 import { FadeImage } from "./FadeImage";
 import { cx } from "./ui";
 
@@ -40,10 +40,10 @@ export function GarmentRail({
                     active ? "outline-2 outline-wine-bright" : "outline-1 outline-transparent group-hover:outline-line",
                   )}
                 >
-                  <FadeImage src={mediaUrl(item.crop_url)} alt={labelFor(item.label)} className="h-full w-full object-cover" />
+                  <FadeImage src={mediaUrl(item.crop_url)} alt={garmentName(item)} className="h-full w-full object-cover" />
                 </span>
                 <span className="mt-2 block text-micro">
-                  <span className="tabular-nums text-muted">{pad(index + 1)}</span> {labelFor(item.label)}
+                  <span className="tabular-nums text-muted">{pad(index + 1)}</span> {garmentName(item)}
                 </span>
                 {item.confidence !== null && (
                   <span className="block text-micro tabular-nums text-muted">

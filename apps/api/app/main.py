@@ -15,11 +15,13 @@ from app.config import Settings
 from app.demo import DemoLens
 from app.images import ImageError, decode_image, encode_jpeg, fetch_image
 from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError
+from app.ml.describe import GarmentDescriber, brand_from_titles, family_of
 from app.ml.detector import YoloGarmentDetector, crop_detections
 from app.ml.embedder import ClipEmbedder
 from app.places import PlaceError, geocode, nearby
+from app.prices import PriceBoard, PriceError
 from app.rerank import VectorCache, http_loader, rank_by_similarity
-from app.schemas import Closet, DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
+from app.schemas import BrandGuess, Closet, DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
 from app.storage import CLOSET_ID_RE, ID_PATTERN, MediaStore
 
 # An honest bot UA with a contact link: sites like Wikimedia answer 403 to browser-looking bot UAs.
@@ -31,12 +33,18 @@ CLOSET_COOKIE = "vibear_closet"
 CLOSET_MAX_AGE = 400 * 24 * 3600  # browsers cap cookie lifetimes at 400 days; each visit renews it
 CLOSET_MAX_BYTES = 1024 * 1024
 
+# FashionCLIP cosine below which a result doesn't look like the garment: on the demo catalog, close
+# matches score 0.6-0.75 and same-category but unalike ones ~0.5. Only applied with the real model:
+# the test fakes have another scale.
+SIMILARITY_FLOOR = 0.55
+
 
 def create_app(
     settings: Settings | None = None,
     *,
     detector=None,
     embedder=None,
+    describer=None,
     lens=None,
     client: httpx.AsyncClient | None = None,
 ) -> FastAPI:
@@ -53,11 +61,17 @@ def create_app(
             settings.yolo_repo, settings.yolo_file, settings.detect_confidence
         )
         state.embedder = embedder or ClipEmbedder(settings.clip_model)
+        # Names garments with the same FashionCLIP. Tests that inject a fake embedder get none
+        # (they can inject a fake describer instead).
+        state.describer = describer or (GarmentDescriber(state.embedder) if embedder is None else None)
         # The first inference is ~10x slower than the rest: pay it at startup, not on the first user.
         blank = Image.new("RGB", (64, 64), "white")
         state.detector.detect(blank)
         state.embedder.embed([blank])
+        if state.describer is not None:
+            state.describer.warm()
 
+        state.prices = PriceBoard(state.http, USER_AGENT, settings.serpapi_api_key)
         state.lens = lens
         if lens is None and settings.serpapi_api_key:
             state.lens = LensClient(
@@ -115,20 +129,35 @@ def create_app(
             raise HTTPException(422, str(exc)) from exc
 
         image_id = store.put(encode_jpeg(image))
-        detections = await asyncio.to_thread(request.app.state.detector.detect, image)
-        # Crops are stored already under the SerpApi upload limit, so /v1/search sends them as-is.
-        found = [
-            (det.label, det.confidence, det.box, crop) for det, crop in crop_detections(image, detections)
-        ]
-        if not found:
-            found = [("full_image", None, (0, 0, image.width, image.height), image)]
+        state = request.app.state
+        detections = await asyncio.to_thread(state.detector.detect, image)
+        found = crop_detections(image, detections)
+        names = [None] * len(found)
+        if found and state.describer is not None:
+            names = await asyncio.to_thread(describe_all, state, image, found)
 
         items = []
-        for label, confidence, box, crop in found:
+        # Crops are stored already under the SerpApi upload limit, so /v1/search sends them as-is.
+        for (det, crop), description in zip(found, names):
             crop_id = store.put(encode_jpeg(crop, UPLOAD_MAX_BYTES))
             items.append(
                 DetectedItem(
-                    crop_id=crop_id, label=label, confidence=confidence, box=box, crop_url=f"/media/{crop_id}.jpg"
+                    crop_id=crop_id,
+                    label=det.label,
+                    confidence=det.confidence,
+                    box=det.box,
+                    crop_url=f"/media/{crop_id}.jpg",
+                    name=description.name if description else None,
+                    kind=description.kind if description else None,
+                    brand=description.brand if description else None,
+                )
+            )
+        if not items:
+            crop_id = store.put(encode_jpeg(image, UPLOAD_MAX_BYTES))
+            items.append(
+                DetectedItem(
+                    crop_id=crop_id, label="full_image", confidence=None, box=(0, 0, image.width, image.height),
+                    crop_url=f"/media/{crop_id}.jpg",
                 )
             )
         look = DetectResponse(image_id=image_id, width=image.width, height=image.height, items=items)
@@ -156,7 +185,7 @@ def create_app(
             raise HTTPException(404, "Unknown crop_id")
 
         demo = state.search_mode == "demo"
-        cache_key = f"{body.crop_id}-{settings.serpapi_country}-{settings.serpapi_hl}"
+        cache_key = f"{body.crop_id}-{body.label or 'any'}-{settings.serpapi_country}-{settings.serpapi_hl}"
         cached = None if demo else store.read_cache(cache_key, settings.search_cache_hours)
         if cached is not None:
             results = cached["results"]
@@ -168,7 +197,13 @@ def create_app(
             except SerpApiError as exc:
                 raise HTTPException(502, str(exc)) from exc
             load = state.lens.loader() if demo else http_loader(state.http)
-            ranked = await rank_by_similarity(decode_image(jpeg), matches, state.embedder, load, vectors)
+            family = family_of(body.label)
+            describer = state.describer
+            ranked = await rank_by_similarity(
+                decode_image(jpeg), matches, state.embedder, load, vectors,
+                keep=(lambda vector: describer.belongs(vector, family)) if describer and family else None,
+                floor=SIMILARITY_FLOOR if describer else None,
+            )
             results = [
                 Match(
                     **asdict(r.match),
@@ -181,7 +216,24 @@ def create_app(
             if not demo:
                 store.write_cache(cache_key, {"results": results})
 
-        return SearchResponse(crop_id=body.crop_id, cached=cached is not None, results=results[: body.limit])
+        # The brand the closest real results agree on (demo results are photos, not products).
+        guess = None if demo else brand_from_titles([r["title"] for r in results[:12]])
+        return SearchResponse(
+            crop_id=body.crop_id,
+            cached=cached is not None,
+            results=results[: body.limit],
+            brand=BrandGuess(name=guess[0], count=guess[1], total=min(12, len(results))) if guess else None,
+        )
+
+    def describe_all(state, image, found):
+        """Name each garment (CPU-bound; runs in a thread). One batched CLIP pass: the whole photo
+        (is it menswear?) and every crop."""
+        whole, *vectors = state.embedder.embed([image] + [crop for _, crop in found])
+        man = state.describer.is_menswear(whole)
+        return [
+            state.describer.describe(crop, det.label, image, det.box, det.polygon, vector=vector, man=man)
+            for (det, crop), vector in zip(found, vectors)
+        ]
 
     def closet_id_of(request: Request) -> str | None:
         value = request.cookies.get(CLOSET_COOKIE, "")
@@ -221,6 +273,15 @@ def create_app(
             store.write_closet(closet_id, kept)
         keep_closet_cookie(response, request, closet_id)
         return kept
+
+    @app.get("/v1/fragrances/{fragrance_id}/prices")
+    async def fragrance_prices(request: Request, fragrance_id: str = Path(pattern=r"^[a-z0-9-]{1,40}$")):
+        """Where to buy a fragrance, cheapest first: Google Shopping (with a SerpApi key) plus the
+        prices shops publish on their product pages. Cached, so it never makes a visitor wait twice."""
+        try:
+            return await request.app.state.prices.prices(fragrance_id)
+        except PriceError as exc:
+            raise HTTPException(404, str(exc)) from exc
 
     @app.get("/v1/places/geocode")
     async def places_geocode(request: Request, q: str = Query(min_length=2, max_length=500)):

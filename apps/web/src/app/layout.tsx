@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Geist_Mono, Inter_Tight } from "next/font/google";
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { whatsappUrl } from "@/lib/contact";
 import "./globals.css";
 
 const display = Bodoni_Moda({
@@ -38,6 +39,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/creditos" className="hover:underline">
                 Créditos de fotos
               </Link>
+              <a href={whatsappUrl("Hola! Vengo de Vibear.")} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                Contacto por WhatsApp
+              </a>
               <span>Resultados visuales vía Google Lens</span>
             </span>
           </div>

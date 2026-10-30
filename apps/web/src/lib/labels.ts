@@ -17,10 +17,11 @@ const LABELS: Record<string, string> = {
   full_image: "Foto completa",
 };
 
-// One word per garment, for tight places (pin captions).
+// One or two words per garment, for tight places (pin captions, chips). A shirt class covers tees,
+// shirts and sweaters alike, so it's named by its sleeves.
 const SHORT: Record<string, string> = {
-  short_sleeved_shirt: "Top",
-  long_sleeved_shirt: "Top",
+  short_sleeved_shirt: "Remera",
+  long_sleeved_shirt: "Manga larga",
   short_sleeved_outwear: "Abrigo",
   long_sleeved_outwear: "Abrigo",
   vest: "Musculosa",
@@ -37,6 +38,16 @@ const SHORT: Record<string, string> = {
 
 export function shortLabelFor(label: string): string {
   return SHORT[label] ?? labelFor(label);
+}
+
+/** A detected garment's name: what the API recognised ("Buzo polo de corderito negro"), else its class. */
+export function garmentName(item: { label: string; name?: string | null }): string {
+  return item.name ?? labelFor(item.label);
+}
+
+/** The short form for chips and captions ("Buzo polo"). */
+export function garmentKind(item: { label: string; kind?: string | null }): string {
+  return item.kind ?? shortLabelFor(item.label);
 }
 
 export function labelFor(label: string): string {

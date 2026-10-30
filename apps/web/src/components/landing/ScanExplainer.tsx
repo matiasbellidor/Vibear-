@@ -73,7 +73,7 @@ function ScanStage({ explainer, className }: { explainer: Explainer; className?:
                 })}
               >
                 <span className="absolute left-0 top-0 whitespace-nowrap bg-paper px-1.5 py-0.5 text-micro tabular-nums">
-                  {pad(i + 1)} {labelFor(item.label)}
+                  {pad(i + 1)} {item.name ?? labelFor(item.label)}
                 </span>
                 {i === 0 && (
                   <>

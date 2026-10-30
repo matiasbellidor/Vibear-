@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { LOOK, PNG, closetBackup, mockApi, nearbyCalls } from "./mock-api";
+import { LOOK, PNG, closetBackup, matches, mockApi, nearbyCalls } from "./mock-api";
 
 test("upload, pick a garment, see ranked results and save one to the board", async ({ page }) => {
   const searched = await mockApi(page);
@@ -96,7 +96,7 @@ test("demo mode is labelled as demo", async ({ page }) => {
 test("no results gets an empty state, not a blank page", async ({ page }) => {
   await mockApi(page, { search: "empty" });
   await page.goto(`/look/${LOOK.image_id}`);
-  await expect(page.getByText("Google Lens no encontró nada para esta prenda.")).toBeVisible();
+  await expect(page.getByText("No encontramos prendas que se parezcan de verdad.", { exact: false })).toBeVisible();
 });
 
 test("an unreadable image explains what to do", async ({ page }) => {
@@ -139,4 +139,20 @@ test("the closet comes back after the browser wipes its storage (Safari's 7-day 
   await page.goto("/saved");
   await expect(page.getByRole("heading", { name: "abrigo 1", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Guardados (1)" })).toBeVisible();
+});
+
+test("garments are named for what they are, with the brand the results agree on", async ({ page }) => {
+  await mockApi(page);
+  const [first, ...rest] = LOOK.items;
+  const named = { ...LOOK, items: [{ ...first, name: "Buzo polo de corderito negro", kind: "Buzo polo" }, ...rest] };
+  await page.route("**/api/v1/looks/*", (route) => route.fulfill({ json: named }));
+  await page.route("**/api/v1/search", (route) =>
+    route.fulfill({
+      json: { crop_id: first.crop_id, cached: false, results: matches("buzo"), brand: { name: "Stüssy", count: 5, total: 12 } },
+    }),
+  );
+  await page.goto(`/look/${LOOK.image_id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Buzo polo de corderito negro" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Buzo polo de corderito negro/ })).toBeVisible();
+  await expect(page.getByText(/Marca probable:/)).toContainText("Stüssy · la mencionan 5 de 12 resultados");
 });
