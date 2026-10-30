@@ -14,12 +14,11 @@ const WHATSAPP =
 
 type State = { status: "idle" | "loading" | "error" } | { status: "ready"; board: FragranceBoard };
 
+// Argentine shops only, so every price is in pesos (the API drops anything else).
+const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+
 function money(offer: Offer): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: offer.currency,
-    maximumFractionDigits: offer.currency === "ARS" ? 0 : 2,
-  }).format(offer.price);
+  return pesos.format(offer.price);
 }
 
 function ago(seconds: number): string {
@@ -62,10 +61,7 @@ export function Fragrance() {
   }, []);
 
   const offers = state.status === "ready" ? state.board.offers : [];
-  // The API sorts pesos first, then cheapest. Prices in different currencies can't be compared
-  // honestly without an exchange rate, so the badge names its currency when there are several.
-  const currencies = new Set(offers.map((offer) => offer.currency));
-  const best = offers[0];
+  const best = offers[0]; // the API sorts cheapest first
 
   return (
     // overflow-x-clip: the glow spills past the bottles on purpose, but never into a sideways scroll.
@@ -109,9 +105,7 @@ export function Fragrance() {
                 <span className="flex min-w-0 items-center gap-3">
                   <span className="truncate text-body">{offer.shop}</span>
                   {offer === best && (
-                    <span className="shrink-0 rounded-full bg-wine px-2.5 py-0.5 text-micro text-cream">
-                      {currencies.size > 1 ? `Mejor precio en ${offer.currency}` : "Mejor precio"}
-                    </span>
+                    <span className="shrink-0 rounded-full bg-wine px-2.5 py-0.5 text-micro text-cream">Mejor precio</span>
                   )}
                 </span>
                 <span className="flex items-center gap-5">
@@ -133,8 +127,7 @@ export function Fragrance() {
         )}
 
         <p className={cx("mt-4 text-micro normal-case tracking-normal text-muted", state.status !== "ready" && "invisible")}>
-          Precios publicados por cada tienda{currencies.size > 1 ? ", en su moneda" : ""}. Pueden cambiar: confirmalos antes
-          de comprar.
+          Frasco de 100 ml en tiendas argentinas, precio de lista en pesos. Pueden cambiar: confirmalos antes de comprar.
         </p>
 
         {/* The supplier's direct line: wa.me opens the chat with the message already written. */}

@@ -19,7 +19,9 @@ test("the week's outfits: three for women, three for men, every garment with pla
   const hrefs = await links.evaluateAll((anchors) => anchors.map((a) => (a as HTMLAnchorElement).href));
   expect(hrefs.some((href) => href.startsWith("https://listado.mercadolibre.com.ar/"))).toBe(true);
   expect(hrefs.some((href) => href.startsWith("https://www.zara.com/ar/es/search?searchTerm="))).toBe(true);
-  expect(hrefs.some((href) => href.startsWith("https://www.google.com/search?tbm=shop&q="))).toBe(true);
+  expect(hrefs.some((href) => href.startsWith("https://www.google.com.ar/search?tbm=shop&gl=ar&"))).toBe(true);
+  // Argentina only: every shop link is an Argentine site.
+  expect(hrefs.every((href) => /^https:\/\/[^/]+\.ar\/|^https:\/\/www\.zara\.com\/ar\/es\//.test(href))).toBe(true);
   await expect(links.first()).toHaveAttribute("target", "_blank");
 });
 

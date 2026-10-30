@@ -1,6 +1,6 @@
 import json
 
-from conftest import BLUE, GRAY, LENS_MATCHES, RED, FakeLens, png_bytes
+from conftest import BLUE, GRAY, LENS_MATCHES, RED, FakeLens, match, png_bytes
 
 from app.ml.detector import Detection
 
@@ -87,6 +87,15 @@ def test_search_ranks_by_similarity_and_caches(make_client):
         assert second["cached"] is True
         assert [r["title"] for r in second["results"]] == ["red", "gray"]
         assert lens.calls == 1  # the cache saved a SerpApi search
+
+
+def test_search_shows_argentine_shops_only(make_client):
+    abroad = match("abroad", "https://img.test/red.png", link="https://www.stussy.com/products/sherpa-polo")
+    with make_client(detections=[], lens=FakeLens([abroad, *LENS_MATCHES])) as client:
+        crop_id = upload(client, png_bytes(RED)).json()["items"][0]["crop_id"]
+        results = client.post("/v1/search", json={"crop_id": crop_id}).json()["results"]
+    assert "abroad" not in [r["title"] for r in results]
+    assert all(".com.ar/" in r["link"] for r in results)
 
 
 def test_demo_search_ranks_the_catalog_and_never_caches(make_client, tmp_path):

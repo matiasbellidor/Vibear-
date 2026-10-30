@@ -60,7 +60,7 @@ export const FRAGRANCE_BOARD = {
   offers: [
     { shop: "Perfumería A", url: "https://a.test/erba-pura", price: 480000, currency: "ARS", title: "Xerjoff Erba Pura 100 ml", source: "shopping" },
     { shop: "Perfumería B", url: "https://b.test/erba-pura", price: 520000, currency: "ARS", title: "Erba Pura EDP", source: "shopping" },
-    { shop: "Heinemann", url: "https://c.test/erba-pura", price: 259.99, currency: "EUR", title: "Erba Pura 100 ml", source: "page" },
+    { shop: "Perfumería C", url: "https://c.test/erba-pura", price: 585000, currency: "ARS", title: "Erba Pura 100 ml", source: "page" },
   ],
   checked: 4,
   updated_at: Math.floor(Date.now() / 1000),

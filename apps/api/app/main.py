@@ -14,7 +14,7 @@ from PIL import Image
 from app.config import Settings
 from app.demo import DemoLens
 from app.images import ImageError, decode_image, encode_jpeg, fetch_image
-from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError
+from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError, is_argentine_shop
 from app.ml.describe import GarmentDescriber, brand_from_titles, family_of
 from app.ml.detector import YoloGarmentDetector, crop_detections
 from app.ml.embedder import ClipEmbedder
@@ -185,7 +185,8 @@ def create_app(
             raise HTTPException(404, "Unknown crop_id")
 
         demo = state.search_mode == "demo"
-        cache_key = f"{body.crop_id}-{body.label or 'any'}-{settings.serpapi_country}-{settings.serpapi_hl}"
+        # "local": results are Argentine shops only (older cache entries weren't filtered).
+        cache_key = f"{body.crop_id}-{body.label or 'any'}-{settings.serpapi_country}-{settings.serpapi_hl}-local"
         cached = None if demo else store.read_cache(cache_key, settings.search_cache_hours)
         if cached is not None:
             results = cached["results"]
@@ -196,6 +197,8 @@ def create_app(
                 matches = await state.lens.visual_matches(jpeg)
             except SerpApiError as exc:
                 raise HTTPException(502, str(exc)) from exc
+            if not demo:  # demo results are your own photos, not shops
+                matches = [m for m in matches if is_argentine_shop(m.link)]
             load = state.lens.loader() if demo else http_loader(state.http)
             family = family_of(body.label)
             describer = state.describer

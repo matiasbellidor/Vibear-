@@ -143,7 +143,7 @@ export function LookView({ id }: { id: string }) {
             <p className="py-16 text-center text-small text-muted">
               {mode === "demo"
                 ? "El catálogo de ejemplo no tiene nada parecido a esta prenda. Probá con otra."
-                : "No encontramos prendas que se parezcan de verdad. Probá con otra prenda o una foto más de cerca."}
+                : "No encontramos en tiendas argentinas prendas que se parezcan de verdad. Probá con otra prenda o una foto más de cerca."}
             </p>
           )}
           {results?.status === "ready" && results.data.results.length > 0 && (

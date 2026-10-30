@@ -18,7 +18,8 @@ const plain = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").to
 
 /**
  * Where to buy a garment like this one. Search pages rather than single products on purpose: a
- * product sells out in days and its link dies, a search keeps answering. Argentine shops first.
+ * product sells out in days and its link dies, a search keeps answering. Argentina only: shops that
+ * sell here, prices in pesos.
  */
 export function shopLinks(spot: Hotspot, gender: "woman" | "man"): ShopLink[] {
   const query = `${garmentName(spot)} ${gender === "woman" ? "mujer" : "hombre"}`;
@@ -29,7 +30,10 @@ export function shopLinks(spot: Hotspot, gender: "woman" | "man"): ShopLink[] {
       shop: "Zara",
       url: `https://www.zara.com/ar/es/search?searchTerm=${encodeURIComponent(query)}&section=${gender === "woman" ? "WOMAN" : "MAN"}`,
     },
-    { shop: "Google Shopping", url: `https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}` },
+    {
+      shop: "Google Shopping",
+      url: `https://www.google.com.ar/search?tbm=shop&gl=ar&hl=es-419&q=${encodeURIComponent(query)}`,
+    },
   ];
 }
 

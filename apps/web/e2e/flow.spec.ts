@@ -96,7 +96,7 @@ test("demo mode is labelled as demo", async ({ page }) => {
 test("no results gets an empty state, not a blank page", async ({ page }) => {
   await mockApi(page, { search: "empty" });
   await page.goto(`/look/${LOOK.image_id}`);
-  await expect(page.getByText("No encontramos prendas que se parezcan de verdad.", { exact: false })).toBeVisible();
+  await expect(page.getByText("No encontramos en tiendas argentinas prendas que se parezcan", { exact: false })).toBeVisible();
 });
 
 test("an unreadable image explains what to do", async ({ page }) => {

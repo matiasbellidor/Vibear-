@@ -47,8 +47,8 @@ class FakeLens:
         return self.matches
 
 
-def match(name, thumbnail):
-    return LensMatch(title=name, link=f"https://shop.test/{name}", source="Shop", thumbnail=thumbnail, price=None)
+def match(name, thumbnail, link=None):
+    return LensMatch(title=name, link=link or f"https://tienda.com.ar/{name}", source="Shop", thumbnail=thumbnail, price=None)
 
 
 # Lens order is deliberately not the similarity order, so the test proves the re-rank.

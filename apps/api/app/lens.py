@@ -1,4 +1,6 @@
+import re
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -7,6 +9,23 @@ SEARCH_URL = "https://serpapi.com/search"
 # Documented limits of the SerpApi Image API: 500 KB, jpg/png/webp, image_id expires after 10 minutes.
 UPLOAD_MAX_BYTES = 500_000
 NO_RESULTS_MARKER = "hasn't returned any results"
+
+# Vibear shows Argentine shops with peso prices only. Lens is asked from Argentina but still returns
+# shops abroad, so a link counts when its domain is Argentine (.ar), it's a Tiendanube store's own
+# subdomain (Argentine stores; Brazil's use lojavirtualnuvem.com.br), or it's a global brand's
+# Argentine site (zara.com/ar/es/...). A bare /ar/ is often the Arabic version of a site, so the path
+# needs Argentina and Spanish together. Import services sell from shops abroad, so they don't count.
+AR_PATH = re.compile(r"^/(?:ar/es|es[-_]ar|ar[-_]es)(?:/|$)", re.I)
+AR_HOSTS = (".mitiendanube.com",)
+IMPORTERS = ("tiendamia.com",)
+
+
+def is_argentine_shop(url: str) -> bool:
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    if any(host == name or host.endswith("." + name) for name in IMPORTERS):
+        return False
+    return host.endswith(".ar") or host.endswith(AR_HOSTS) or bool(AR_PATH.search(parts.path))
 
 
 class SerpApiError(RuntimeError):
