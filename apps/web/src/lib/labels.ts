@@ -14,6 +14,13 @@ const LABELS: Record<string, string> = {
   vest_dress: "Vestido sin mangas",
   sling_dress: "Vestido de breteles",
   shoes: "Zapatos",
+  bag: "Cartera",
+  glasses: "Anteojos",
+  hat: "Gorro",
+  belt: "Cinturón",
+  watch: "Reloj",
+  scarf: "Bufanda",
+  headband: "Vincha",
   full_image: "Foto completa",
 };
 
@@ -34,6 +41,13 @@ const SHORT: Record<string, string> = {
   vest_dress: "Vestido",
   sling_dress: "Vestido",
   shoes: "Zapatos",
+  bag: "Cartera",
+  glasses: "Anteojos",
+  hat: "Gorro",
+  belt: "Cinturón",
+  watch: "Reloj",
+  scarf: "Bufanda",
+  headband: "Vincha",
 };
 
 export function shortLabelFor(label: string): string {

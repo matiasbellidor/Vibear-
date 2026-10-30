@@ -107,7 +107,12 @@ export function LookView({ id }: { id: string }) {
           </p>
         </header>
         {results?.status === "ready" && (
-          <BrandLine guess={results.data.brand ?? null} hint={selected.brand ?? null} searched={mode === "serpapi"} />
+          <BrandLine
+            guess={results.data.brand ?? null}
+            hint={selected.brand ?? null}
+            similar={selected.similar ?? null}
+            searched={mode === "serpapi"}
+          />
         )}
 
         <div className="mt-4">
@@ -164,9 +169,22 @@ export function LookView({ id }: { id: string }) {
   );
 }
 
-/** Which brand it is, when the results agree (or the photo says so); otherwise, honestly, none. */
-function BrandLine({ guess, hint, searched }: { guess: BrandGuess | null; hint: string | null; searched: boolean }) {
-  if (!guess && !hint && !searched) return null;
+/**
+ * Which brand it is, when the results agree (or the photo says so). Otherwise, honestly, none, with
+ * the design's reference when it is someone's signature ("Símil Polo Ralph Lauren").
+ */
+function BrandLine({
+  guess,
+  hint,
+  similar,
+  searched,
+}: {
+  guess: BrandGuess | null;
+  hint: string | null;
+  similar: string | null;
+  searched: boolean;
+}) {
+  if (!guess && !hint && !similar && !searched) return null;
   return (
     <p className="mt-3 flex items-center gap-2 text-small text-muted">
       <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-wine-bright" />
@@ -178,6 +196,11 @@ function BrandLine({ guess, hint, searched }: { guess: BrandGuess | null; hint: 
       ) : hint ? (
         <span>
           Posible marca: <span className="text-ink">{hint}</span> (por la foto)
+        </span>
+      ) : similar ? (
+        <span>
+          Sin marca identificada: <span className="text-ink">símil {similar}</span>, por el diseño. Te mostramos los más
+          parecidos.
         </span>
       ) : (
         <span>No identificamos la marca: te mostramos los diseños más parecidos.</span>

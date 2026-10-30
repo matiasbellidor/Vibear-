@@ -85,11 +85,56 @@ DRESSES = {
     "shirt dress": ("Vestido camisero", "m", None),
     "knit dress": ("Vestido tejido", "m", "knit"),
 }
+# Shoes and accessories (app/ml/accessories.py finds them). "mp"/"fp": plural, for the colour's agreement.
+SHOES = {
+    "loafers": ("Mocasines", "mp", None),
+    "sneakers": ("Zapatillas", "fp", None),
+    "running shoes": ("Zapatillas deportivas", "fp", None),
+    "ankle boots": ("Botinetas", "fp", None),
+    "knee high boots": ("Botas altas", "fp", None),
+    "cowboy boots": ("Botas texanas", "fp", None),
+    "chelsea boots": ("Botas Chelsea", "fp", None),
+    "combat boots": ("Borcegos", "mp", None),
+    "shearling boots": ("Botas de corderito", "fp", "sherpa"),
+    "high heels": ("Zapatos de taco", "mp", None),
+    "sandals": ("Sandalias", "fp", None),
+    "ballet flats": ("Chatitas", "fp", None),
+    "mules": ("Mules", "mp", None),
+    "dress shoes": ("Zapatos de vestir", "mp", None),
+    "boat shoes": ("Náuticos", "mp", None),
+    "slides": ("Ojotas", "fp", None),
+}
+BAGS = {
+    "shoulder bag": ("Cartera", "f", None),
+    "crossbody bag": ("Bandolera", "f", None),
+    "tote bag": ("Bolso tote", "m", None),
+    "backpack": ("Mochila", "f", None),
+    "clutch bag": ("Clutch", "m", None),
+    "belt bag": ("Riñonera", "f", None),
+    "baguette bag": ("Cartera baguette", "f", None),
+}
+HATS = {
+    "baseball cap": ("Gorra", "f", None),
+    "beanie": ("Gorro de lana", "m", None),
+    "bucket hat": ("Piluso", "m", None),
+    "wide brim hat": ("Sombrero", "m", None),
+    "beret": ("Boina", "f", None),
+}
+EYEWEAR = {"sunglasses": ("Anteojos de sol", "mp", None), "eyeglasses": ("Anteojos", "mp", None)}
+# What a shoe or an accessory is called when the exact type isn't clear (name, gender for the colour).
+COARSE = {"shoes": ("Zapatos", "mp"), "bag": ("Cartera", "f"), "glasses": ("Anteojos", "mp"), "hat": ("Gorro", "m"),
+          "belt": ("Cinturón", "m"), "watch": ("Reloj", "m"), "scarf": ("Bufanda", "f"), "headband": ("Vincha", "f")}
+BELTS = {"belt": ("Cinturón", "m", None)}
+WATCHES = {"wristwatch": ("Reloj", "m", None)}
+SCARVES = {"knit scarf": ("Bufanda", "f", None), "silk scarf": ("Pañuelo", "m", None)}
+HAIR = {"headband": ("Vincha", "f", None), "hair clip": ("Broche de pelo", "m", None)}
 FAMILY = {
     "trousers": PANTS,
     "shorts": SHORTS,
     "skirt": SKIRTS,
     **{label: DRESSES for label in ("short_sleeved_dress", "long_sleeved_dress", "vest_dress", "sling_dress")},
+    "shoes": SHOES, "bag": BAGS, "hat": HATS, "glasses": EYEWEAR, "belt": BELTS, "watch": WATCHES,
+    "scarf": SCARVES, "headband": HAIR,
 }
 # Shirts and outerwear share one catalogue: YOLO often calls a sweater a shirt or a shirt a jacket.
 
@@ -136,6 +181,24 @@ BRANDS = {
 }
 BRAND_MIN_SHARE = 0.7  # zero-shot brands are a hint only when the model is this sure
 
+# Designs that are a brand's signature. When the brand itself isn't known, the garment is "símil"
+# that brand, the way Argentine shops list a lookalike ("chomba símil Polo"): a reference to the
+# design, never a claim about the label. By type on purpose: below BRAND_MIN_SHARE the zero-shot
+# brand is noise (it called a black sherpa polo "Converse" and black jeans "Lululemon").
+ICONIC = {
+    "polo shirt": "Polo Ralph Lauren", "long sleeve polo shirt": "Polo Ralph Lauren", "rugby shirt": "Polo Ralph Lauren",
+    "denim shirt": "Levi's", "denim jacket": "Levi's", "denim vest": "Levi's", "jeans": "Levi's", "baggy jeans": "Levi's",
+    "denim shorts": "Levi's", "denim skirt": "Levi's",
+    "fleece pullover": "Patagonia", "sherpa pullover": "Patagonia",
+    "puffer vest": "The North Face", "puffer jacket": "The North Face", "windbreaker": "Nike",
+    "trench coat": "Burberry", "bomber jacket": "Alpha Industries",
+    "cargo pants": "Carhartt", "chino pants": "Dockers",
+    "leggings": "Lululemon", "biker shorts": "Lululemon", "sports bra": "Lululemon",
+    "shearling boots": "UGG", "combat boots": "Dr. Martens",
+}
+# A material can make the design someone else's: the sherpa polo is Stüssy's.
+ICONIC_WITH = {("polo collar sweater", "sherpa"): "Stüssy"}
+
 # Known brands for reading search results (matched as whole words, accents ignored), Argentine ones included.
 KNOWN_BRANDS = sorted({
     *BRANDS.values(), "Zara", "H&M", "Uniqlo", "Mango", "Pull&Bear", "Bershka", "Stradivarius", "Massimo Dutti", "COS",
@@ -178,6 +241,9 @@ LABEL_FAMILY = {
                                   "long_sleeved_outwear", "vest", "sling")},
     **{label: "bottom" for label in ("trousers", "shorts", "skirt")},
     **{label: "dress" for label in ("short_sleeved_dress", "long_sleeved_dress", "vest_dress", "sling_dress")},
+    "shoes": "shoes",
+    "bag": "bag",
+    **{label: "accessory" for label in ("hat", "glasses", "belt", "watch", "scarf", "headband")},
 }
 # A result is kept unless its own family's share is this low. Calibrated on the demo catalog: for a
 # trousers query, the jackets and sweaters CLIP still rated 0.63-0.65 similar scored 0.00-0.12 here,
@@ -207,17 +273,19 @@ class Description:
     kind: str  # "Buzo polo": short enough for a chip
     color: str | None
     brand: str | None  # a hint from the image alone; the search may find a better one
+    similar: str | None = None  # without a brand: whose signature design it resembles ("símil Lacoste")
 
 
 # Types never offered for a photo known to be menswear (CLIP called a man's fitted tee a crop top).
 WOMENSWEAR = {"crop top", "sports bra", "leggings", "biker shorts", "mini skirt", "midi skirt", "maxi skirt",
-              "pleated tennis skirt", "denim skirt", "slip dress", "mini dress", "maxi dress"}
+              "pleated tennis skirt", "denim skirt", "slip dress", "mini dress", "maxi dress",
+              "high heels", "ballet flats", "knee high boots", "clutch bag", "baguette bag"}
 
 
 def _agree(word: str | tuple[str, str], gender: str) -> str:
     """A word that changes with gender is a (masculine, feminine) pair."""
     if isinstance(word, tuple):
-        return word[1] if gender == "f" else word[0]
+        return word[1] if gender.startswith("f") else word[0]
     return word
 
 
@@ -321,8 +389,19 @@ def garment_colors(
     return [(main, 1.0)]
 
 
+# Plural colour words (shoes, glasses): (masculine, feminine) when they change, one word when only the
+# number does. The rest (crema, beige, bordó, azul marino...) don't change at all.
+PLURAL = {"negro": ("negros", "negras"), "blanco": ("blancos", "blancas"), "rojo": ("rojos", "rojas"),
+          "amarillo": ("amarillos", "amarillas"), "verde": "verdes", "azul": "azules", "gris": "grises",
+          "marrón": "marrones", "celeste": "celestes"}
+
+
 def color_phrase(colors: list[tuple[str, float]], gender: str) -> str | None:
-    words = [FEMININE.get(name, name) if gender == "f" else name for name, _ in colors]
+    """`gender`: "m" / "f", or "mp" / "fp" for plural names (Mocasines, Zapatillas)."""
+    if gender in ("mp", "fp"):
+        words = [_agree(PLURAL.get(name, name), gender[0]) for name, _ in colors]
+    else:
+        words = [FEMININE.get(name, name) if gender == "f" else name for name, _ in colors]
     return " y ".join(words[:2]) if words else None
 
 
@@ -372,8 +451,7 @@ class GarmentDescriber:
 
     def warm(self) -> None:
         """Embed every type prompt once (a few seconds on CPU), so the first scan isn't slower."""
-        catalogues = [UPPER, PANTS, SHORTS, SKIRTS, DRESSES]
-        self._text([f"a photo of a {t}" for c in catalogues for t in c])
+        self._text([f"a photo of a {t}" for c in [UPPER, *FAMILY.values()] for t in c])
         self._text([f"a photo of {p}" for ps in FAMILY_PROMPTS.values() for p in ps])
 
     def describe(
@@ -385,12 +463,19 @@ class GarmentDescriber:
         vector = vector if vector is not None else self._embedder.embed([crop])[0]
         probs = self._probs(vector, [f"a photo of a {t}" for t in types])
         best = int(np.argmax(probs))
-        if probs[best] < 0.25:  # not sure what it is: keep YOLO's coarse name
-            return None
+        # Not sure what it is: keep the detector's coarse name. Shoes and accessories still get their
+        # colour ("Zapatos negros": loafers half hidden under trousers are shoes, not a guess).
+        if probs[best] < (0.2 if label in COARSE else 0.25):
+            if label not in COARSE:
+                return None
+            kind, gender = COARSE[label]
+            color = color_phrase(garment_colors(image, box, polygon, False), gender)
+            return Description(name=f"{kind} {color}" if color else kind, kind=kind, color=color, brand=None)
         prompt = types[best]
         kind, gender, own_material = catalogue[prompt]
 
         name = kind
+        material = own_material
         allowed = MATERIALS_FOR.get(prompt, set())
         if own_material is None and allowed:
             materials = ["plain", *sorted(allowed)]
@@ -400,9 +485,11 @@ class GarmentDescriber:
             suffix = MATERIALS[top]
             if suffix and m[order[0]] >= 0.3 and m[order[0]] >= 1.5 * second:
                 name += " " + _agree(suffix, gender)
+                material = top
 
-        # Two-tone trousers are rare; a second colour there is nearly always shoes or a hand.
-        two_tone = catalogue is not PANTS and catalogue is not SHORTS
+        # Two-tone trousers are rare; a second colour there is nearly always shoes or a hand. Shoes and
+        # accessories come as boxes, no outline: a second colour there is usually the floor.
+        two_tone = catalogue is not PANTS and catalogue is not SHORTS and polygon is not None
         color = color_phrase(garment_colors(image, box, polygon, two_tone), gender)
         if color:
             name += " " + color
@@ -414,7 +501,9 @@ class GarmentDescriber:
         for brand, p in zip(names, b):
             merged[BRANDS[brand]] += float(p)
         brand, share = merged.most_common(1)[0]
-        return Description(name=name, kind=kind, color=color, brand=brand if share >= BRAND_MIN_SHARE else None)
+        brand = brand if share >= BRAND_MIN_SHARE else None
+        similar = None if brand else ICONIC_WITH.get((prompt, material)) or ICONIC.get(prompt)
+        return Description(name=name, kind=kind, color=color, brand=brand, similar=similar)
 
 
 def brand_from_titles(titles: list[str], minimum: int = 3, min_share: float = 0.25) -> tuple[str, int] | None:

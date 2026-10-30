@@ -159,6 +159,22 @@
   70%, 100% { transform: scale(2.8); opacity: 0; }
 }
 
+/* Each garment's outline (YOLO's mask) on a pin: invisible, but it catches the pointer, and inside a
+   ScanField the garment under the crosshair lights up while the readout names it. */
+.scan-area {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  transition: fill 150ms var(--ease-out-soft), stroke 150ms var(--ease-out-soft);
+}
+@media (hover: hover) and (pointer: fine) {
+  .scan-field .scan-area:hover {
+    fill: color-mix(in srgb, var(--color-wine-bright) 14%, transparent);
+    stroke: var(--color-wine-bright);
+  }
+}
+
 /* Pins that float gently in place (keeps their --tilt). */
 .float-pin {
   transform: rotate(var(--tilt, 0deg));
@@ -284,7 +300,7 @@
     animation: reveal 0.5s var(--ease-expo) both;
   }
 
-  /* Fragrance welcome (PerfumeBottles.tsx): the bottles float and the glow breathes, both loops. */
+  /* Perfumery welcome (Perfumery.tsx, the shops' bottles cut out): they float and the glow breathes, both loops. */
   .fragrance-float {
     animation: app-float 6s var(--ease-in-out-soft) infinite alternate;
     animation-delay: calc(var(--i, 0) * -2s);

@@ -15,14 +15,21 @@ from app.config import Settings
 from app.demo import DemoLens
 from app.images import ImageError, decode_image, encode_jpeg, fetch_image
 from app.lens import UPLOAD_MAX_BYTES, LensClient, SerpApiError, is_argentine_shop
+from app.ml.accessories import AccessoryDetector, FashionDetector
 from app.ml.describe import GarmentDescriber, brand_from_titles, family_of
 from app.ml.detector import YoloGarmentDetector, crop_detections
 from app.ml.embedder import ClipEmbedder
 from app.places import PlaceError, geocode, nearby
 from app.prices import PriceBoard, PriceError
 from app.rerank import VectorCache, http_loader, rank_by_similarity
-from app.schemas import BrandGuess, Closet, DetectedItem, DetectResponse, Match, SearchRequest, SearchResponse
+from app.ml.pose import YoloPose
+from app.schemas import (
+    Body, BrandGuess, Closet, DetectedItem, DetectResponse, Garment, Garments, Match, SearchRequest, SearchResponse,
+)
 from app.storage import CLOSET_ID_RE, ID_PATTERN, MediaStore
+from app.tryon import (
+    FAMILY_SLOTS, LAYER, MAX_GARMENTS, SLOTS, cut_garment, cut_white, data_url, is_full_body, normalized,
+)
 
 # An honest bot UA with a contact link: sites like Wikimedia answer 403 to browser-looking bot UAs.
 USER_AGENT = "VibearBot/0.2 (+https://github.com/matiasbellidor/Vibear-)"
@@ -46,6 +53,7 @@ def create_app(
     embedder=None,
     describer=None,
     lens=None,
+    pose=None,
     client: httpx.AsyncClient | None = None,
 ) -> FastAPI:
     """Build the app. Tests inject fakes; in production every dependency is created at startup."""
@@ -57,17 +65,21 @@ def create_app(
     async def lifespan(app: FastAPI):
         state = app.state
         state.http = client if client is not None else httpx.AsyncClient(headers={"User-Agent": USER_AGENT})
-        state.detector = detector or YoloGarmentDetector(
-            settings.yolo_repo, settings.yolo_file, settings.detect_confidence
+        # Clothes with their outlines (YOLO DeepFashion2) plus shoes and accessories (YOLOS Fashionpedia).
+        state.detector = detector or FashionDetector(
+            YoloGarmentDetector(settings.yolo_repo, settings.yolo_file, settings.detect_confidence),
+            AccessoryDetector(settings.accessory_repo),
         )
         state.embedder = embedder or ClipEmbedder(settings.clip_model)
         # Names garments with the same FashionCLIP. Tests that inject a fake embedder get none
         # (they can inject a fake describer instead).
         state.describer = describer or (GarmentDescriber(state.embedder) if embedder is None else None)
+        state.pose = pose or YoloPose(settings.pose_repo, settings.pose_file)
         # The first inference is ~10x slower than the rest: pay it at startup, not on the first user.
         blank = Image.new("RGB", (64, 64), "white")
         state.detector.detect(blank)
         state.embedder.embed([blank])
+        state.pose.keypoints(blank)
         if state.describer is not None:
             state.describer.warm()
 
@@ -107,13 +119,8 @@ def create_app(
     async def health(request: Request):
         return {"status": "ok", "search": request.app.state.search_mode}
 
-    @app.post("/v1/detect", response_model=DetectResponse)
-    async def detect(
-        request: Request,
-        file: UploadFile | None = File(None),
-        image_url: str | None = Form(None),
-    ):
-        """Find garments in a photo and return one crop per garment. Local and free: no SerpApi call."""
+    async def read_image(request: Request, file: UploadFile | None, image_url: str | None) -> Image.Image:
+        """The photo sent as a file or a link (fetched with the SSRF guards in app/images.py)."""
         if (file is None) == (image_url is None):
             raise HTTPException(400, "Send exactly one of: file, image_url")
         max_bytes = settings.max_upload_mb * 1024 * 1024
@@ -124,10 +131,18 @@ def create_app(
                     raise HTTPException(413, f"Image is larger than {settings.max_upload_mb} MB")
             else:
                 data = await fetch_image(image_url, max_bytes, request.app.state.http)
-            image = decode_image(data)
+            return decode_image(data)
         except ImageError as exc:
             raise HTTPException(422, str(exc)) from exc
 
+    @app.post("/v1/detect", response_model=DetectResponse)
+    async def detect(
+        request: Request,
+        file: UploadFile | None = File(None),
+        image_url: str | None = Form(None),
+    ):
+        """Find garments in a photo and return one crop per garment. Local and free: no SerpApi call."""
+        image = await read_image(request, file, image_url)
         image_id = store.put(encode_jpeg(image))
         state = request.app.state
         detections = await asyncio.to_thread(state.detector.detect, image)
@@ -150,6 +165,7 @@ def create_app(
                     name=description.name if description else None,
                     kind=description.kind if description else None,
                     brand=description.brand if description else None,
+                    similar=description.similar if description else None,
                 )
             )
         if not items:
@@ -276,6 +292,62 @@ def create_app(
             store.write_closet(closet_id, kept)
         keep_closet_cookie(response, request, closet_id)
         return kept
+
+    @app.post("/v1/tryon/body", response_model=Body)
+    async def tryon_body(request: Request, file: UploadFile = File(...)):
+        """Where your shoulders, hips, knees and ankles are in a full-body photo, for the fitting
+        room. The photo is read in memory and not kept."""
+        image = await read_image(request, file, None)
+        points = await asyncio.to_thread(request.app.state.pose.keypoints, image)
+        if not is_full_body(points):
+            raise HTTPException(422, "No full body found")
+        return Body(width=image.width, height=image.height, keypoints=normalized(points, image.width, image.height))
+
+    @app.post("/v1/tryon/garments", response_model=Garments)
+    async def tryon_garments(
+        request: Request,
+        file: UploadFile | None = File(None),
+        image_url: str | None = Form(None),
+    ):
+        """Every garment in a photo, cut out for the fitting room: a full outfit gives a top, trousers
+        and a jacket at once. With the person wearing them, their pose comes back too, so each piece can
+        be fitted shoulder to shoulder. Nothing is stored."""
+        image = await read_image(request, file, image_url)
+        state = request.app.state
+        return await asyncio.to_thread(cut_garments, state, image)
+
+    def cut_garments(state, image: Image.Image) -> Garments:
+        width, height = image.size
+        detections = [d for d in sorted(state.detector.detect(image), key=lambda d: d.confidence, reverse=True) if d.label in SLOTS]
+        detections = detections[:MAX_GARMENTS]
+        on_top = lambda det: [o for o in detections if LAYER[SLOTS[o.label]] > LAYER[SLOTS[det.label]]]  # noqa: E731
+        cuts = [(det, cut) for det in detections if (cut := cut_garment(image, det, on_top(det)))]
+        items = []
+        for det, (piece, (x1, y1, x2, y2)) in cuts:
+            description = state.describer.describe(image.crop((x1, y1, x2, y2)), det.label, image, det.box, det.polygon) \
+                if state.describer is not None else None
+            items.append(Garment(slot=SLOTS[det.label], label=det.label, name=description.name if description else None,
+                                 image=data_url(piece), box=(x1 / width, y1 / height, x2 / width, y2 / height)))
+        pose = None
+        if items:
+            points = state.pose.keypoints(image)
+            pose = normalized(points, width, height) if is_full_body(points) else None
+        else:
+            piece = cut_white(image)
+            if piece is None:
+                raise HTTPException(422, "No garment found")
+            slot = "top"
+            if state.describer is not None:
+                shares = state.describer.family_shares(state.embedder.embed([image])[0])
+                slot = FAMILY_SLOTS.get(max(shares, key=shares.get), "top")
+            items.append(Garment(slot=slot, label=None, name=None, image=data_url(piece), box=(0, 0, 1, 1)))
+        return Garments(width=width, height=height, pose=pose, items=items)
+
+    @app.get("/v1/fragrances")
+    async def fragrances(request: Request):
+        """The perfumery catalogue: every fragrance with its best price at Argentine shops and the
+        shop's own photo of the bottle. Cached 12 h."""
+        return await request.app.state.prices.catalogue()
 
     @app.get("/v1/fragrances/{fragrance_id}/prices")
     async def fragrance_prices(request: Request, fragrance_id: str = Path(pattern=r"^[a-z0-9-]{1,40}$")):

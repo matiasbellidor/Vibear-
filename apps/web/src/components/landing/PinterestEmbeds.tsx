@@ -15,7 +15,7 @@ const SCRIPT_SRC = "https://assets.pinterest.com/js/pinit.js";
  * their author and a link back. pinit.js is loaded once per page (as Pinterest asks), and only
  * when the section gets close to the viewport, so it never weighs on the first load.
  */
-export function PinterestEmbeds({ board, pins }: { board?: string; pins: string[] }) {
+export function PinterestEmbeds({ boards, pins }: { boards: string[]; pins: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,11 +43,16 @@ export function PinterestEmbeds({ board, pins }: { board?: string; pins: string[
 
   return (
     <div ref={ref} className="space-y-8">
-      {board && (
-        <div className="overflow-hidden">
-          <a data-pin-do="embedBoard" data-pin-scale-height="480" data-pin-scale-width="110" href={board} className="text-micro underline">
-            Ver el tablero en Pinterest
-          </a>
+      {boards.length > 0 && (
+        // Each board with its owner's own avatar and name, as Pinterest shows it.
+        <div className="grid gap-8 lg:grid-cols-2">
+          {boards.map((board) => (
+            <div key={board} className="min-w-0 overflow-hidden">
+              <a data-pin-do="embedBoard" data-pin-scale-height="480" data-pin-scale-width="110" href={board} className="text-micro underline">
+                Ver el tablero en Pinterest
+              </a>
+            </div>
+          ))}
         </div>
       )}
       {pins.length > 0 && (

@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     yolo_repo: str = "Bingsu/adetailer"
     yolo_file: str = "deepfashion2_yolov8s-seg.pt"
     clip_model: str = "patrickjohncyh/fashion-clip"
+    accessory_repo: str = "valentinafeve/yolos-fashionpedia"  # shoes, bags, glasses, hats, belts (MIT)
+    pose_repo: str = "Ultralytics/YOLO11"  # body keypoints for the fitting room
+    pose_file: str = "yolo11n-pose.pt"
     detect_confidence: float = 0.35
 
     data_dir: Path = Path("data")

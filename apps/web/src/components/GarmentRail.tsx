@@ -50,6 +50,11 @@ export function GarmentRail({
                     {Math.round(item.confidence * 100)}% seguro
                   </span>
                 )}
+                {(item.brand || item.similar) && (
+                  <span className="block truncate text-micro text-wine-bright">
+                    {item.brand ?? `Símil ${item.similar}`}
+                  </span>
+                )}
               </button>
             </li>
           );

@@ -1,4 +1,5 @@
 import { Benefits, Carousels, FinalCta, FromPinterest, Problem } from "@/components/landing/Sections";
+import { Perfumery } from "@/components/landing/Perfumery";
 import { WeeklyOutfits } from "@/components/landing/WeeklyOutfits";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { Story } from "@/components/landing/Story";
@@ -6,7 +7,7 @@ import { PINS } from "@/lib/landing";
 import { getLanding } from "@/lib/landing-data";
 
 // The story, page after page, alternating black and white: the promise and how it works (scroll
-// story), the problem, the feed, why it helps, the week's outfits (and a fragrance), straight from
+// story), the problem, the feed, why it helps, the week's outfits, the perfumery, straight from
 // Pinterest, your turn.
 export default function Landing() {
   const { pins, explainer, local } = getLanding();
@@ -20,6 +21,7 @@ export default function Landing() {
       <Carousels pins={pins} />
       <Benefits />
       <WeeklyOutfits pins={outfits} />
+      <Perfumery />
       <FromPinterest />
       <FinalCta pins={pins} />
     </PageTransition>

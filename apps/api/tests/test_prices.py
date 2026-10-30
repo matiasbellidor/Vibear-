@@ -1,9 +1,12 @@
 import asyncio
 import json
+from urllib.parse import urlsplit
 
 import httpx
 
-from app.prices import FRAGRANCES, Offer, PriceBoard, Shop, offers_from_page, offers_from_shopping, plausible
+from app.prices import (
+    FRAGRANCES, Offer, PriceBoard, Shop, offers_from_page, offers_from_shopping, offers_from_vtex, plausible, vtex_api,
+)
 
 SHOP = Shop("Tienda", "https://tienda.com.ar/erba-pura")
 ERBA = FRAGRANCES["erba-pura"]
@@ -14,19 +17,21 @@ def ld(*offers, name="Xerjoff Erba Pura 100 ml"):
     return f'<script type="application/ld+json">{json.dumps(product)}</script>'
 
 
-def tiendanube(title, *variants):
-    """A Tiendanube product page: the title, plus each variant as the store embeds it."""
+def tiendanube(title, *variants, image="http://cdn.test/erba-pura-640-0.webp"):
+    """A Tiendanube product page: the title, the photo it shares, and each variant as the store embeds it."""
     rows = [
         {"option0": size, "price_number": price, "price_long": f"${price:,} ARS", "available": available}
         for size, price, available in variants
     ]
-    return f"<title>{title}</title>\n<script>\n  LS.variants = {json.dumps(rows)};\n</script>"
+    return (f'<title>{title}</title><meta property="og:image" content="{image}" />\n'
+            f"<script>\n  LS.variants = {json.dumps(rows)};\n</script>")
 
 
 def test_tiendanube_pages_give_the_100_ml_bottle_in_stock():
     html = tiendanube("Xerjoff Erba Pura EDP | Oud Maison", ("50ml", 420000, True), ("100ml", 585000, True))
     [offer] = offers_from_page(html, SHOP, ERBA)
     assert (offer.shop, offer.price, offer.currency, offer.source) == ("Tienda", 585000.0, "ARS", "page")
+    assert offer.image == "https://cdn.test/erba-pura-640-0.webp"  # the shop's photo, always https
 
     sold_out = tiendanube("Xerjoff Erba Pura", ("50ml", 488000, True), ("100ml", 601000, False))
     assert offers_from_page(sold_out, SHOP, ERBA) == []  # only the 50 ml left: not the same bottle
@@ -107,11 +112,53 @@ def test_offers_from_argentine_shops_and_shopping_cheapest_first():
         ("Perfumería B", 560000.0, "ARS"), (fourth.name, 634115.0, "ARS")]
     assert third.url not in calls
     assert result["fragrance"]["name"] == "Erba Pura"
+    assert result["image"] == "https://cdn.test/erba-pura-640-0.webp"
 
     # Cached: a second visit doesn't go back to the shops.
     before = len(calls)
     asyncio.run(board.prices("erba-pura"))
     assert len(calls) == before
+
+
+def vtex_product(name, *items):
+    """A VTEX catalogue answer: one product, one item (SKU) per size."""
+    return [{"productName": name, "items": [
+        {"name": size, "images": [{"imageUrl": f"https://cdn.test/{size}.jpg"}],
+         "sellers": [{"commertialOffer": {"Price": price, "AvailableQuantity": stock}}]}
+        for size, price, stock in items]}]
+
+
+def test_vtex_shops_give_the_right_size_in_stock():
+    male = FRAGRANCES["le-male-elixir"]
+    shop = male.shops[0]
+    product = vtex_product("Le Male Elixir Parfum", ("200 Ml", 469500, 99), ("125 Ml", 375550, 100), ("75 Ml", 319150, 100))
+    [offer] = offers_from_vtex(product, shop, male)
+    assert (offer.price, offer.currency, offer.image) == (375550.0, "ARS", "https://cdn.test/125 Ml.jpg")
+    assert offers_from_vtex(vtex_product("Le Male Elixir Parfum", ("125 Ml", 375550, 0)), shop, male) == []  # no stock
+    assert vtex_api(shop.url) == "https://www.perfumeriaspigmento.com.ar/api/catalog_system/pub/products/search/jean-paul-gaultier-le-male-elixir-parfum/p"
+
+
+def test_the_catalogue_reads_every_fragrance_from_the_shops_without_spending_searches():
+    def page(fragrance, shop):
+        if shop.url.endswith("/p"):
+            return httpx.Response(200, json=[{"productName": f"{fragrance.house} {fragrance.name}", "items": [
+                {"name": f"{fragrance.size_ml} Ml", "images": [{"imageUrl": f"https://cdn.test/{fragrance.id}.webp"}],
+                 "sellers": [{"commertialOffer": {"Price": 500000, "AvailableQuantity": 3}}]}]}])
+        return httpx.Response(200, text=tiendanube(f"{fragrance.house} {fragrance.name} {fragrance.size_ml} ml",
+                                                   ("", 500000, True), image=f"https://cdn.test/{fragrance.id}.webp"))
+
+    responses = {(vtex_api(shop.url) if shop.url.endswith("/p") else shop.url): page(f, shop)
+                 for f in FRAGRANCES.values() for shop in f.shops}
+    board, calls = board_with(responses, key="test-key")
+    catalogue = asyncio.run(board.catalogue())
+    assert [item["fragrance"]["id"] for item in catalogue["items"]] == list(FRAGRANCES)
+    assert all(item["offers"] and item["image"] == f"https://cdn.test/{item['fragrance']['id']}.webp"
+               for item in catalogue["items"])
+    assert "https://serpapi.com/search.json" not in calls
+    pages = [url for url in calls if not url.endswith("/robots.txt")]
+    assert len(pages) == len(set(pages))  # each shop page read once
+    shops = {urlsplit(s.url).netloc for f in FRAGRANCES.values() for s in f.shops}
+    assert len([url for url in calls if url.endswith("/robots.txt")]) == len(shops)  # one robots.txt per shop
 
 
 def test_every_shop_is_argentine():

@@ -4,20 +4,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, ViewTransition, useEffect } from "react";
 import { syncCloset, useSaved } from "@/lib/storage";
-import { Icon, cx, icons } from "./ui";
+import { Icon, cx, icons, tapArea } from "./ui";
 
 // The tabs in order. Picking a tab to the right slides the page left, and the other way round
 // (PageTransition); the wine pill morphs from the old tab to the new one.
 const TABS = [
   { href: "/", label: "Inicio", icon: icons.home },
   { href: "/scan", label: "Escanear", icon: icons.scan },
+  { href: "/outfits", label: "Outfits", icon: icons.hanger },
   { href: "/saved", label: "Guardados", icon: icons.bookmark },
 ] as const;
 
 function tabOf(pathname: string): number {
   if (pathname === "/") return 0;
   if (pathname === "/scan" || pathname.startsWith("/look/")) return 1;
-  if (pathname === "/saved") return 2;
+  if (pathname === "/outfits") return 2;
+  if (pathname === "/saved") return 3;
   return -1;
 }
 
@@ -32,7 +34,7 @@ export function Header() {
         <Link
           href="/"
           aria-label="Vibear, inicio"
-          className="font-display text-logo tracking-[0.16em] sm:tracking-[0.22em]"
+          className={cx("font-display text-logo tracking-[0.16em] sm:tracking-[0.22em]", tapArea)}
         >
           VIBEAR
         </Link>
@@ -66,8 +68,9 @@ function Tabs({ active }: { active: number }) {
               )}
             >
               <Icon path={tab.icon} filled={current && tab.href === "/saved"} />
-              {/* On phones only the current tab shows its name; the others keep it for screen readers. */}
-              <span className={current ? undefined : "sr-only sm:not-sr-only"}>{tab.label}</span>
+              {/* On phones only the current tab shows its name (under 380px, four names don't fit:
+                  icons only, the wine pill marks the current one); screen readers always get it. */}
+              <span className={current ? "max-[379px]:sr-only" : "sr-only sm:not-sr-only"}>{tab.label}</span>
               {count > 0 && <span className="tabular-nums">{count}</span>}
             </span>
           );

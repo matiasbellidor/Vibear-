@@ -37,6 +37,21 @@ class FakeEmbedder:
         return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
 
 
+class FakePose:
+    """A person standing in the middle of any photo, or nobody (keypoints=None)."""
+
+    STANDING = {"nose": (0.5, 0.1), "left_shoulder": (0.62, 0.25), "right_shoulder": (0.38, 0.25),
+                "left_hip": (0.58, 0.52), "right_hip": (0.42, 0.52), "left_ankle": (0.56, 0.95), "right_ankle": (0.44, 0.95)}
+
+    def __init__(self, points=STANDING):
+        self.points = points
+
+    def keypoints(self, image):
+        if self.points is None:
+            return None
+        return {name: (x * image.width, y * image.height) for name, (x, y) in self.points.items()}
+
+
 class FakeLens:
     def __init__(self, matches):
         self.matches = matches
@@ -73,7 +88,7 @@ def thumbnails_transport() -> httpx.MockTransport:
 
 @pytest.fixture
 def make_client(tmp_path):
-    def _make(detections=(), lens=None, describer=None, **overrides) -> TestClient:
+    def _make(detections=(), lens=None, describer=None, pose=None, **overrides) -> TestClient:
         settings = Settings(_env_file=None, data_dir=tmp_path, **overrides)
         app = create_app(
             settings,
@@ -81,6 +96,7 @@ def make_client(tmp_path):
             embedder=FakeEmbedder(),
             describer=describer,
             lens=lens,
+            pose=pose or FakePose(),
             client=httpx.AsyncClient(transport=thumbnails_transport()),
         )
         return TestClient(app)

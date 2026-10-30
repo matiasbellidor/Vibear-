@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bodoni_Moda, Geist_Mono, Inter_Tight } from "next/font/google";
 import Link from "next/link";
 import { Header } from "@/components/Header";
+import { cx, tapArea } from "@/components/ui";
 import { whatsappUrl } from "@/lib/contact";
 import "./globals.css";
 
@@ -36,10 +37,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="flex flex-wrap justify-between gap-x-6 gap-y-2 text-micro text-muted">
             <span>Vibear · MVP</span>
             <span className="flex flex-wrap gap-x-6 gap-y-2">
-              <Link href="/creditos" className="hover:underline">
+              <Link href="/creditos" className={cx("hover:underline", tapArea)}>
                 Créditos de fotos
               </Link>
-              <a href={whatsappUrl("Hola! Vengo de Vibear.")} target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href={whatsappUrl("Hola! Vengo de Vibear.")} target="_blank" rel="noopener noreferrer" className={cx("hover:underline", tapArea)}>
                 Contacto por WhatsApp
               </a>
               <span>Resultados visuales vía Google Lens</span>

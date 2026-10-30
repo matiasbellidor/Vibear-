@@ -156,3 +156,13 @@ test("garments are named for what they are, with the brand the results agree on"
   await expect(page.getByRole("button", { name: /Buzo polo de corderito negro/ })).toBeVisible();
   await expect(page.getByText(/Marca probable:/)).toContainText("Stüssy · la mencionan 5 de 12 resultados");
 });
+
+test("without a brand, a signature design shows as símil that brand", async ({ page }) => {
+  await mockApi(page);
+  const [first, ...rest] = LOOK.items;
+  const chomba = { ...first, name: "Chomba azul marino", kind: "Chomba", similar: "Polo Ralph Lauren" };
+  await page.route("**/api/v1/looks/*", (route) => route.fulfill({ json: { ...LOOK, items: [chomba, ...rest] } }));
+  await page.goto(`/look/${LOOK.image_id}`);
+  await expect(page.getByRole("button", { name: /Chomba azul marino/ })).toContainText("Símil Polo Ralph Lauren");
+  await expect(page.getByText(/Sin marca identificada/)).toContainText("símil Polo Ralph Lauren, por el diseño");
+});

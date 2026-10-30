@@ -3,6 +3,11 @@ from dataclasses import dataclass
 from PIL import Image
 
 MAX_ITEMS = 6
+# DeepFashion2's classes. Anything else (shoes, bags...) comes from app/ml/accessories.py.
+GARMENT_LABELS = {
+    "short_sleeved_shirt", "long_sleeved_shirt", "short_sleeved_outwear", "long_sleeved_outwear", "vest", "sling",
+    "shorts", "trousers", "skirt", "short_sleeved_dress", "long_sleeved_dress", "vest_dress", "sling_dress",
+}
 
 
 @dataclass(frozen=True)
@@ -52,7 +57,9 @@ def crop_detections(
     kept = []
     for det in sorted(detections, key=lambda d: d.confidence, reverse=True):
         x1, y1, x2, y2 = det.box
-        if (x2 - x1) * (y2 - y1) < min_area_ratio * width * height:
+        # Shoes, a belt or sunglasses are small in a full-body photo and still worth finding.
+        floor = min_area_ratio if det.label in GARMENT_LABELS else min_area_ratio / 5
+        if (x2 - x1) * (y2 - y1) < floor * width * height:
             continue
         dx, dy = (x2 - x1) * pad, (y2 - y1) * pad
         box = (

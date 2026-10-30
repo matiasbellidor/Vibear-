@@ -56,7 +56,8 @@ Everything is in `apps/web/src/app/globals.css`, so components only pick class n
 | `.page` | a section whose background (a `::before`, so text never scales) opens from 90% width as it enters; the top corners stay rounded, like a sheet. It also has `content-visibility: auto` |
 | `.app-pop`, `.app-float` (`--i`, `--from-*`) | the brand marks behind the headline: they come out from behind its centre one by one, then float (a loop); `.story-app` spreads them outward (`--spread`) as the headline scrolls away |
 | `.tab-beam`, `.tab-chip` (`--n`), `.tab-drop`, `.tab-pop` | the tab banners: one-shot, so they replay each time the tab opens |
-| `.fragrance-bottle` (`--from-x`, `--i`), `.fragrance-float`, `.fragrance-glow` | the fragrance welcome: bottles rise into the glow as the part scrolls in (`view()`, centre first), then float; the glow breathes. Both loops carry `.motion-loop` |
+| `.fragrance-bottle` (`--from-x`, `--i`), `.fragrance-float`, `.fragrance-glow` | the perfumery welcome (real bottles, cut out): they rise into the glow as the section scrolls in (`view()`, centre first), then float; the glow breathes. Both loops carry `.motion-loop` |
+| `.scan-area` (inside `.scan-field`) | a garment's outline on a pin lights up (wine fill + stroke, 150 ms) under the ScanField crosshair; mouse only |
 | `.swap-in` | a quick (0.5 s) arrival for content that changes after a choice, like the 404's look per mood |
 | `::view-transition-*(.nav-forward / .nav-back / .page-fade / .nav-pill / site-header)` | page transitions: 150 ms out, 380 ms in; the header never moves |
 | `.scroll-progress` | the 2px wine reading bar under the header, on `scroll(root)` |

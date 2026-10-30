@@ -2,7 +2,7 @@
 // Hotspots, explainer boxes and similarities are real YOLO / FashionCLIP output.
 
 export type Credit = { title: string; author: string; license: string; url: string };
-export type Hotspot = { label: string; confidence: number | null; kind?: string; name?: string; x: number; y: number };
+export type Hotspot = { label: string; confidence: number | null; kind?: string; name?: string; x: number; y: number; outline?: string };
 export type Pin = { src: string; width: number; height: number; kind: "woman" | "man" | "product" | "board"; style?: string; hotspots: Hotspot[]; credits: Credit[] };
 export type Match = { src: string; width: number; height: number; label: string; name?: string; similarity: number };
 export type Explainer = { src: string; width: number; height: number; credit: Credit; matches: Match[];
@@ -22,7 +22,8 @@ export const PINS: Pin[] = [
         "kind": "Sweater tejido",
         "name": "Sweater tejido gris",
         "x": 0.528,
-        "y": 0.506
+        "y": 0.506,
+        "outline": "39,29 32,33 30,42 31,59 33,62 37,66 40,67 50,65 69,64 73,66 75,63 73,60 71,55 76,50 72,47 66,44 64,41 58,37 53,33 49,32 44,30"
       },
       {
         "label": "trousers",
@@ -30,7 +31,17 @@ export const PINS: Pin[] = [
         "kind": "Pantalón de vestir",
         "name": "Pantalón de vestir blanco",
         "x": 0.588,
-        "y": 0.805
+        "y": 0.805,
+        "outline": "64,64 61,65 49,65 44,65 40,66 41,76 42,83 43,86 44,88 45,90 46,93 47,95 48,99 77,93 76,87 75,82 74,79 73,75 72,72 71,69 70,66"
+      },
+      {
+        "label": "glasses",
+        "confidence": 0.558,
+        "kind": "Anteojos",
+        "name": "Anteojos camel",
+        "x": 0.477,
+        "y": 0.2,
+        "outline": "40,18 56,18 56,22 40,22"
       }
     ],
     "credits": [
@@ -50,12 +61,31 @@ export const PINS: Pin[] = [
     "style": "old-money",
     "hotspots": [
       {
+        "label": "glasses",
+        "confidence": 0.871,
+        "kind": "Anteojos de sol",
+        "name": "Anteojos de sol negros",
+        "x": 0.399,
+        "y": 0.231,
+        "outline": "26,19 54,19 54,27 26,27"
+      },
+      {
         "label": "long_sleeved_shirt",
         "confidence": 0.683,
         "kind": "Campera de cuero",
         "name": "Campera de cuero marrón",
         "x": 0.45,
-        "y": 0.633
+        "y": 0.633,
+        "outline": "49,33 47,48 43,55 39,63 35,56 32,47 29,38 20,42 12,46 9,56 6,73 5,87 16,89 78,98 82,91 82,65 78,55 75,46 66,40 58,37 48,32"
+      },
+      {
+        "label": "headband",
+        "confidence": 0.508,
+        "kind": "Broche de pelo",
+        "name": "Broche de pelo azul",
+        "x": 0.339,
+        "y": 0.091,
+        "outline": "25,6 43,6 43,12 25,12"
       }
     ],
     "credits": [
@@ -75,12 +105,22 @@ export const PINS: Pin[] = [
     "style": "clean-girl",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.991,
+        "kind": "Zapatillas",
+        "name": "Zapatillas gris oscuro",
+        "x": 0.543,
+        "y": 0.872,
+        "outline": "50,84 59,84 59,90 50,90"
+      },
+      {
         "label": "long_sleeved_outwear",
         "confidence": 0.791,
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.51,
-        "y": 0.596
+        "y": 0.596,
+        "outline": "55,51 55,65 58,68 59,65 62,63 63,60 63,57 61,54 60,52 58,51 55,51 44,51 42,53 41,55 40,57 38,60 41,64 43,69 46,68 46,64 47,53"
       },
       {
         "label": "trousers",
@@ -88,7 +128,8 @@ export const PINS: Pin[] = [
         "kind": "Calza",
         "name": "Calza negra",
         "x": 0.512,
-        "y": 0.751
+        "y": 0.751,
+        "outline": "44,64 45,68 45,70 46,71 46,72 47,73 47,74 48,75 48,76 48,77 49,79 49,80 50,82 50,83 51,85 52,86 55,85 55,80 56,77 56,74 57,72 57,70 58,68 58,66"
       }
     ],
     "credits": [
@@ -108,12 +149,22 @@ export const PINS: Pin[] = [
     "style": "streetwear",
     "hotspots": [
       {
+        "label": "hat",
+        "confidence": 0.916,
+        "kind": "Gorro de lana",
+        "name": "Gorro de lana camel",
+        "x": 0.419,
+        "y": 0.242,
+        "outline": "29,17 54,17 54,32 29,32"
+      },
+      {
         "label": "long_sleeved_outwear",
         "confidence": 0.908,
         "kind": "Camisa de jean",
         "name": "Camisa de jean azul",
         "x": 0.418,
-        "y": 0.644
+        "y": 0.644,
+        "outline": "50,52 53,67 56,76 63,82 72,75 69,61 66,49 60,43 52,40 38,50 35,40 27,40 20,42 15,50 11,65 16,76 24,78 26,89 32,84 36,77 39,58"
       },
       {
         "label": "trousers",
@@ -121,7 +172,8 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean negro",
         "x": 0.492,
-        "y": 0.898
+        "y": 0.898,
+        "outline": "56,81 54,82 52,82 51,83 49,83 48,84 40,84 36,84 33,85 31,84 29,84 28,92 29,94 29,98 30,100 70,92 70,91 69,90 68,89 68,88 67,87 67,86 66,85 66,83 65,82"
       }
     ],
     "credits": [
@@ -145,7 +197,8 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean gris oscuro",
         "x": 0.514,
-        "y": 0.664
+        "y": 0.664,
+        "outline": "63,43 51,44 37,44 36,48 34,53 33,58 31,70 44,90 46,79 48,68 49,63 51,59 53,62 55,67 56,83 66,90 71,76 70,64 68,56 67,51 65,45"
       },
       {
         "label": "vest",
@@ -153,7 +206,17 @@ export const PINS: Pin[] = [
         "kind": "Chaleco inflable",
         "name": "Chaleco inflable de cuero negro",
         "x": 0.511,
-        "y": 0.24
+        "y": 0.24,
+        "outline": "44,8 43,10 39,11 37,12 36,14 35,17 33,21 36,39 42,39 53,40 60,39 64,39 67,38 68,31 68,20 67,18 66,15 65,12 62,11 59,10 55,8"
+      },
+      {
+        "label": "belt",
+        "confidence": 0.626,
+        "kind": "Cinturón",
+        "name": "Cinturón blanco",
+        "x": 0.503,
+        "y": 0.441,
+        "outline": "34,41 67,41 67,47 34,47"
       }
     ],
     "credits": [
@@ -178,7 +241,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.534,
-        "y": 0.606
+        "y": 0.606,
+        "outline": "52,94 48,93 48,88 56,76 53,64 65,67 70,76 78,76 76,66 76,49 80,36 63,27 61,35 67,42 58,54 48,55 35,53 27,63 27,81 35,89 47,93"
       },
       {
         "label": "trousers",
@@ -186,7 +250,8 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean gris",
         "x": 0.484,
-        "y": 0.907
+        "y": 0.907,
+        "outline": "49,83 45,83 37,83 33,84 30,87 26,88 25,90 23,92 22,93 21,96 40,100 46,98 51,98 54,99 73,97 74,94 77,92 77,86 75,84 63,83 59,84 53,84"
       }
     ],
     "credits": [
@@ -211,7 +276,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.454,
-        "y": 0.537
+        "y": 0.537,
+        "outline": "55,44 57,63 59,71 69,72 67,62 64,45 61,39 58,33 52,33 55,44 47,39 43,35 37,32 30,34 25,38 22,45 24,66 26,71 36,70 45,71 49,46"
       },
       {
         "label": "trousers",
@@ -219,7 +285,17 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean azul marino",
         "x": 0.411,
-        "y": 0.838
+        "y": 0.838,
+        "outline": "28,70 27,72 26,77 26,83 25,90 24,95 23,97 37,98 38,96 39,95 40,93 41,91 42,92 41,96 56,99 56,96 57,93 58,90 59,81 59,73 58,70"
+      },
+      {
+        "label": "hat",
+        "confidence": 0.709,
+        "kind": "Gorro de lana",
+        "name": "Gorro de lana celeste",
+        "x": 0.442,
+        "y": 0.192,
+        "outline": "31,13 57,13 57,25 31,25"
       }
     ],
     "credits": [
@@ -239,12 +315,22 @@ export const PINS: Pin[] = [
     "style": "streetwear",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.967,
+        "kind": "Botas altas",
+        "name": "Botas altas marrones",
+        "x": 0.571,
+        "y": 0.857,
+        "outline": "52,79 62,79 62,93 52,93"
+      },
+      {
         "label": "trousers",
         "confidence": 0.914,
         "kind": "Jean ancho",
         "name": "Jean ancho azul marino",
         "x": 0.536,
-        "y": 0.671
+        "y": 0.671,
+        "outline": "54,48 46,53 39,53 30,54 27,59 42,75 49,72 46,66 44,60 53,59 59,65 62,69 61,76 59,82 68,85 71,80 74,75 77,70 81,65 74,57 67,51"
       },
       {
         "label": "long_sleeved_outwear",
@@ -252,7 +338,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.504,
-        "y": 0.385
+        "y": 0.385,
+        "outline": "60,38 63,43 65,47 68,51 73,56 71,48 69,34 67,30 60,26 53,37 51,32 48,28 40,21 33,23 30,27 28,32 28,46 34,51 42,54 49,53 54,47"
       }
     ],
     "credits": [
@@ -272,12 +359,22 @@ export const PINS: Pin[] = [
     "style": "casual",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.992,
+        "kind": "Zapatillas",
+        "name": "Zapatillas grises",
+        "x": 0.595,
+        "y": 0.858,
+        "outline": "28,78 91,78 91,94 28,94"
+      },
+      {
         "label": "long_sleeved_outwear",
         "confidence": 0.929,
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.441,
-        "y": 0.132
+        "y": 0.132,
+        "outline": "49,3 51,9 53,15 55,18 57,23 61,21 65,20 68,17 73,12 77,8 79,5 81,2 43,4 7,6 12,10 19,16 26,16 30,22 37,23 44,24 44,12"
       },
       {
         "label": "trousers",
@@ -285,7 +382,8 @@ export const PINS: Pin[] = [
         "kind": "Pantalón chino",
         "name": "Pantalón chino caqui",
         "x": 0.52,
-        "y": 0.49
+        "y": 0.49,
+        "outline": "46,18 40,24 27,22 29,38 33,45 36,52 39,66 42,78 50,75 51,38 55,43 58,48 62,54 65,64 68,79 77,55 74,33 71,24 65,20 58,23 51,21"
       }
     ],
     "credits": [
@@ -310,7 +408,8 @@ export const PINS: Pin[] = [
         "kind": "Polera",
         "name": "Polera tejida blanca",
         "x": 0.5,
-        "y": 0.58
+        "y": 0.58,
+        "outline": "66,30 68,38 67,43 55,43 42,41 31,43 21,50 7,61 4,73 17,77 28,80 38,83 55,80 67,73 87,71 96,64 93,52 87,45 80,39 76,33 67,31"
       }
     ],
     "credits": [
@@ -330,12 +429,31 @@ export const PINS: Pin[] = [
     "style": "old-money",
     "hotspots": [
       {
+        "label": "hat",
+        "confidence": 0.961,
+        "kind": "Boina",
+        "name": "Boina marrón",
+        "x": 0.54,
+        "y": 0.378,
+        "outline": "40,32 68,32 68,43 40,43"
+      },
+      {
+        "label": "bag",
+        "confidence": 0.782,
+        "kind": "Cartera",
+        "name": "Cartera negra",
+        "x": 0.697,
+        "y": 0.74,
+        "outline": "64,48 76,48 76,100 64,100"
+      },
+      {
         "label": "long_sleeved_outwear",
         "confidence": 0.635,
         "kind": "Tapado",
         "name": "Tapado negro",
         "x": 0.558,
-        "y": 0.713
+        "y": 0.713,
+        "outline": "48,47 40,52 35,56 32,64 31,71 40,78 48,97 52,85 58,88 62,94 73,89 74,78 80,71 80,63 77,57 71,52 62,49 59,57 56,63 52,59 49,52"
       }
     ],
     "credits": [
@@ -357,19 +475,22 @@ export const PINS: Pin[] = [
         "label": "long_sleeved_outwear",
         "confidence": null,
         "x": 0.294,
-        "y": 0.298
+        "y": 0.298,
+        "outline": "3,6 55,6 55,54 3,54"
       },
       {
         "label": "trousers",
         "confidence": null,
         "x": 0.76,
-        "y": 0.402
+        "y": 0.402,
+        "outline": "56,12 96,12 96,68 56,68"
       },
       {
         "label": "shoes",
         "confidence": null,
         "x": 0.311,
-        "y": 0.798
+        "y": 0.798,
+        "outline": "10,65 53,65 53,95 10,95"
       }
     ],
     "credits": [
@@ -406,7 +527,8 @@ export const PINS: Pin[] = [
         "kind": "Camisa a cuadros",
         "name": "Camisa a cuadros marrón y crema",
         "x": 0.5,
-        "y": 0.622
+        "y": 0.622,
+        "outline": "76,99 84,92 90,83 96,70 96,36 82,33 76,46 70,60 55,70 42,65 48,50 54,40 36,33 17,41 2,71 17,71 21,56 30,71 51,73 71,80 76,99"
       },
       {
         "label": "trousers",
@@ -414,7 +536,8 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean celeste",
         "x": 0.479,
-        "y": 0.84
+        "y": 0.84,
+        "outline": "33,70 28,74 26,76 23,79 22,81 21,83 20,86 19,89 17,91 16,93 79,94 79,82 75,81 71,80 64,80 60,79 58,77 54,75 47,75 42,73 40,71"
       }
     ],
     "credits": [
@@ -439,7 +562,17 @@ export const PINS: Pin[] = [
         "kind": "Campera de cuero",
         "name": "Campera de cuero camel",
         "x": 0.507,
-        "y": 0.617
+        "y": 0.617,
+        "outline": "38,29 27,35 18,41 14,49 9,62 26,94 31,82 59,84 84,89 91,79 90,56 86,46 82,39 71,33 64,32 69,45 67,65 62,57 58,47 54,40 44,31"
+      },
+      {
+        "label": "glasses",
+        "confidence": 0.61,
+        "kind": "Anteojos de sol",
+        "name": "Anteojos de sol violeta",
+        "x": 0.58,
+        "y": 0.145,
+        "outline": "48,11 68,11 68,18 48,18"
       }
     ],
     "credits": [
@@ -461,7 +594,8 @@ export const PINS: Pin[] = [
         "label": "shoes",
         "confidence": null,
         "x": 0.5,
-        "y": 0.5
+        "y": 0.5,
+        "outline": "0,0 100,0 100,100 0,100"
       }
     ],
     "credits": [
@@ -486,7 +620,8 @@ export const PINS: Pin[] = [
         "kind": "Cárdigan",
         "name": "Cárdigan tejido blanco",
         "x": 0.613,
-        "y": 0.642
+        "y": 0.642,
+        "outline": "29,47 35,71 31,79 32,86 44,80 64,83 75,86 91,83 97,91 97,84 99,50 92,38 83,35 70,39 67,69 63,80 55,74 51,66 47,58 44,38 36,40"
       },
       {
         "label": "skirt",
@@ -494,7 +629,8 @@ export const PINS: Pin[] = [
         "kind": "Minifalda",
         "name": "Minifalda tejida blanca y negra",
         "x": 0.653,
-        "y": 0.908
+        "y": 0.908,
+        "outline": "44,83 43,84 42,86 41,87 40,89 39,90 38,91 37,93 36,94 99,98 98,95 97,92 96,88 96,85 95,83 78,83 75,85 73,86 71,85 68,84 66,83 63,83 58,83"
       }
     ],
     "credits": [
@@ -519,7 +655,17 @@ export const PINS: Pin[] = [
         "kind": "Buzo con capucha",
         "name": "Buzo con capucha amarillo",
         "x": 0.556,
-        "y": 0.709
+        "y": 0.709,
+        "outline": "51,46 48,50 41,55 37,60 34,65 31,70 28,75 25,81 22,88 32,88 36,85 50,89 72,92 74,82 77,77 83,94 88,88 90,70 86,57 82,50 72,47"
+      },
+      {
+        "label": "glasses",
+        "confidence": 0.79,
+        "kind": "Anteojos",
+        "name": "Anteojos gris oscuro",
+        "x": 0.526,
+        "y": 0.308,
+        "outline": "41,27 64,27 64,35 41,35"
       },
       {
         "label": "trousers",
@@ -527,7 +673,8 @@ export const PINS: Pin[] = [
         "kind": "Pantalón de vestir",
         "name": "Pantalón de vestir de satén negro",
         "x": 0.494,
-        "y": 0.936
+        "y": 0.936,
+        "outline": "35,88 34,89 34,90 33,91 33,91 33,92 32,93 32,93 31,94 30,95 30,96 29,97 28,98 71,100 71,97 72,94 71,90 71,90 68,89 66,89 63,89 58,89 52,88"
       }
     ],
     "credits": [
@@ -552,7 +699,8 @@ export const PINS: Pin[] = [
         "kind": "Tapado",
         "name": "Tapado azul",
         "x": 0.5,
-        "y": 0.688
+        "y": 0.688,
+        "outline": "47,42 37,45 36,50 27,54 22,57 19,61 16,65 14,69 11,74 9,79 7,89 4,96 97,87 95,77 92,71 90,66 87,62 84,58 79,54 73,51 65,47"
       }
     ],
     "credits": [
@@ -572,12 +720,22 @@ export const PINS: Pin[] = [
     "style": "streetwear",
     "hotspots": [
       {
+        "label": "hat",
+        "confidence": 0.988,
+        "kind": "Gorro de lana",
+        "name": "Gorro de lana gris",
+        "x": 0.41,
+        "y": 0.141,
+        "outline": "20,5 62,5 62,23 20,23"
+      },
+      {
         "label": "trousers",
         "confidence": 0.925,
         "kind": "Jogging",
         "name": "Jogging negro",
         "x": 0.5,
-        "y": 0.774
+        "y": 0.774,
+        "outline": "92,60 87,60 80,61 75,62 66,63 48,64 37,62 31,61 21,60 13,62 10,64 8,67 8,82 9,91 35,99 38,96 42,91 63,91 72,91 73,97 97,61 93,60"
       },
       {
         "label": "short_sleeved_shirt",
@@ -585,7 +743,8 @@ export const PINS: Pin[] = [
         "kind": "Remera",
         "name": "Remera blanca",
         "x": 0.54,
-        "y": 0.458
+        "y": 0.458,
+        "outline": "29,34 20,39 17,44 19,49 27,52 31,61 44,63 71,63 77,57 85,54 93,51 90,44 87,40 82,34 74,31 63,29 59,33 47,37 42,32 33,31 19,28"
       }
     ],
     "credits": [
@@ -605,12 +764,31 @@ export const PINS: Pin[] = [
     "style": "casual",
     "hotspots": [
       {
+        "label": "belt",
+        "confidence": 0.912,
+        "kind": "Cinturón",
+        "name": "Cinturón azul",
+        "x": 0.639,
+        "y": 0.735,
+        "outline": "48,71 80,71 80,76 48,76"
+      },
+      {
+        "label": "bag",
+        "confidence": 0.683,
+        "kind": "Mochila",
+        "name": "Mochila negra",
+        "x": 0.363,
+        "y": 0.666,
+        "outline": "21,33 51,33 51,100 21,100"
+      },
+      {
         "label": "skirt",
         "confidence": 0.653,
         "kind": "Pollera de jean",
         "name": "Pollera de jean negra",
         "x": 0.687,
-        "y": 0.855
+        "y": 0.855,
+        "outline": "49,73 47,75 47,77 46,78 45,79 44,80 43,82 98,78 96,77 94,75 91,74 83,73 80,74 77,74 73,75 70,75 67,76 60,75 56,75 54,74 51,74 50,73"
       },
       {
         "label": "long_sleeved_outwear",
@@ -618,7 +796,17 @@ export const PINS: Pin[] = [
         "kind": "Camisa de jean",
         "name": "Camisa de jean azul",
         "x": 0.62,
-        "y": 0.634
+        "y": 0.634,
+        "outline": "98,100 43,84 42,77 48,72 46,61 45,47 63,40 67,47 74,53 77,64 87,74 91,82 95,93 99,87 97,46 84,35 72,33 64,36 43,38 33,41 41,93"
+      },
+      {
+        "label": "bag",
+        "confidence": 0.512,
+        "kind": "Mochila",
+        "name": "Mochila azul",
+        "x": 0.863,
+        "y": 0.653,
+        "outline": "72,31 100,31 100,100 72,100"
       }
     ],
     "credits": [
@@ -638,12 +826,40 @@ export const PINS: Pin[] = [
     "style": "streetwear",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.98,
+        "kind": "Zapatillas",
+        "name": "Zapatillas grises",
+        "x": 0.382,
+        "y": 0.86,
+        "outline": "26,81 51,81 51,91 26,91"
+      },
+      {
+        "label": "shoes",
+        "confidence": 0.905,
+        "kind": "Zapatillas",
+        "name": "Zapatillas beige",
+        "x": 0.469,
+        "y": 0.898,
+        "outline": "41,88 53,88 53,92 41,92"
+      },
+      {
         "label": "trousers",
         "confidence": 0.871,
         "kind": "Jean",
         "name": "Jean negro",
         "x": 0.424,
-        "y": 0.763
+        "y": 0.763,
+        "outline": "38,65 38,68 39,71 40,73 40,75 41,76 41,79 38,80 34,85 37,86 38,85 39,87 41,88 44,88 44,86 45,84 46,82 49,80 50,79 50,71 50,68 49,65"
+      },
+      {
+        "label": "glasses",
+        "confidence": 0.85,
+        "kind": "Anteojos de sol",
+        "name": "Anteojos de sol camel",
+        "x": 0.454,
+        "y": 0.434,
+        "outline": "40,41 50,41 50,45 40,45"
       },
       {
         "label": "long_sleeved_shirt",
@@ -651,7 +867,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean gris",
         "x": 0.439,
-        "y": 0.584
+        "y": 0.584,
+        "outline": "35,67 35,62 36,62 37,64 37,66 39,66 41,64 48,64 51,65 52,64 52,61 51,59 50,57 49,55 48,53 47,52 44,49 41,48 37,52 36,53 35,55 35,61 35,64"
       }
     ],
     "credits": [
@@ -671,12 +888,31 @@ export const PINS: Pin[] = [
     "style": "clean-girl",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.93,
+        "kind": "Mules",
+        "name": "Mules crema",
+        "x": 0.528,
+        "y": 0.904,
+        "outline": "31,81 75,81 75,100 31,100"
+      },
+      {
+        "label": "hat",
+        "confidence": 0.927,
+        "kind": "Sombrero",
+        "name": "Sombrero blanco",
+        "x": 0.457,
+        "y": 0.301,
+        "outline": "29,25 62,25 62,35 29,35"
+      },
+      {
         "label": "trousers",
         "confidence": 0.905,
         "kind": "Calza",
         "name": "Calza blanca",
         "x": 0.552,
-        "y": 0.822
+        "y": 0.822,
+        "outline": "48,67 47,70 45,74 44,77 42,80 41,82 39,85 37,88 39,95 47,100 48,90 50,87 53,85 56,82 58,79 61,79 63,88 71,99 72,89 74,75 74,70 72,68"
       },
       {
         "label": "long_sleeved_outwear",
@@ -684,7 +920,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean azul",
         "x": 0.545,
-        "y": 0.562
+        "y": 0.562,
+        "outline": "46,47 37,43 31,41 29,48 37,55 39,63 42,57 44,53 55,52 58,60 60,64 65,68 72,66 74,72 80,69 78,58 75,52 73,47 70,43 65,41 56,43"
       }
     ],
     "credits": [
@@ -709,7 +946,8 @@ export const PINS: Pin[] = [
         "kind": "Campera inflable",
         "name": "Campera inflable de jean azul marino",
         "x": 0.5,
-        "y": 0.671
+        "y": 0.671,
+        "outline": "8,42 70,39 73,44 78,46 82,48 89,51 92,55 96,59 100,64 2,70 5,67 7,63 10,59 12,55 18,51 22,49 26,42 16,40 4,40 17,39 27,40"
       }
     ],
     "credits": [
@@ -731,7 +969,8 @@ export const PINS: Pin[] = [
         "label": "trousers",
         "confidence": null,
         "x": 0.5,
-        "y": 0.5
+        "y": 0.5,
+        "outline": "0,0 100,0 100,100 0,100"
       }
     ],
     "credits": [
@@ -753,13 +992,15 @@ export const PINS: Pin[] = [
         "label": "long_sleeved_outwear",
         "confidence": null,
         "x": 0.312,
-        "y": 0.322
+        "y": 0.322,
+        "outline": "4,8 58,8 58,57 4,57"
       },
       {
         "label": "trousers",
         "confidence": null,
         "x": 0.74,
-        "y": 0.653
+        "y": 0.653,
+        "outline": "52,35 96,35 96,95 52,95"
       }
     ],
     "credits": [
@@ -790,7 +1031,8 @@ export const PINS: Pin[] = [
         "kind": "Campera de jean",
         "name": "Campera de jean negra",
         "x": 0.529,
-        "y": 0.695
+        "y": 0.695,
+        "outline": "57,70 58,92 71,91 76,87 85,79 87,68 83,57 78,51 68,47 58,49 58,69 48,56 45,48 34,47 24,55 20,62 20,77 24,85 29,93 44,91 46,71"
       }
     ],
     "credits": [
@@ -810,12 +1052,31 @@ export const PINS: Pin[] = [
     "style": "streetwear",
     "hotspots": [
       {
+        "label": "shoes",
+        "confidence": 0.977,
+        "kind": "Botas de corderito",
+        "name": "Botas de corderito azules",
+        "x": 0.632,
+        "y": 0.709,
+        "outline": "50,65 76,65 76,77 50,77"
+      },
+      {
+        "label": "shoes",
+        "confidence": 0.964,
+        "kind": "Zapatillas",
+        "name": "Zapatillas azul marino",
+        "x": 0.284,
+        "y": 0.89,
+        "outline": "12,82 45,82 45,96 12,96"
+      },
+      {
         "label": "trousers",
         "confidence": 0.856,
         "kind": "Jean",
         "name": "Jean negro",
         "x": 0.294,
-        "y": 0.576
+        "y": 0.576,
+        "outline": "44,82 29,79 27,63 25,48 22,43 29,45 38,48 42,49 45,45 41,40 37,35 25,33 16,36 6,35 3,35 3,52 10,54 13,67 15,80 23,82 49,80"
       },
       {
         "label": "short_sleeved_shirt",
@@ -823,7 +1084,8 @@ export const PINS: Pin[] = [
         "kind": "Chomba",
         "name": "Chomba celeste",
         "x": 0.189,
-        "y": 0.219
+        "y": 0.219,
+        "outline": "22,7 19,8 16,8 12,9 8,10 6,11 3,13 3,35 10,36 14,36 17,36 21,34 32,27 34,23 33,20 30,19 28,18 27,15 26,12 25,10"
       }
     ],
     "credits": [
@@ -848,7 +1110,8 @@ export const PINS: Pin[] = [
         "kind": "Jean",
         "name": "Jean celeste",
         "x": 0.478,
-        "y": 0.539
+        "y": 0.539,
+        "outline": "14,15 10,26 5,45 9,62 12,94 33,80 37,62 41,51 46,58 51,64 55,71 60,78 64,88 68,97 85,85 81,68 77,50 72,35 61,21 34,18 20,15"
       },
       {
         "label": "long_sleeved_shirt",
@@ -856,7 +1119,8 @@ export const PINS: Pin[] = [
         "kind": "Camisa",
         "name": "Camisa blanca",
         "x": 0.484,
-        "y": 0.116
+        "y": 0.116,
+        "outline": "11,0 13,3 16,4 19,6 18,8 17,10 15,11 17,14 22,15 27,16 31,17 34,17 38,18 42,19 50,20 59,20 64,21 72,18 72,8 86,7 85,3"
       }
     ],
     "credits": [
@@ -881,7 +1145,8 @@ export const PINS: Pin[] = [
         "kind": "Sweater tejido",
         "name": "Sweater tejido gris",
         "x": 0.5,
-        "y": 0.595
+        "y": 0.595,
+        "outline": "55,32 45,38 36,43 21,57 13,50 6,47 6,58 13,67 26,66 36,62 39,71 35,80 52,80 78,81 83,85 91,75 93,60 89,51 84,45 76,38 64,35"
       }
     ],
     "credits": [
@@ -941,6 +1206,18 @@ export const EXPLAINER: Explainer = {
   ],
   "boxes": [
     {
+      "label": "shoes",
+      "confidence": 0.992,
+      "kind": "Zapatillas",
+      "name": "Zapatillas grises",
+      "box": [
+        273,
+        1118,
+        869,
+        1354
+      ]
+    },
+    {
       "label": "long_sleeved_outwear",
       "confidence": 0.929,
       "kind": "Campera de jean",
@@ -950,18 +1227,6 @@ export const EXPLAINER: Explainer = {
         0,
         842,
         380
-      ]
-    },
-    {
-      "label": "trousers",
-      "confidence": 0.913,
-      "kind": "Pantalón chino",
-      "name": "Pantalón chino caqui",
-      "box": [
-        215,
-        191,
-        784,
-        1219
       ]
     }
   ]

@@ -88,7 +88,7 @@ class FakeDescriber:
 
     def describe(self, crop, label, image, box, polygon=None, vector=None, man=False):
         self.seen.append((label, polygon, man))
-        return Description(name="Buzo polo de corderito negro", kind="Buzo polo", color="negro", brand="Stüssy")
+        return Description(name="Buzo polo de corderito negro", kind="Buzo polo", color="negro", brand=None, similar="Stüssy")
 
 
 def test_detect_returns_what_each_garment_really_is(make_client):
@@ -96,8 +96,8 @@ def test_detect_returns_what_each_garment_really_is(make_client):
     describer = FakeDescriber()
     with make_client(detections=[detection], describer=describer) as client:
         item = client.post("/v1/detect", files={"file": ("p.png", png_bytes(RED), "image/png")}).json()["items"][0]
-    assert (item["label"], item["name"], item["kind"], item["brand"]) == (
-        "long_sleeved_shirt", "Buzo polo de corderito negro", "Buzo polo", "Stüssy")
+    assert (item["label"], item["name"], item["kind"], item["brand"], item["similar"]) == (
+        "long_sleeved_shirt", "Buzo polo de corderito negro", "Buzo polo", None, "Stüssy")
     # The mask reaches the describer, and so does the whole photo's menswear call.
     assert describer.seen == [("long_sleeved_shirt", ((20, 10), (280, 10), (280, 220)), True)]
 
@@ -113,6 +113,17 @@ class PromptEmbedder:
 
     def embed_text(self, prompts):
         return np.array([[1.0, 0.0, 0.0] if self.winner in p else [0.0, 1.0, 0.0] for p in prompts])
+
+
+def test_without_a_brand_a_signature_design_is_simil_that_brand():
+    tee = Image.new("RGB", (60, 60), (128, 128, 128))
+    box = (0, 0, 60, 60)
+    polo = GarmentDescriber(PromptEmbedder("polo shirt")).describe(tee, "short_sleeved_shirt", tee, box)
+    assert (polo.kind, polo.brand, polo.similar) == ("Chomba", None, "Polo Ralph Lauren")
+    jeans = GarmentDescriber(PromptEmbedder("baggy jeans")).describe(tee, "trousers", tee, box)
+    assert jeans.similar == "Levi's"
+    plain = GarmentDescriber(PromptEmbedder("t-shirt")).describe(tee, "short_sleeved_shirt", tee, box)
+    assert plain.similar is None  # a plain tee is nobody's signature
 
 
 def test_menswear_photos_never_get_womenswear_names():

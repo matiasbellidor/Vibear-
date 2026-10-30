@@ -72,12 +72,12 @@ export function Carousels({ pins }: { pins: Pin[] }) {
 }
 
 export function FromPinterest() {
-  const { board, pins } = pinterestConfig();
-  const configured = Boolean(board || pins.length);
+  const { boards, pins } = pinterestConfig();
+  const configured = Boolean(boards.length || pins.length);
   if (!configured && process.env.NODE_ENV !== "development") return null;
 
   return (
-    <section aria-labelledby="pinterest-title" className="page theme-light px-4 py-20 lg:px-8 lg:py-28">
+    <section aria-labelledby="pinterest-title" className="page px-4 py-20 lg:px-8 lg:py-28">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-3">
         <h2 id="pinterest-title" className="text-micro">
           Desde Pinterest
@@ -92,7 +92,7 @@ export function FromPinterest() {
       </p>
       <div className="mt-10">
         {configured ? (
-          <PinterestEmbeds board={board} pins={pins} />
+          <PinterestEmbeds boards={boards} pins={pins} />
         ) : (
           // Only shown by `npm run dev`, to whoever runs the site: published builds hide the section.
           <div className="relative border border-dashed border-line p-6 text-small text-muted">
@@ -101,7 +101,7 @@ export function FromPinterest() {
             <p className="mt-3 max-w-[62ch]">
               Agregá tu tablero en <code className="font-mono text-ink">apps/web/.env.local</code> con{" "}
               <code className="font-mono text-ink">NEXT_PUBLIC_PINTEREST_BOARD=https://www.pinterest.com/usuario/tablero/</code>{" "}
-              (o pins sueltos en <code className="font-mono text-ink">NEXT_PUBLIC_PINTEREST_PINS</code>, separados por
+              (varios tableros separados por comas, o pins sueltos en <code className="font-mono text-ink">NEXT_PUBLIC_PINTEREST_PINS</code>, separados por
               comas) y reiniciá <code className="font-mono text-ink">npm run dev</code>.
             </p>
           </div>

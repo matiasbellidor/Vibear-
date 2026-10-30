@@ -1,0 +1,318 @@
+"use client";
+
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { api, type Catalogue, type FragranceBoard, type Offer } from "@/lib/api";
+import { whatsappUrl } from "@/lib/contact";
+import { cutout, type Cutout } from "@/lib/cutout";
+import { cx, textButton } from "../ui";
+
+const FEATURED = "erba-pura";
+// The welcome: the featured bottle in the middle, two of the most wanted fragrances around it.
+const TRIO = [
+  { id: "le-male-elixir", size: "w-[25%]", place: "translate-y-[10%]", tilt: "-7deg", from: "-40%", i: 1 },
+  { id: "erba-pura", size: "w-[32%]", place: "z-10", tilt: "0deg", from: "0%", i: 0 },
+  { id: "good-girl", size: "w-[25%]", place: "translate-y-[10%]", tilt: "7deg", from: "40%", i: 2 },
+];
+
+// WhatsApp glyph, Simple Icons v13.21.0 (CC0). Nominative use: it says where the button leads.
+const WHATSAPP =
+  "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z";
+
+const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+const money = (offer: Offer) => pesos.format(offer.price);
+const ask = (board: FragranceBoard) =>
+  whatsappUrl(`Hola! Vengo de Vibear y quiero el mejor precio para ${board.fragrance.name} de ${board.fragrance.house}.`);
+
+type State<T> = { status: "idle" | "loading" | "error" } | { status: "ready"; data: T };
+
+function ago(seconds: number): string {
+  const minutes = Math.max(0, Math.round((Date.now() / 1000 - seconds) / 60));
+  if (minutes < 2) return "recién";
+  if (minutes < 60) return `hace ${minutes} min`;
+  return `hace ${Math.round(minutes / 60)} h`;
+}
+
+function WhatsAppGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={cx("fill-current", className)}>
+      <path d={WHATSAPP} />
+    </svg>
+  );
+}
+
+/** The shop's photo of the bottle, cut out of its white background (lib/cutout.ts). */
+function useCutout(src: string | null): Cutout | null {
+  const [shot, setShot] = useState<{ src: string; cut: Cutout } | null>(null);
+  useEffect(() => {
+    if (!src) return;
+    let live = true;
+    cutout(src).then(
+      (cut) => live && setShot({ src, cut }),
+      () => live && setShot({ src, cut: { src, width: 3, height: 4, cut: false } }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [src]);
+  return shot && shot.src === src ? shot.cut : null;
+}
+
+function Bottle({ board, className }: { board: FragranceBoard; className?: string }) {
+  const shot = useCutout(board.image);
+  if (!shot) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- a shop's CDN photo (or its cut-out blob): not for next/image
+    <img
+      src={shot.src}
+      alt={`${board.fragrance.name} de ${board.fragrance.house}`}
+      width={shot.width}
+      height={shot.height}
+      referrerPolicy="no-referrer"
+      className={cx("swap-in", !shot.cut && "rounded-media mix-blend-multiply", className)}
+    />
+  );
+}
+
+/**
+ * Perfumería: real bottles (the shops' photos, cut out in the browser) rise into a warm glow as the
+ * section scrolls in; then the featured fragrance compared shop by shop, the catalogue (photo, price,
+ * where), and a WhatsApp line to the supplier. Prices come from Argentine shops only, in pesos, read by
+ * the API and fetched when the section gets close.
+ */
+export function Perfumery() {
+  const ref = useRef<HTMLElement>(null);
+  const [catalogue, setCatalogue] = useState<State<Catalogue>>({ status: "idle" });
+  const [featured, setFeatured] = useState<State<FragranceBoard>>({ status: "idle" });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const controller = new AbortController();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        setCatalogue({ status: "loading" });
+        setFeatured({ status: "loading" });
+        const failed = (set: (state: { status: "error" }) => void) => () => !controller.signal.aborted && set({ status: "error" });
+        api.fragrances(controller.signal).then((data) => setCatalogue({ status: "ready", data }), failed(setCatalogue));
+        api.fragrancePrices(FEATURED, controller.signal).then((data) => setFeatured({ status: "ready", data }), failed(setFeatured));
+      },
+      { rootMargin: "600px" },
+    );
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      controller.abort();
+    };
+  }, []);
+
+  const items = catalogue.status === "ready" ? catalogue.data.items : [];
+  const byId = new Map(items.map((item) => [item.fragrance.id, item]));
+  const offers = featured.status === "ready" ? featured.data.offers : [];
+
+  return (
+    // overflow-x-clip: the glow spills past the bottles on purpose, but never into a sideways scroll.
+    <section
+      ref={ref}
+      id="perfumeria"
+      aria-labelledby="perfumery-title"
+      className="page theme-light overflow-x-clip px-4 py-20 lg:px-8 lg:py-28"
+    >
+      <div className="text-center">
+        <p className="text-micro text-wine-bright">Perfumería · tiendas argentinas</p>
+        <h2 id="perfumery-title" className="mx-auto mt-4 max-w-[18ch] font-display text-title tracking-tight">
+          Potenciá tu outfit con una <span className="italic text-wine-bright">fragancia</span>.
+        </h2>
+        <p className="mx-auto mt-4 max-w-[46ch] text-small text-muted">
+          Frascos originales, con el mejor precio que encontramos hoy en perfumerías de Argentina.
+        </p>
+      </div>
+
+      {/* The welcome: the bottles rise into the glow (globals.css .fragrance-*), then float. */}
+      <div aria-hidden="true" className="relative mx-auto mt-6 flex aspect-[5/4] max-w-xl items-end justify-center gap-[3%] pb-[6%]">
+        <span className="fragrance-glow motion-loop pointer-events-none absolute inset-x-0 top-[2%] bottom-[-6%] rounded-full bg-[radial-gradient(closest-side,rgb(255_186_102/0.6),rgb(232_84_108/0.14)_58%,transparent)]" />
+        {TRIO.map((spot) => {
+          const board = byId.get(spot.id);
+          return (
+            <span
+              key={spot.id}
+              className={cx("fragrance-bottle relative block", spot.size, spot.place)}
+              style={{ rotate: spot.tilt, "--from-x": spot.from, "--i": spot.i } as CSSProperties}
+            >
+              <span className="fragrance-float motion-loop block" style={{ "--i": spot.i } as CSSProperties}>
+                {board && <Bottle board={board} className="mx-auto h-auto w-full drop-shadow-[0_24px_30px_rgb(120_60_10/0.28)]" />}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+
+      {/* The featured fragrance, shop by shop (Google Shopping included when there's a SerpApi key). */}
+      <div className="mx-auto mt-12 max-w-2xl">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
+          <h3 className="text-micro">Erba Pura de Xerjoff · dónde comprarla al mejor precio</h3>
+          {featured.status === "ready" && (
+            <span className="shrink-0 text-micro tabular-nums text-muted">Actualizado {ago(featured.data.updated_at)}</span>
+          )}
+        </div>
+        {(featured.status === "idle" || featured.status === "loading") && (
+          <ul aria-label="Cargando precios" className="divide-y divide-line">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="flex h-14 items-center justify-between">
+                <span className="h-3 w-32 bg-surface motion-safe:animate-shimmer" />
+                <span className="h-3 w-20 bg-surface motion-safe:animate-shimmer" />
+              </li>
+            ))}
+          </ul>
+        )}
+        {featured.status === "ready" && offers.length > 0 && (
+          <ul aria-label="Precios por tienda" className="divide-y divide-line">
+            {offers.map((offer, i) => (
+              <li key={`${offer.shop}-${offer.url}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-4">
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="truncate text-body">{offer.shop}</span>
+                  {i === 0 && <span className="shrink-0 rounded-full bg-wine px-2.5 py-0.5 text-micro text-cream">Mejor precio</span>}
+                </span>
+                <span className="flex items-center gap-5">
+                  <span className="font-mono text-body tabular-nums">{money(offer)}</span>
+                  <a href={offer.url} target="_blank" rel="noopener noreferrer" className={textButton}>
+                    Ver <span aria-hidden="true">↗</span>
+                    <span className="sr-only"> en {offer.shop} (se abre en otra pestaña)</span>
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {((featured.status === "ready" && offers.length === 0) || featured.status === "error") && (
+          <p className="py-8 text-center text-small text-muted">
+            No pudimos leer los precios de las tiendas ahora. Escribinos y te pasamos el mejor.
+          </p>
+        )}
+      </div>
+
+      {/* The catalogue, like any shop: the bottle, what it is, the best price and where. */}
+      <div className="mx-auto mt-20 max-w-6xl">
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3">
+          <h3 className="text-micro">Catálogo</h3>
+          {catalogue.status === "ready" && <span className="text-micro tabular-nums text-muted">{items.length} fragancias</span>}
+        </div>
+        {(catalogue.status === "idle" || catalogue.status === "loading") && (
+          <ul aria-label="Cargando catálogo" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }, (_, i) => (
+              <li key={i}>
+                <span className="block aspect-[4/5] rounded-media bg-surface motion-safe:animate-shimmer" />
+                <span className="mt-3 block h-3 w-2/3 bg-surface motion-safe:animate-shimmer" />
+                <span className="mt-2 block h-3 w-1/3 bg-surface motion-safe:animate-shimmer" />
+              </li>
+            ))}
+          </ul>
+        )}
+        {catalogue.status === "ready" && (
+          <ul aria-label="Catálogo de fragancias" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
+            {items.map((board) => (
+              <li key={board.fragrance.id}>
+                <PerfumeCard board={board} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {catalogue.status === "error" && (
+          <p className="py-10 text-center text-small text-muted">
+            No pudimos leer el catálogo ahora. Escribinos y te pasamos precios y stock.
+          </p>
+        )}
+        <p className="mt-8 text-micro normal-case tracking-normal text-muted">
+          Precio de lista en pesos, publicado por cada perfumería argentina, solo frascos en stock. Puede cambiar:
+          confirmalo antes de comprar.
+        </p>
+      </div>
+
+      {/* The supplier's direct line: wa.me opens the chat with the message already written. */}
+      <div className="mt-14 flex flex-col items-center gap-3 text-center">
+        <a
+          href={whatsappUrl("Hola! Vengo de Vibear y quiero precios de perfumes originales.")}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-wine-bright px-8 text-micro text-paper shadow-[0_0_40px_-6px_rgb(232_84_108/0.7)] transition-transform duration-200 ease-out-soft hover:scale-[1.03]"
+        >
+          <WhatsAppGlyph className="h-5 w-5" />
+          ¿Querés mejores precios? Hablá con el proveedor
+        </a>
+        <span className="text-micro normal-case tracking-normal text-muted">Te responde por WhatsApp</span>
+      </div>
+    </section>
+  );
+}
+
+function PerfumeCard({ board }: { board: FragranceBoard }) {
+  const { fragrance, offers } = board;
+  const best = offers[0];
+  const id = `perfume-${fragrance.id}`;
+  return (
+    <article aria-labelledby={id} className="flex h-full flex-col">
+      <div className="relative flex aspect-[4/5] items-end justify-center overflow-hidden rounded-media bg-surface px-[12%] pb-[10%] pt-[12%]">
+        <span aria-hidden="true" className="absolute inset-x-[18%] bottom-[7%] h-[7%] rounded-[50%] bg-[radial-gradient(closest-side,rgb(0_0_0/0.16),transparent)]" />
+        <Bottle board={board} className="relative max-h-full w-auto max-w-full object-contain drop-shadow-[0_12px_14px_rgb(0_0_0/0.14)]" />
+      </div>
+      <p className="mt-3 truncate text-micro text-muted">{fragrance.house}</p>
+      <h4 id={id} className="mt-1 text-body font-medium leading-snug">
+        {fragrance.name}
+      </h4>
+      <p className="mt-0.5 line-clamp-1 text-small text-muted">{fragrance.notes}</p>
+      <p className="mt-2 flex items-baseline justify-between gap-2">
+        <span className="font-mono text-body tabular-nums">{best ? money(best) : "Sin stock"}</span>
+        <span className="shrink-0 text-micro tabular-nums text-muted">{fragrance.size_ml} ml</span>
+      </p>
+      <p className="mt-0.5 truncate text-micro normal-case tracking-normal text-muted">
+        {best ? `en ${best.shop}${offers.length > 1 ? ` · ${offers.length} tiendas` : ""}` : "Consultanos por WhatsApp"}
+      </p>
+      {offers.length > 1 && (
+        <details className="mt-1">
+          <summary className="cursor-pointer text-micro text-muted underline underline-offset-4">Comparar {offers.length} tiendas</summary>
+          <ul className="mt-1 divide-y divide-line">
+            {offers.map((offer) => (
+              <li key={offer.url} className="flex items-center justify-between gap-2 py-1.5 text-small">
+                <a href={offer.url} target="_blank" rel="noopener noreferrer" className="truncate underline-offset-4 hover:underline">
+                  {offer.shop}
+                </a>
+                <span className="font-mono tabular-nums">{money(offer)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {/* Last and pushed down, so the buttons line up across a row whatever is above them. */}
+      <div className="mt-auto flex items-center gap-2 pt-3">
+        {best && (
+          <a
+            href={best.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 flex-1 items-center justify-center gap-1 bg-ink px-3 text-micro text-paper transition-colors duration-200 ease-out-soft hover:bg-wine-bright"
+          >
+            Comprar <span aria-hidden="true">↗</span>
+            <span className="sr-only">
+              {" "}
+              {fragrance.name} en {best.shop} (se abre en otra pestaña)
+            </span>
+          </a>
+        )}
+        <a
+          href={ask(board)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Consultar ${fragrance.name} por WhatsApp`}
+          className={cx(
+            "inline-flex h-10 items-center justify-center gap-2 border border-ink text-micro transition-colors duration-200 ease-out-soft hover:bg-ink hover:text-paper",
+            best ? "w-10" : "flex-1 px-3",
+          )}
+        >
+          <WhatsAppGlyph className="h-4 w-4" />
+          {!best && "Consultar"}
+        </a>
+      </div>
+    </article>
+  );
+}

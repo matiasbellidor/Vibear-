@@ -13,6 +13,7 @@ class DetectedItem(BaseModel):
     name: str | None = None
     kind: str | None = None
     brand: str | None = None  # a hint from the image alone, only when the model is very sure
+    similar: str | None = None  # no brand: whose signature design it resembles ("Símil Polo Ralph Lauren")
 
 
 class DetectResponse(BaseModel):
@@ -54,6 +55,32 @@ class SearchResponse(BaseModel):
 
 class SavedProduct(Match):
     savedAt: int  # epoch ms, set by the browser (same shape as the web app's SavedItem)
+
+
+Point = tuple[float, float]  # x, y as fractions of the photo's width and height
+
+
+class Body(BaseModel):
+    """A full-body photo's keypoints (shoulders, hips, knees, ankles, nose when seen)."""
+
+    width: int
+    height: int
+    keypoints: dict[str, Point]
+
+
+class Garment(BaseModel):
+    slot: str  # where it goes: top, outer, bottom or dress
+    label: str | None  # YOLO's class; None for a product shot cut from its white background
+    name: str | None  # what it is, in Spanish, when the model can tell
+    image: str  # the cut-out, transparent around it (a data: URL; nothing is stored)
+    box: tuple[float, float, float, float]  # where it was in the photo (fractions), for placing it
+
+
+class Garments(BaseModel):
+    width: int
+    height: int
+    pose: dict[str, Point] | None  # the person wearing them, when there was one: anchors the fit
+    items: list[Garment]
 
 
 class Closet(BaseModel):

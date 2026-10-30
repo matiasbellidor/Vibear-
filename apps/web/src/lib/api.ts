@@ -13,6 +13,8 @@ export type DetectedItem = {
   kind?: string | null;
   /** A brand read from the photo alone, only when the model was very sure. */
   brand?: string | null;
+  /** No brand: whose signature design it resembles ("Polo Ralph Lauren" → "Símil Polo Ralph Lauren"). */
+  similar?: string | null;
 };
 
 export type Look = {
@@ -41,13 +43,49 @@ export type SearchResult = { crop_id: string; cached: boolean; results: Match[];
 export type SearchMode = "serpapi" | "demo" | "off";
 
 /** A shop's price for a fragrance (GET /v1/fragrances/{id}/prices), cheapest first, pesos first. */
-export type Offer = { shop: string; url: string; price: number; currency: string; title: string; source: "shopping" | "page" };
+export type Offer = {
+  shop: string;
+  url: string;
+  price: number; // pesos: Argentine shops only
+  currency: string;
+  title: string;
+  source: "shopping" | "page";
+  image?: string | null; // the shop's own product photo
+};
 
 export type FragranceBoard = {
-  fragrance: { id: string; name: string; house: string; notes: string };
-  offers: Offer[];
+  fragrance: { id: string; name: string; house: string; notes: string; size_ml: number };
+  offers: Offer[]; // cheapest first; empty when no shop has it in stock
+  image: string | null; // the bottle, from a shop's page (white background, cut out by lib/cutout.ts)
   checked: number; // sources read this round
   updated_at: number; // epoch seconds
+};
+
+export type Catalogue = { items: FragranceBoard[]; updated_at: number };
+
+/** Fitting room. Points are [x, y] as fractions of their photo. */
+export type Point = [number, number];
+export type BodyPoints = Partial<
+  Record<
+    "nose" | "left_shoulder" | "right_shoulder" | "left_hip" | "right_hip" | "left_knee" | "right_knee" | "left_ankle" | "right_ankle",
+    Point
+  >
+>;
+export type Slot = "top" | "outer" | "bottom" | "dress";
+export type CutGarment = {
+  slot: Slot;
+  label: string | null;
+  name: string | null;
+  image: string; // data: URL, transparent around the garment
+  box: [number, number, number, number]; // where it was in its photo
+};
+export type CutGarments = { width: number; height: number; pose: BodyPoints | null; items: CutGarment[] };
+
+const TRYON_MESSAGES: Record<number, string> = {
+  422: "No encontramos una prenda en esa foto. Probá con la prenda entera, de frente y con buena luz.",
+};
+const BODY_MESSAGES: Record<number, string> = {
+  422: "No te encontramos de cuerpo entero. Probá con una foto de pies a cabeza, de frente y con luz.",
 };
 
 export type Place = { lat: number; lng: number; label: string };
@@ -128,6 +166,19 @@ export const api = {
     }),
   fragrancePrices: (id: string, signal?: AbortSignal) =>
     request<FragranceBoard>(`/v1/fragrances/${encodeURIComponent(id)}/prices`, { signal }),
+  fragrances: (signal?: AbortSignal) => request<Catalogue>("/v1/fragrances", { signal }),
+  /** Your keypoints in a full-body photo. The photo isn't stored by the API. */
+  body: (file: Blob) =>
+    request<{ width: number; height: number; keypoints: BodyPoints }>(
+      "/v1/tryon/body",
+      { method: "POST", body: form("file", file) },
+      BODY_MESSAGES,
+    ),
+  /** Every garment in a photo (or at a link), cut out. Nothing is stored by the API. */
+  garmentsFile: (file: Blob) =>
+    request<CutGarments>("/v1/tryon/garments", { method: "POST", body: form("file", file) }, TRYON_MESSAGES),
+  garmentsUrl: (url: string) =>
+    request<CutGarments>("/v1/tryon/garments", { method: "POST", body: form("image_url", url) }, TRYON_MESSAGES),
   geocode: (query: string) =>
     request<Place>(`/v1/places/geocode?q=${encodeURIComponent(query)}`, undefined, PLACE_MESSAGES),
   nearby: (place: Pick<Place, "lat" | "lng">, radius: number, brands: string[]) => {

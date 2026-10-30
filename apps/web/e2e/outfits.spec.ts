@@ -25,10 +25,10 @@ test("the week's outfits: three for women, three for men, every garment with pla
   await expect(links.first()).toHaveAttribute("target", "_blank");
 });
 
-test("the fragrance part shows prices from several shops and a WhatsApp line to the supplier", async ({ page }) => {
+test("the perfumery: real bottles, the featured one shop by shop, a catalogue with prices, WhatsApp", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  await page.locator("#fragrance-title").scrollIntoViewIfNeeded();
+  await page.locator("#perfumeria").scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "Potenciá tu outfit con una fragancia." })).toBeVisible();
 
   const prices = page.getByRole("list", { name: "Precios por tienda" });
@@ -37,10 +37,21 @@ test("the fragrance part shows prices from several shops and a WhatsApp line to 
   await expect(prices.getByRole("listitem").first()).toContainText("Mejor precio");
   await expect(prices.getByRole("listitem").first()).toContainText("480.000");
 
+  // The catalogue: every perfume with its photo, price and where; out of stock says so.
+  const catalogue = page.getByRole("list", { name: "Catálogo de fragancias" });
+  await expect(catalogue.getByRole("article")).toHaveCount(4);
+  const naxos = catalogue.getByRole("article", { name: "Naxos" });
+  await expect(naxos).toContainText("$ 630.000");
+  await expect(naxos).toContainText("en Neve");
+  await expect(naxos.getByRole("img", { name: "Naxos de Xerjoff" })).toBeVisible();
+  await expect(naxos.getByRole("link", { name: /Comprar/ })).toHaveAttribute("href", "https://neve.test/naxos");
+  const ask = await naxos.getByRole("link", { name: "Consultar Naxos por WhatsApp" }).getAttribute("href");
+  expect(decodeURIComponent(ask!.split("text=")[1])).toContain("Naxos de Xerjoff");
+  await expect(catalogue.getByRole("article", { name: "Kirke" })).toContainText("Sin stock");
+
   const whatsapp = page.getByRole("link", { name: /Hablá con el proveedor/ });
   const href = await whatsapp.getAttribute("href");
   expect(href).toMatch(/^https:\/\/wa\.me\/5491168300606\?text=/);
-  expect(decodeURIComponent(href!.split("text=")[1])).toContain("Erba Pura");
   await expect(whatsapp).toHaveAttribute("rel", /noopener/);
 });
 

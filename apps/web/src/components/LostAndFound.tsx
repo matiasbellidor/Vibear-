@@ -6,7 +6,7 @@ import type { Pin } from "@/lib/landing";
 import { garmentName } from "@/lib/labels";
 import { STYLE_LABELS, shopLinks } from "@/lib/outfits";
 import { PinCard } from "./landing/Pin";
-import { cx, primaryButton, textButton } from "./ui";
+import { cx, primaryButton, tapArea, textButton } from "./ui";
 
 // How you want to feel, and the styles that get you there (styles: describe.py STYLES).
 const MOODS = [
@@ -104,7 +104,7 @@ export function LostAndFound({ pins }: { pins: Pin[] }) {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-micro text-muted underline underline-offset-4 hover:text-ink"
+                            className={cx("text-micro text-muted underline underline-offset-4 hover:text-ink", tapArea)}
                           >
                             {link.shop} <span aria-hidden="true">↗</span>
                           </a>

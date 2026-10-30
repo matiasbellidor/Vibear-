@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import type { Pin } from "@/lib/landing";
 import { garmentName, pad } from "@/lib/labels";
 import { STYLE_LABELS, isoWeek, shopLinks, weeklyPick } from "@/lib/outfits";
-import { Fragrance } from "./Fragrance";
+import { cx, tapArea } from "../ui";
 import { PinCard } from "./Pin";
 
 const noSubscribe = () => () => {};
@@ -58,7 +58,7 @@ export function WeeklyOutfits({ pins }: { pins: Pin[] }) {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-micro text-muted underline underline-offset-4 hover:text-ink"
+                            className={cx("text-micro text-muted underline underline-offset-4 hover:text-ink", tapArea)}
                           >
                             {link.shop} <span aria-hidden="true">↗</span>
                             <span className="sr-only">: {garmentName(spot)} (se abre en otra pestaña)</span>
@@ -73,8 +73,6 @@ export function WeeklyOutfits({ pins }: { pins: Pin[] }) {
           );
         })}
       </ul>
-
-      <Fragrance />
     </section>
   );
 }

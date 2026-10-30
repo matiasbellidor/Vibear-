@@ -19,7 +19,7 @@ export default function ScanPage() {
           <h1 className="font-display text-title tracking-tight">
             Escaneá un <span className="italic text-wine-bright">look</span>
           </h1>
-          <p className="text-micro text-muted">Detecta 13 tipos de prenda</p>
+          <p className="text-micro text-muted">Ropa, calzado y accesorios</p>
         </div>
         <div className="mt-6">
           <ScanBanner pins={pins} />

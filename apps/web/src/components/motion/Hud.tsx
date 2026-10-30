@@ -20,8 +20,9 @@ export function LiveClock() {
 }
 
 /**
- * A field the mouse scans: a crosshair follows the pointer with its coordinates and, over a pin,
- * the garment Vibear detected there (from the pin's data-garment, real YOLO output).
+ * A field the mouse scans: a crosshair follows the pointer with its coordinates and, over a garment,
+ * what Vibear detected there and how sure it is (the outline's data-garment, real YOLO output; the
+ * outline lights up too). Off a garment, no readout.
  * Writes straight to the DOM in a frame callback, so moving the mouse never re-renders React.
  */
 export function ScanField({ children, className }: { children: ReactNode; className?: string }) {
@@ -41,13 +42,14 @@ export function ScanField({ children, className }: { children: ReactNode; classN
         const rect = element.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        const pin = (event.target as Element | null)?.closest<HTMLElement>("[data-garment]");
+        const under = (event.target as Element | null)?.closest<SVGElement | HTMLElement>("[data-garment]");
+        const readout = under?.dataset.garment ?? "";
         if (!reticle.current || !coords.current || !garment.current) return;
         reticle.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
         reticle.current.dataset.on = "true";
         coords.current.textContent = `X ${String(Math.round(x)).padStart(3, "0")} · Y ${String(Math.round(y)).padStart(3, "0")}`;
-        garment.current.textContent = pin?.dataset.garment ?? "";
-        garment.current.dataset.on = pin?.dataset.garment ? "true" : "false";
+        garment.current.textContent = readout;
+        garment.current.dataset.on = readout ? "true" : "false";
       });
     };
     const onLeave = () => {
@@ -64,7 +66,7 @@ export function ScanField({ children, className }: { children: ReactNode; classN
   }, []);
 
   return (
-    <div ref={field} className={cx("relative", className)}>
+    <div ref={field} className={cx("scan-field relative", className)}>
       {children}
       <div
         ref={reticle}
