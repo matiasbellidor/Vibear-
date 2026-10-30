@@ -4,9 +4,12 @@
  * on its own like a PNG. The photo is the shop's own, hotlinked from its CDN (Tiendanube's allows it
  * with CORS); nothing is stored or re-published. When a CDN doesn't allow it, the photo is used as is.
  */
-export type Cutout = { src: string; width: number; height: number; cut: boolean };
+import { useEffect, useState } from "react";
 
-const MAX_SIDE = 640;
+/** `tint`: the bottle's own colour (its most colourful pixels, averaged), for a backdrop that matches it. */
+export type Cutout = { src: string; width: number; height: number; cut: boolean; tint?: string };
+
+const MAX_SIDE = 640; // a catalogue card; the perfume film asks for more
 // Shop photos sit on 254-255 white; a white bottle's edge is ~234. At 236 the flood ate into Naxos's
 // white glass, at 248 it stops at the glass.
 const WHITE = 248; // a pixel this light on every channel, and grey, is background when it touches the edge
@@ -17,15 +20,34 @@ const cache = new Map<string, Promise<Cutout>>();
 let queue: Promise<unknown> = Promise.resolve();
 const breathe = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-export function cutout(src: string): Promise<Cutout> {
-  let pending = cache.get(src);
+export function cutout(src: string, maxSide = MAX_SIDE): Promise<Cutout> {
+  const key = `${maxSide} ${src}`;
+  let pending = cache.get(key);
   if (!pending) {
-    pending = queue.then(breathe).then(() => load(src, true).then(cut, () => load(src, false).then(plain)));
+    pending = queue.then(breathe).then(() => load(src, true).then((image) => cut(image, maxSide), () => load(src, false).then(plain)));
     queue = pending.catch(() => undefined);
-    pending.catch(() => cache.delete(src));
-    cache.set(src, pending);
+    pending.catch(() => cache.delete(key));
+    cache.set(key, pending);
   }
   return pending;
+}
+
+/** The cut-out photo for a component; null while it is being cut. A photo that fails shows as is. */
+export function useCutout(src: string | null, maxSide = MAX_SIDE): Cutout | null {
+  const [shot, setShot] = useState<{ key: string; cut: Cutout } | null>(null);
+  const key = `${maxSide} ${src}`;
+  useEffect(() => {
+    if (!src) return;
+    let live = true;
+    cutout(src, maxSide).then(
+      (cut) => live && setShot({ key, cut }),
+      () => live && setShot({ key, cut: { src, width: 3, height: 4, cut: false } }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [src, maxSide, key]);
+  return src && shot && shot.key === key ? shot.cut : null;
 }
 
 function load(src: string, cors: boolean): Promise<HTMLImageElement> {
@@ -45,8 +67,8 @@ function plain(image: HTMLImageElement): Cutout {
   return { src: image.src, width: image.naturalWidth, height: image.naturalHeight, cut: false };
 }
 
-async function cut(image: HTMLImageElement): Promise<Cutout> {
-  const scale = Math.min(1, MAX_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
+async function cut(image: HTMLImageElement, maxSide: number): Promise<Cutout> {
+  const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
   const w = Math.max(1, Math.round(image.naturalWidth * scale));
   const h = Math.max(1, Math.round(image.naturalHeight * scale));
   const canvas = document.createElement("canvas");
@@ -92,6 +114,8 @@ async function cut(image: HTMLImageElement): Promise<Cutout> {
   // Background out; the product's rim (next to the background) fades by how white it is, with the
   // white taken back out of its colour, so no pale halo shows on a dark page.
   let top = h, left = w, bottom = -1, right = -1;
+  // The tint: solid product pixels, weighted by how colourful they are (gold beats a black stripe).
+  let tr = 0, tg = 0, tb = 0, weight = 0;
   for (let p = 0; p < w * h; p++) {
     const i = p * 4;
     if (background[p]) {
@@ -109,6 +133,16 @@ async function cut(image: HTMLImageElement): Promise<Cutout> {
       for (let c = 0; c < 3; c++) data[i + c] = Math.max(0, Math.min(255, (data[i + c] - 255 * (1 - alpha)) / alpha));
       data[i + 3] = Math.round(alpha * 255);
     }
+    if (!rim) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+      if (chroma > 24 && Math.max(r, g, b) > 28) {
+        tr += r * chroma;
+        tg += g * chroma;
+        tb += b * chroma;
+        weight += chroma;
+      }
+    }
     if (x < left) left = x;
     if (x > right) right = x;
     if (y < top) top = y;
@@ -123,5 +157,6 @@ async function cut(image: HTMLImageElement): Promise<Cutout> {
   trimmed.getContext("2d")!.drawImage(canvas, left, top, trimmed.width, trimmed.height, 0, 0, trimmed.width, trimmed.height);
   const blob = await new Promise<Blob | null>((resolve) => trimmed.toBlob(resolve, "image/png"));
   if (!blob) return plain(image);
-  return { src: URL.createObjectURL(blob), width: trimmed.width, height: trimmed.height, cut: true };
+  const tint = weight ? `rgb(${Math.round(tr / weight)} ${Math.round(tg / weight)} ${Math.round(tb / weight)})` : undefined;
+  return { src: URL.createObjectURL(blob), width: trimmed.width, height: trimmed.height, cut: true, tint };
 }

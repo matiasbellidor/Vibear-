@@ -72,7 +72,8 @@ test("the pin wall moves on its own and slows down under the mouse", async ({ pa
   await page.goto("/");
   const wall = page.locator(".marquee");
   const loop = (key: "playState" | "playbackRate") => wall.evaluate((el, key) => el.getAnimations()[0]?.[key], key);
-  await wall.hover();
+  // Hover its frame: the wall itself never stands still, so Playwright would wait for it forever.
+  await page.locator(".marquee-wrap").hover();
   await expect.poll(() => loop("playState")).toBe("running");
   await expect.poll(() => loop("playbackRate")).toBeLessThan(1);
   await page.mouse.move(0, 0);

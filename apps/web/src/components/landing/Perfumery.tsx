@@ -1,28 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { api, type Catalogue, type FragranceBoard, type Offer } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import { api, type Catalogue, type FragranceBoard } from "@/lib/api";
 import { whatsappUrl } from "@/lib/contact";
-import { cutout, type Cutout } from "@/lib/cutout";
-import { Brackets } from "../motion/Hud";
+import { useCutout, type Cutout } from "@/lib/cutout";
 import { InView } from "../motion/InView";
 import { cx, textButton } from "../ui";
+import { money, PerfumeFilm } from "./PerfumeFilm";
 
 const FEATURED = "erba-pura";
-// The welcome: the featured bottle in the middle, two of the most wanted fragrances around it. Each
-// one's readout (name and best price) hangs over it, flush with the stage's edge on the sides.
-const TRIO = [
-  { id: "le-male-elixir", size: "w-[24%] sm:w-[18%]", place: "translate-y-[10%]", tilt: "-7deg", from: "-40%", i: 1, chip: "left-0 items-start text-left" },
-  { id: "erba-pura", size: "w-[30%] sm:w-[23%]", place: "z-10", tilt: "0deg", from: "0%", i: 0, chip: "left-1/2 -translate-x-1/2 items-center text-center" },
-  { id: "good-girl", size: "w-[24%] sm:w-[18%]", place: "translate-y-[10%]", tilt: "7deg", from: "40%", i: 2, chip: "right-0 items-end text-right" },
-];
+// The film's three covers: the featured fragrance, then two of the most wanted.
+const COVERS = ["erba-pura", "le-male-elixir", "good-girl"];
 
 // WhatsApp glyph, Simple Icons v13.21.0 (CC0). Nominative use: it says where the button leads.
 const WHATSAPP =
   "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z";
 
-const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
-const money = (offer: Offer) => pesos.format(offer.price);
 const ask = (board: FragranceBoard) =>
   whatsappUrl(`Hola! Vengo de Vibear y quiero el mejor precio para ${board.fragrance.name} de ${board.fragrance.house}.`);
 
@@ -41,23 +34,6 @@ function WhatsAppGlyph({ className }: { className?: string }) {
       <path d={WHATSAPP} />
     </svg>
   );
-}
-
-/** The shop's photo of the bottle, cut out of its white background (lib/cutout.ts). */
-function useCutout(src: string | null): Cutout | null {
-  const [shot, setShot] = useState<{ src: string; cut: Cutout } | null>(null);
-  useEffect(() => {
-    if (!src) return;
-    let live = true;
-    cutout(src).then(
-      (cut) => live && setShot({ src, cut }),
-      () => live && setShot({ src, cut: { src, width: 3, height: 4, cut: false } }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [src]);
-  return shot && shot.src === src ? shot.cut : null;
 }
 
 function BottleImage({ shot, alt, className }: { shot: Cutout; alt: string; className?: string }) {
@@ -81,53 +57,9 @@ function Bottle({ board, className }: { board: FragranceBoard; className?: strin
 }
 
 /**
- * A bottle on the welcome's podium: it rises in, floats, stands over its reflection (the same photo,
- * mirrored and fading) and carries its readout.
- */
-function Spot({ spot, board }: { spot: (typeof TRIO)[number]; board?: FragranceBoard }) {
-  const shot = useCutout(board?.image ?? null);
-  const best = board?.offers[0];
-  const float = (
-    <span className="fragrance-float motion-loop block" style={{ "--i": spot.i } as CSSProperties}>
-      {shot && <BottleImage shot={shot} alt="" className="mx-auto h-auto w-full drop-shadow-[0_24px_30px_rgb(120_60_10/0.28)]" />}
-    </span>
-  );
-  return (
-    <span
-      className={cx("fragrance-bottle relative block", spot.size, spot.place)}
-      style={{ "--from-x": spot.from, "--i": spot.i } as CSSProperties}
-    >
-      {board && (
-        <span
-          className={cx("fragrance-chip absolute bottom-[calc(100%+0.25rem)] z-10 flex flex-col whitespace-nowrap", spot.chip)}
-          style={{ "--i": spot.i } as CSSProperties}
-        >
-          <span className="border border-ink/15 bg-paper/85 px-2 py-1">
-            <span className="block text-micro text-wine-bright">{board.fragrance.name}</span>
-            {best && <span className="block font-mono text-small tabular-nums">{money(best)}</span>}
-          </span>
-          <span className="mx-3 h-4 w-px bg-wine-bright/60" />
-          <span className="mx-[0.6875rem] size-[3px] rounded-full bg-wine-bright" />
-        </span>
-      )}
-      <span className="block" style={{ rotate: spot.tilt }}>
-        {float}
-      </span>
-      {shot && (
-        <span className="fragrance-reflection pointer-events-none absolute inset-x-0 top-full block">
-          <span className="block" style={{ rotate: spot.tilt }}>
-            {float}
-          </span>
-        </span>
-      )}
-    </span>
-  );
-}
-
-/**
- * Perfumería: real bottles (the shops' photos, cut out in the browser) rise into a warm glow as the
- * section scrolls in; then the featured fragrance compared shop by shop, the catalogue (photo, price,
- * where), and a WhatsApp line to the supplier. Prices come from Argentine shops only, in pesos, read by
+ * Perfumería: a film of three fragrance covers (PerfumeFilm: the shops' photos, cut out in the
+ * browser); then the featured fragrance compared shop by shop, the catalogue (photo, price, where),
+ * and a WhatsApp line to the supplier. Prices come from Argentine shops only, in pesos, read by
  * the API and fetched when the section gets close.
  */
 export function Perfumery() {
@@ -149,7 +81,7 @@ export function Perfumery() {
         api.fragrances(controller.signal).then((data) => setCatalogue({ status: "ready", data }), failed(setCatalogue));
         api.fragrancePrices(FEATURED, controller.signal).then((data) => setFeatured({ status: "ready", data }), failed(setFeatured));
       },
-      { rootMargin: "600px" },
+      { rootMargin: "1200px" },
     );
     observer.observe(element);
     return () => {
@@ -161,7 +93,6 @@ export function Perfumery() {
   const items = catalogue.status === "ready" ? catalogue.data.items : [];
   const byId = new Map(items.map((item) => [item.fragrance.id, item]));
   const offers = featured.status === "ready" ? featured.data.offers : [];
-  const shops = new Set(items.flatMap((item) => item.offers.map((offer) => offer.shop))).size;
 
   return (
     // overflow-x-clip: the glow spills past the bottles on purpose, but never into a sideways scroll.
@@ -171,42 +102,20 @@ export function Perfumery() {
       aria-labelledby="perfumery-title"
       className="page theme-light overflow-x-clip px-4 py-20 lg:px-8 lg:py-28"
     >
-      <div className="text-center">
-        <p className="text-micro text-wine-bright">Perfumería · tiendas argentinas</p>
-        <h2 id="perfumery-title" className="mx-auto mt-4 max-w-[18ch] font-display text-title tracking-tight">
-          Potenciá tu outfit con una <span className="italic text-wine-bright">fragancia</span>.
-        </h2>
-        <p className="mx-auto mt-4 max-w-[46ch] text-small text-muted">
-          Frascos originales, con el mejor precio que encontramos hoy en perfumerías de Argentina.
-        </p>
-      </div>
-
-      {/* The welcome, a display under the scanner: the bottles rise onto a podium whose rings turn, stand
-          over their reflections and get read out (name, best price) while the wine scan line passes,
-          framed like the hero's photo (globals.css .fragrance-*). */}
-      <InView aria-hidden="true" className="relative mx-auto mt-10 aspect-[4/5] max-w-2xl overflow-clip sm:aspect-[5/4]">
-        <span className="fragrance-glow motion-loop pointer-events-none absolute inset-x-0 top-[2%] bottom-[-6%] rounded-full bg-[radial-gradient(closest-side,rgb(255_186_102/0.6),rgb(232_84_108/0.14)_58%,transparent)]" />
-        <span className="fragrance-podium pointer-events-none absolute inset-x-[4%] bottom-[8%] aspect-square">
-          <span className="absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,rgb(163_32_58/0.12),transparent)]" />
-          <span className="fragrance-orbit motion-loop absolute inset-0 rounded-full border-2 border-dashed border-wine-bright/40" />
-          <span className="fragrance-comet motion-loop absolute inset-[10%] rounded-full" />
-        </span>
-        <div className="absolute inset-x-0 bottom-[16%] flex items-end justify-center gap-[4%]">
-          {TRIO.map((spot) => (
-            <Spot key={spot.id} spot={spot} board={byId.get(spot.id)} />
-          ))}
-        </div>
-        <span className="pointer-events-none absolute inset-0">
-          <span className="sweep motion-loop block h-[10%]">
-            <span className="block h-px bg-wine-bright shadow-[0_0_14px_2px_rgb(163_32_58/0.45)]" />
-          </span>
-        </span>
-        <span className="absolute left-3 top-3 flex items-center gap-1.5 text-micro text-wine-bright">
-          <span className="blink motion-loop size-1.5 rounded-full bg-wine-bright" /> Precios de hoy
-        </span>
-        {shops > 0 && <span className="absolute right-3 top-3 text-micro tabular-nums text-muted">{shops} tiendas</span>}
-        <Brackets />
-      </InView>
+      <PerfumeFilm
+        boards={COVERS.map((id) => byId.get(id))}
+        intro={
+          <>
+            <p className="text-micro text-wine-bright">Perfumería · tiendas argentinas</p>
+            <h2 id="perfumery-title" className="mx-auto mt-4 max-w-[18ch] font-display text-title tracking-tight">
+              Potenciá tu outfit con una <span className="italic text-wine-bright">fragancia</span>.
+            </h2>
+            <p className="mx-auto mt-4 max-w-[46ch] text-small text-muted">
+              Frascos originales, con el mejor precio que encontramos hoy en perfumerías de Argentina.
+            </p>
+          </>
+        }
+      />
 
       {/* The featured fragrance, shop by shop (Google Shopping included when there's a SerpApi key). */}
       <div className="mx-auto mt-12 max-w-2xl">

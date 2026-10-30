@@ -381,42 +381,12 @@
     animation: reveal 0.5s var(--ease-expo) both;
   }
 
-  /* Perfumery welcome (Perfumery.tsx, the shops' bottles cut out): they float and the glow breathes, both loops. */
-  .fragrance-float {
-    animation: app-float 6s var(--ease-in-out-soft) infinite alternate;
-    animation-delay: calc(var(--i, 0) * -2s);
-  }
-  .fragrance-glow {
-    animation: fragrance-glow 4.5s var(--ease-in-out-soft) infinite alternate;
-  }
-  /* The podium's rings turn: the dashed one slowly, the comet of light the other way. */
-  .fragrance-orbit {
-    animation: orbit 60s linear infinite;
-  }
-  .fragrance-comet {
-    animation: orbit 6s linear infinite reverse;
-  }
   /* The supplier's button: a light runs round its border and a shine crosses it now and then. */
   .supplier-ring {
     animation: orbit 3.5s linear infinite;
   }
   .supplier-shine {
     animation: shine 3.6s var(--ease-in-out-soft) infinite;
-  }
-  /* ...and as the part scrolls in, the bottles rise into it from below and the sides (like the
-     brand marks in the hero), the centre one first. */
-  @supports (animation-timeline: view()) {
-    .fragrance-bottle {
-      animation: fragrance-rise linear both;
-      animation-timeline: view();
-      animation-range: entry calc(var(--i, 0) * 8%) cover 42%;
-    }
-    /* Each readout comes in once its bottle has landed. */
-    .fragrance-chip {
-      animation: fragrance-chip linear both;
-      animation-timeline: view();
-      animation-range: cover calc(30% + var(--i, 0) * 4%) cover calc(42% + var(--i, 0) * 4%);
-    }
   }
 
   /* Tab banners (TabBanners.tsx): one-shot, replayed each time the tab opens. The beam crosses the
@@ -498,38 +468,12 @@
 @keyframes tab-drop {
   from { opacity: 0; transform: translateY(-4rem) rotate(calc(var(--r, 0deg) - 20deg)); }
 }
-@keyframes fragrance-rise {
-  from { opacity: 0; transform: translateX(var(--from-x, 0%)) translateY(45%) scale(0.7); }
-}
-@keyframes fragrance-chip {
-  from { opacity: 0; transform: translateY(0.75rem); }
-}
 @keyframes orbit {
   to { rotate: 360deg; }
 }
 @keyframes shine {
   from { transform: translateX(-120%); }
   55%, 100% { transform: translateX(420%); }
-}
-/* The perfumery's podium: a square squashed into an ellipse (perspective without 3D), so a ring
-   turning inside it reads as an orbit seen from the side. */
-.fragrance-podium {
-  transform: scaleY(0.22);
-  transform-origin: 50% 100%;
-}
-.fragrance-comet {
-  background: conic-gradient(from 0deg, transparent 0 60%, var(--color-wine-bright) 97%, transparent);
-  mask: radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
-}
-/* Bottles stand on a glossy floor: each one mirrored under itself, fading out. */
-.fragrance-reflection {
-  transform: scaleY(-1);
-  opacity: 0.18;
-  mask-image: linear-gradient(to top, #000, transparent 40%);
-}
-@keyframes fragrance-glow {
-  from { opacity: 0.65; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1.06); }
 }
 @keyframes app-float {
   from { transform: translateY(-3%); }
@@ -601,6 +545,124 @@
   background-color: color-mix(in srgb, var(--color-wine-bright) 55%, transparent);
 }
 .step-rule-a {
+  display: none;
+}
+
+/* ─── Perfume film (PerfumeFilm.tsx): three fragrance covers you scroll through ─────────────────
+   Each cover is a magazine cover: the fragrance's name runs across it like a masthead, the bottle
+   stands in front of the letters, the backdrop takes the bottle's own colour (--tint, read from the
+   photo) and the notes and price are the cover lines. Static (no scroll timelines, reduced motion,
+   short screens): the intro, then the three covers side by side. The film is in the motion block. */
+.film-covers {
+  display: grid;
+  gap: 3rem 1.5rem;
+  margin-top: 2.5rem;
+  padding-inline: 1rem;
+}
+@media (width >= 64rem) {
+  .film-covers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-inline: 2rem;
+  }
+}
+.film-visual {
+  --bottle-h: 66cqh;
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-media);
+  background-color: var(--color-surface);
+  container-type: size;
+}
+.film-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55% 50% at 50% 62%, color-mix(in srgb, var(--tint) 42%, transparent), transparent 72%),
+    linear-gradient(color-mix(in srgb, var(--tint) 6%, transparent), color-mix(in srgb, var(--tint) 16%, transparent));
+}
+.film-masthead {
+  position: absolute;
+  inset-inline: 0;
+  top: 6cqh;
+  z-index: 1;
+  white-space: nowrap;
+  text-align: center;
+  font-size: min(calc(170cqw / var(--len)), 28cqh);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, var(--tint) 62%, var(--color-ink));
+}
+.film-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.06em;
+}
+.film-letter {
+  display: inline-block;
+}
+.film-bottle {
+  position: absolute;
+  left: 50%;
+  bottom: 6cqh;
+  z-index: 2;
+  translate: -50% 0;
+}
+.film-drift {
+  position: relative;
+  display: block;
+}
+.film-image {
+  display: block;
+  width: auto;
+  height: var(--bottle-h);
+  max-width: 86cqw;
+  object-fit: contain;
+}
+.film-shadow {
+  position: absolute;
+  inset: auto 6% -3%;
+  height: 7%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.24), transparent);
+}
+/* Light on the glass: a band that only shows where the bottle is (the cut-out is its mask). */
+.film-sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-size: contain;
+  mask-position: center;
+  mask-repeat: no-repeat;
+}
+.film-sheen-band {
+  position: absolute;
+  inset: -10% auto -10% 0;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.45) 42%, rgb(255 255 255 / 0.85) 50%, rgb(255 255 255 / 0.45) 58%, transparent);
+  transform: translateX(-130%) skewX(-14deg);
+}
+.film-scan {
+  position: absolute;
+  inset: 0 -10% auto;
+  height: 2px;
+  background-color: var(--color-wine-bright);
+  box-shadow: 0 0 18px 3px color-mix(in srgb, var(--color-wine-bright) 55%, transparent);
+  opacity: 0;
+}
+.film-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.film-price {
+  text-align: right;
+}
+.film-ticks {
   display: none;
 }
 
@@ -839,6 +901,167 @@
   }
 }
 
+/* The perfume film: a 360svh block with a sticky stage; the covers take turns on it.
+   0-6% the intro leaves · cover 01 3-29% · 02 35-61% · 03 67-100%. Within each (from --in): the
+   tint fades in (-3 to +6%), the name rises letter by letter and the bottle comes up out of a
+   close-up (+0-10%), light glides over the glass (+6-16%), the scan line reads it (+8-16%) and the
+   notes appear as it passes (+10-19%), the price lands (+12-18%), the brackets lock on (+15-18%).
+   The bottle keeps pushing in until the cover fades out (--out, 6%). */
+@media (prefers-reduced-motion: no-preference) and (min-height: 600px) {
+  @supports (animation-timeline: view()) {
+    .film {
+      height: 360svh;
+      view-timeline-name: --film;
+    }
+    .film-stage {
+      position: sticky;
+      top: 3.5rem;
+      height: calc(100svh - 3.5rem);
+      overflow: hidden;
+    }
+    .film-intro {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      animation: film-intro linear both;
+      animation-timeline: --film;
+      animation-range: contain 0% contain 6%;
+    }
+    .film-covers {
+      position: absolute;
+      inset: 0;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+    .film-cover {
+      position: absolute;
+      inset: 0;
+      animation: film-out linear both;
+      animation-timeline: --film;
+      animation-range: contain var(--out) contain calc(var(--out) + 6%);
+    }
+    .film-cover-3 {
+      animation: none;
+    }
+    .film-visual {
+      --bottle-h: 44cqh;
+      position: absolute;
+      inset: 0;
+      aspect-ratio: auto;
+      border-radius: 0;
+      background: none;
+    }
+    .film-masthead {
+      top: 9cqh;
+      font-size: min(calc(170cqw / var(--len)), 24cqh);
+    }
+    .film-bottle {
+      bottom: 30cqh;
+    }
+    .film-meta {
+      position: absolute;
+      inset: auto 1rem 1.5rem;
+      margin: 0;
+    }
+    .film-ticks {
+      position: absolute;
+      inset: 1rem 0 auto;
+      z-index: 3;
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+    }
+    .film-tick {
+      position: relative;
+      display: flex;
+    }
+    .film-tick-on {
+      position: absolute;
+      inset: 0;
+      border-bottom: 2px solid var(--color-wine-bright);
+      animation: film-tick linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) - 3%) contain calc(var(--out) + 6%);
+    }
+
+    .film-tint {
+      animation: film-fade linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) - 3%) contain calc(var(--in) + 6%);
+    }
+    .film-letter {
+      animation: film-letter linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + var(--l, 0) * 0.45%) contain calc(var(--in) + 7% + var(--l, 0) * 0.45%);
+    }
+    .film-bottle {
+      animation: film-bottle linear both;
+      animation-timeline: --film;
+      animation-range: contain var(--in) contain calc(var(--in) + 10%);
+    }
+    .film-drift {
+      animation: film-drift linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 10%) contain calc(var(--out) + 6%);
+    }
+    .film-sheen-band {
+      animation: film-sheen linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 6%) contain calc(var(--in) + 16%);
+    }
+    .film-scan {
+      animation: film-scan linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 8%) contain calc(var(--in) + 16%);
+    }
+    .film-brackets {
+      animation: film-lock linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 15%) contain calc(var(--in) + 18%);
+    }
+    .film-kicker {
+      animation: film-rise linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 4%) contain calc(var(--in) + 10%);
+    }
+    .film-note {
+      animation: film-note linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 10% + var(--n, 0) * 1.5%) contain calc(var(--in) + 14% + var(--n, 0) * 1.5%);
+    }
+    .film-price {
+      animation: film-rise linear both;
+      animation-timeline: --film;
+      animation-range: contain calc(var(--in) + 12%) contain calc(var(--in) + 18%);
+    }
+
+    @media (width >= 64rem) {
+      /* The cover proper: a masthead across the page, the bottle standing in front of its letters,
+         the cover lines low on each side. */
+      .film-visual {
+        --bottle-h: 64cqh;
+      }
+      .film-masthead {
+        top: 12cqh;
+        font-size: min(calc(165cqw / var(--len)), 30cqh);
+      }
+      .film-bottle {
+        bottom: 5cqh;
+      }
+      .film-meta {
+        inset: auto 2rem 12%;
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+    }
+  }
+}
+
 @keyframes progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
@@ -888,6 +1111,47 @@
 }
 @keyframes side-dim {
   20%, 80% { opacity: 0.15; }
+}
+@keyframes film-intro {
+  to { opacity: 0; transform: translateY(-5svh) scale(0.97); }
+}
+@keyframes film-out {
+  to { opacity: 0; transform: scale(0.96); }
+}
+@keyframes film-fade {
+  from { opacity: 0; }
+}
+@keyframes film-letter {
+  from { transform: translateY(105%); }
+}
+@keyframes film-bottle {
+  from { opacity: 0; transform: translateY(24%) scale(1.35); }
+}
+@keyframes film-drift {
+  to { transform: scale(1.06) translateY(-1%); }
+}
+@keyframes film-sheen {
+  from { transform: translateX(-130%) skewX(-14deg); }
+  to { transform: translateX(300%) skewX(-14deg); }
+}
+@keyframes film-scan {
+  from { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; }
+  to { opacity: 0; transform: translateY(var(--bottle-h)); }
+}
+@keyframes film-lock {
+  from { opacity: 0; transform: scale(1.08); }
+}
+@keyframes film-rise {
+  from { opacity: 0; transform: translateY(1rem); }
+}
+@keyframes film-note {
+  from { opacity: 0; transform: translateX(-1.25rem); }
+}
+@keyframes film-tick {
+  0% { opacity: 0; }
+  12%, 88% { opacity: 1; }
+  100% { opacity: 0; }
 }
 /* ─── Page transitions: View Transitions through React's <ViewTransition> (PageTransition, Header)
    Short, so a tab feels instant: the page leaves in 90 ms while the next one arrives in 220 ms (no

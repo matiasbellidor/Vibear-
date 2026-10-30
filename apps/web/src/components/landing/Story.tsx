@@ -77,7 +77,7 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
   ];
 
   return (
-    <section aria-labelledby="story-title" className="story relative bg-grid">
+    <section aria-labelledby="story-title" className="story relative overflow-x-clip bg-grid">
       <div className="story-stage">
         <div className="story-intro flex flex-col items-center justify-center px-4 py-8 text-center">
           {/* Width capped by the stage height too, so the headline fits a landscape iPad or a laptop.
