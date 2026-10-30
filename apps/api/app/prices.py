@@ -70,7 +70,8 @@ def _fragrance(id: str, name: str, house: str, notes: str, size_ml: int, must_in
     return Fragrance(id, name, house, notes, f"{house} {name} perfume {size_ml} ml", must_include, size_ml, shops)
 
 
-# The catalogue, featured first: what these Argentine shops had in stock, full bottles.
+# The catalogue, featured first: what these Argentine shops had in stock, full bottles. Twelve, so a
+# 2-, 3- or 4-column grid ends in full rows.
 FRAGRANCES = {
     f.id: f
     for f in (
@@ -84,15 +85,10 @@ FRAGRANCES = {
                    at("Pigmento", "good-girl-edp"), at("Farmalife", "carolina-herrera-goodgirl-edp-x-80ml--3002142079")),
         _fragrance("naxos", "Naxos", "Xerjoff", "Tabaco, miel y lavanda", 100, ("naxos",),
                    at("Oud Maison", "xerjoff-naxos-edp"), at("Neve", "xerjoff-1891-naxos")),
-        _fragrance("erba-gold", "Erba Gold", "Xerjoff", "Cítrico, frutal y ambarado", 100, ("erba", "gold"),
-                   at("Brume", "xerjoff-erba-gold-edp-100-ml"), at("Neve", "xerjoff-erba-gold"),
-                   at("Esenzzia", "xerjoff-erba-gold-100ml")),
         _fragrance("baccarat-rouge-540", "Baccarat Rouge 540", "Maison Francis Kurkdjian", "Azafrán, ámbar y cedro", 70,
                    ("baccarat", "540"), at("Oud Maison", "maison-francis-kurkdjian-baccarat-rouge-540-edp")),
         _fragrance("bianco-latte", "Bianco Latte", "Giardini di Toscana", "Leche, caramelo y vainilla", 100, ("bianco", "latte"),
                    at("Oud Maison", "giardini-di-toscana-bianco-latte-edp"), at("Neve", "giardini-di-toscana-bianco-latte")),
-        _fragrance("gris-charnel", "Gris Charnel", "BDK Parfums", "Higo, cardamomo y té negro", 100, ("gris", "charnel"),
-                   at("Oud Maison", "bdk-parfums-gris-charnel-edp")),
         _fragrance("arabians-tonka", "Arabians Tonka", "Montale", "Tonka, azafrán y oud", 100, ("arabians", "tonka"),
                    at("Oud Maison", "montale-arabians-tonka-edp"), at("Neve", "montale-arabians-tonka")),
         _fragrance("by-the-fireplace", "By the Fireplace", "Maison Margiela", "Castaña, vainilla y humo de leña", 100,

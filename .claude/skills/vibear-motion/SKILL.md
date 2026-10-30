@@ -1,6 +1,6 @@
 ---
 name: vibear-motion
-description: Vibear's motion graphics system for apps/web. Covers the Apple-style scroll story (a sticky stage that plays with the scroll), page and tab transitions (View Transitions, the sliding wine tab pill), the per-tab banners, kinetic typography, scroll-driven reveals, the pin wall that slides with the scroll, sections opening like pages, timeline explainers (the animated scan demo), loop pausing and reduced-motion fallbacks, all CSS-first and cheap to run. Use this skill whenever you add or change any animation, transition, keyframe, scroll effect, carousel, marquee, ticker, hover motion, loading animation or landing page section, or when the user asks for motion graphics, "make it feel alive", more dynamic, animated or storytelling. Use it together with vibear-design, which owns layout, colour and type.
+description: Vibear's motion graphics system for apps/web. Covers the Apple-style scroll story (a sticky stage that plays with the scroll), page and tab transitions (View Transitions, the sliding wine tab pill), the per-tab banners, kinetic typography, scroll-driven reveals, the pin wall that loops on its own (slower under the mouse), sections opening like pages, timeline explainers (the animated scan demo), loop pausing and reduced-motion fallbacks, all CSS-first and cheap to run. Use this skill whenever you add or change any animation, transition, keyframe, scroll effect, carousel, marquee, ticker, hover motion, loading animation or landing page section, or when the user asks for motion graphics, "make it feel alive", more dynamic, animated or storytelling. Use it together with vibear-design, which owns layout, colour and type.
 ---
 
 # Vibear motion
@@ -13,7 +13,9 @@ Motion in Vibear exists to **tell the product's story**, not to decorate. Each a
 | Kinetic headline (words rising from a mask) | "this is a brand with a point of view" |
 | Lines lighting up as you scroll | "here is the problem, one beat at a time" |
 | Scan line, boxes drawing in, cards rising (the `/scan` demo) | "this is what will happen to your photo" |
-| A wall of pins sliding sideways as you scroll, hotspots breathing | "every garment in these photos can be found" |
+| A wall of pins that keeps moving on its own and slows down when you point at it, hotspots breathing | "every garment in these photos can be found" |
+| How it works in three big steps that take turns around the hero photo, each with its wine numeral and a rule drawing toward the photo | "three moves and you have it" |
+| Perfume bottles rising onto a podium whose rings turn, over their reflections, read out with their price while the scan line passes | "real bottles, real prices, scanned like your clothes" |
 | Sections opening like pages, black then white; a wine progress bar under the header | "you are moving forward through a story" |
 | Pins floating on the wine closing section | "this is what you get when you press the button" |
 | A crosshair following the mouse over the hero, reading the garment under it | "point at anything, Vibear knows what it is" |
@@ -51,15 +53,17 @@ Everything is in `apps/web/src/app/globals.css`, so components only pick class n
 | `.reveal` | fades and rises as it scrolls in (CSS scroll-driven, `animation-timeline: view()`) |
 | `.scrub-line` | text going from 15% to 100% opacity as it crosses the viewport |
 | `.story` > `.story-stage` | the scroll story: a 250svh section with a sticky stage and a named view timeline `--story` (see below). The user found 330svh too slow to scroll through |
-| `.story-intro`, `-app`, `-card`, `-side`, `-scan`, `-box`, `-chip`, `-caption`, `-caption-title` | its parts, each with an `animation-range` in `contain` percentages of `--story`; boxes and chips stagger with `--i` |
-| `.scroll-row` (inside `.scroll-row-wrap`) | the pin wall: slides from its start to its end while it crosses the viewport (`view()`, `cover 0%` → `cover 100%`) |
+| `.story-intro`, `-app`, `-card`, `-side`, `-scan`, `-box`, `-chip` | its parts, each with an `animation-range` in `contain` percentages of `--story`; boxes and chips stagger with `--i`. The photo's width is `--photo-w` on `.story` (a smaller share of the stage under `lg`, so the steps fit) |
+| `.story-step-1/2/3` (`--in`, `--out`) > `.step-num`, `.step-rule(-a/-b)`, `.step-word` (`--w`), `.step-text` | the three how-it-works steps, big (`text-step`): each one's numeral slides in from its side, its rule draws toward the photo, its words rise from a mask and its text follows; then it leaves the way it came. On a laptop: left of the photo, right of it, under it; below `lg`: step 1 on top (the photo is still rising from below), 2 and 3 under it. `.story-side-dim` (`--dim-from/to`) dims the side pins while a step sits on their side |
+| `.marquee` (inside `.marquee-wrap`, `--marquee`) | the pin wall: a loop with the list twice (`translateX(-50%)` lands where it started; the gap is padding on each column). `.marquee-copy` only shows while it moves. `SlowOnHover` drops its `playbackRate` to 0.3 under a mouse (no jump, unlike a new duration) |
 | `.page` | a section whose background (a `::before`, so text never scales) opens from 90% width as it enters; the top corners stay rounded, like a sheet. It also has `content-visibility: auto` |
 | `.app-pop`, `.app-float` (`--i`, `--from-*`) | the brand marks behind the headline: they come out from behind its centre one by one, then float (a loop); `.story-app` spreads them outward (`--spread`) as the headline scrolls away |
 | `.tab-beam`, `.tab-chip` (`--n`), `.tab-drop`, `.tab-pop` | the tab banners: one-shot, so they replay each time the tab opens |
-| `.fragrance-bottle` (`--from-x`, `--i`), `.fragrance-float`, `.fragrance-glow` | the perfumery welcome (real bottles, cut out): they rise into the glow as the section scrolls in (`view()`, centre first), then float; the glow breathes. Both loops carry `.motion-loop` |
+| `.fragrance-bottle` (`--from-x`, `--i`), `.fragrance-float`, `.fragrance-glow`, `.fragrance-podium` > `.fragrance-orbit`, `.fragrance-comet`, `.fragrance-reflection`, `.fragrance-chip` | the perfumery welcome (real bottles, cut out): they rise onto a podium as the section scrolls in (`view()`, centre first) and float over their reflections (the same photo mirrored and masked). The podium is a square squashed to an ellipse with `scaleY`, so a ring turning inside it reads as an orbit (a dashed one slowly, a comet of light the other way). Each bottle's readout (name, best price) comes in once it has landed, the scan line sweeps and `Brackets` frame it like the hero photo. Loops carry `.motion-loop` |
+| `.supplier-ring`, `.supplier-shine` | the supplier's WhatsApp button: a conic gradient turning behind the fill draws a light round its border, a shine crosses it every few seconds, and the WhatsApp mark pings (`.hotspot-ring`) |
 | `.scan-area` (inside `.scan-field`) | a garment's outline on a pin lights up (wine fill + stroke, 150 ms) under the ScanField crosshair; mouse only |
 | `.swap-in` | a quick (0.5 s) arrival for content that changes after a choice, like the 404's look per mood |
-| `::view-transition-*(.nav-forward / .nav-back / .page-fade / .nav-pill / site-header)` | page transitions: 150 ms out, 380 ms in; the header never moves |
+| `::view-transition-*(.nav-forward / .nav-back / .page-fade / .nav-pill / site-header)` | page transitions: 90 ms out and 220 ms in at the same time, the pill in 260 ms; the header never moves |
 | `.scroll-progress` | the 2px wine reading bar under the header, on `scroll(root)` |
 | `.motion-loop` | **every infinite animation gets this class**: it is what pausing and reduced motion target |
 | `.x-*` | the scan explainer timeline (one `--loop: 6s` shared by every part; per-item delays are fractions of `--loop`, so changing the duration keeps the choreography) |
@@ -71,7 +75,8 @@ Everything is in `apps/web/src/app/globals.css`, so components only pick class n
 Components (`apps/web/src/components/motion/`):
 - `InView.tsx`: wraps a section and sets `data-inview="true|false"` with an IntersectionObserver. Loops inside pause off-screen, so a long landing costs no CPU for what you can't see. `restart` rewinds clock-based animations each time the section enters (scroll-driven ones are skipped: setting their `currentTime` throws).
 - `KineticText.tsx`: splits lines into masked words with stagger. Server component, no JS.
-- `Loops.tsx`: `PinWall`, columns of two pins at their natural height in a `.scroll-row`, the uneven bottom faded with `mask-fade-b`. Without scroll timelines it is a plain horizontal scroller (`overflow-x-auto`).
+- `Loops.tsx`: `PinWall`, columns of two pins at their natural height in a `.marquee`, the uneven bottom faded with `mask-fade-b`, inside an `InView` (it pauses off-screen) and a `SlowOnHover`. With reduced motion it is a plain horizontal scroller (`overflow-x-auto`).
+- `SlowOnHover.tsx`: slows the CSS loop with a given name inside it while a mouse is over it (`updatePlaybackRate`).
 - `Hud.tsx`: `ScanField` (crosshair, coordinates and the garment under the pointer, read from each pin's `data-garment`; it writes to the DOM inside a frame callback, so moving the mouse never re-renders React; mouse only), `LiveClock` (`useSyncExternalStore` on a 1 s interval) and `Brackets`.
 - `MotionToggle.tsx`: the visible "Pausar movimiento" button. It stores the choice in localStorage (`useMotionPreference` in `lib/storage.ts`) and sets `data-motion="paused"` on `<html>`.
 - `PageTransition.tsx`: React's `<ViewTransition>` with enter/exit classes per transition type. Every `page.tsx` wraps its content in it (layouts persist, so they never enter or exit). Links that change tab carry `transitionTypes={["nav-forward"]}` or `["nav-back"]` by tab order (Inicio, Escanear, Guardados); the Header does it for its tabs, and in-page CTAs to `/scan` set it by hand.
@@ -84,13 +89,14 @@ The landing itself is `components/landing/`: `Story.tsx` (the scroll-story hero 
 - With cacheComponents, anything that reads the URL (`usePathname`, `params`) must sit inside a `<Suspense>`, or the build fails for `/look/[id]`. The Header wraps its tabs in one.
 - The header is named (`viewTransitionName: "site-header"`), so it stays still while the page slides; the current tab's pill is a named `<ViewTransition name="nav-pill" share="nav-pill">` that morphs between tabs.
 - Measured on a phone-speed CPU (4x throttle): a tab switch went from ~2 s to 0.25-0.7 s after a first visit (~1 s on the first). `npm run dev` is slower by nature (it compiles each page on first open; `scripts/warm.mjs` opens them at start). Judge speed with `npm run preview`.
+- On a laptop CPU (production) the new page is ready 40-140 ms after the click; the rest is the animation. With 150 ms out + 380 ms in (after a 60 ms gap) a switch took 530-750 ms and the user found it slow; with 90 + 220 ms at once it takes 350-540 ms. In dev the same switch takes 0.5-1.1 s (dev React and the RSC refetch), which is what people notice while building.
 
 ## Rules that keep it fast
 
-- Animate **only `transform` and `opacity`** (plus `clip-path` for small box draw-ins). Never width, height, top/left, `border-radius` or filters on large areas: they force layout or paint on every frame. The section-opening animation used to animate the radius; it repainted the whole section each frame.
+- Animate **only `transform` and `opacity`** (plus `clip-path` for small, scroll-driven box draw-ins, which only tick while you scroll). Never loop a `clip-path`: the scan demo's boxes did, and the page's style was recalculated every frame on the main thread; they now grow out of a corner with `scale`. Never width, height, top/left, `border-radius` or filters on large areas: they force layout or paint on every frame. The section-opening animation used to animate the radius; it repainted the whole section each frame.
 - No `backdrop-filter` over content that moves (the scroll story's captions had a blur over the rising photo): use a solid `bg-paper/90`.
 - Big sections below the fold get `content-visibility: auto` (`.page` has it), so the landing renders and reappears at the cost of what's on screen.
-- Count loops in a section: one breathing ring per pin, not one per garment (the pin wall had 51 rings), and at most 20 pins in the wall.
+- Count loops in a section: one breathing ring per pin, not one per garment (the pin wall had 51 rings), and at most 24 pins in the wall (48 cards with the loop's copy: the wall is already 40% of the landing's DOM).
 - No JavaScript animation loops (`requestAnimationFrame` per frame, scroll listeners). CSS keyframes and scroll-driven timelines run on the compositor. JS only decides *whether* something plays (`InView`, `MotionToggle`), or follows the pointer once per frame while it moves (`ScanField`).
 - Third-party widgets (the Pinterest embed) load their script once, and only when their section gets near the viewport.
 - `will-change: transform` only on moving tracks, never on everything.
@@ -110,9 +116,9 @@ The landing itself is `components/landing/`: `Story.tsx` (the scroll-story hero 
 
 The hero (`components/landing/Story.tsx` + the `.story-*` block in `globals.css`) is the model:
 1. A tall section (`250svh`) with `view-timeline-name: --story` and a sticky stage of one viewport under the header (`top: 3.5rem; height: calc(100svh - 3.5rem)`). Every part animates on `animation-timeline: --story` with `animation-range: contain X% contain Y%`, so the whole story plays while the stage is pinned.
-2. Keep a phase table in a comment above the block (0-16% headline leaves · 0-34% photo rises, pins fly in · 36-56% scan · 44-66% boxes · 62-82% readouts · captions follow the three beats). Change the table first, then the ranges.
+2. Keep a phase table in a comment above the block (0-16% headline leaves · 0-34% photo rises, pins fly in · 36-56% scan · 44-66% boxes · 62-82% readouts · steps 01 16-46%, 02 44-70%, 03 68-100%). Change the table first, then the ranges.
 3. All of it sits inside `@media (prefers-reduced-motion: no-preference) and (min-height: 600px) { @supports (animation-timeline: view()) {…} }`. Outside it, the same markup is a normal column: intro, photo with boxes and chips, the three steps. A phone held sideways (390px tall) has no room for a pinned stage, so it gets the column too.
-4. What starts hidden must start out of the way: the photo begins below the fold (`translateY(115%) scale(.5)`), or it overlaps the headline on short screens. Captions take turns in one grid cell (`grid-area: 1/1`), and their heading fades in with the first one.
+4. What starts hidden must start out of the way: the photo begins below the fold (`translateY(115%) scale(.5)`), or it overlaps the headline on short screens. The steps were micro captions in one grid cell at the bottom and nobody read them: now they are big and each one takes a different place around the photo, positioned from `--photo-w`. Their heading ("Cómo funciona") stays for screen readers only.
 5. The headline is sized by its container (`cqw`) and the container's width is also capped by the stage height (`max-w-[min(64rem,calc((100svh-3.5rem)*0.9))]`). Without the cap it covered the button on a landscape iPad.
 6. Check it frame by frame at real device sizes, including landscape: scroll to 0/30/55/85% of the story and screenshot each with a short Playwright script. Assert in tests with `mouse.wheel` and computed opacity, not with timeouts.
 

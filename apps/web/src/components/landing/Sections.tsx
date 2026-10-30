@@ -64,8 +64,8 @@ export function Carousels({ pins }: { pins: Pin[] }) {
         </div>
       </div>
       <ScanField className="mt-12">
-        {/* 20 pins (10 columns) fill the slide at any width and keep it light on phones. */}
-        <PinWall pins={pins.slice(0, 20)} labels={false} className="h-[30rem] sm:h-[36rem] md:h-[42rem]" />
+        {/* Up to 24 pins (12 columns, shown twice for the loop): 72 s before a photo comes round again. */}
+        <PinWall pins={pins.slice(0, 24)} labels={false} className="h-[30rem] sm:h-[36rem] md:h-[42rem]" />
       </ScanField>
     </section>
   );

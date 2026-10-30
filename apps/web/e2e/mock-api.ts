@@ -79,7 +79,7 @@ export const CATALOGUE = {
   items: [
     { ...FRAGRANCE_BOARD, offers: FRAGRANCE_BOARD.offers.slice(2) },
     perfume("naxos", "Naxos", "Xerjoff", 630000),
-    perfume("erba-gold", "Erba Gold", "Xerjoff", 584500),
+    perfume("bianco-latte", "Bianco Latte", "Giardini di Toscana", 540000),
     perfume("kirke", "Kirke", "Tiziana Terenzi", null),
   ],
   updated_at: Math.floor(Date.now() / 1000),

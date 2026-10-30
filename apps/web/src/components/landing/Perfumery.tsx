@@ -4,14 +4,17 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { api, type Catalogue, type FragranceBoard, type Offer } from "@/lib/api";
 import { whatsappUrl } from "@/lib/contact";
 import { cutout, type Cutout } from "@/lib/cutout";
+import { Brackets } from "../motion/Hud";
+import { InView } from "../motion/InView";
 import { cx, textButton } from "../ui";
 
 const FEATURED = "erba-pura";
-// The welcome: the featured bottle in the middle, two of the most wanted fragrances around it.
+// The welcome: the featured bottle in the middle, two of the most wanted fragrances around it. Each
+// one's readout (name and best price) hangs over it, flush with the stage's edge on the sides.
 const TRIO = [
-  { id: "le-male-elixir", size: "w-[25%]", place: "translate-y-[10%]", tilt: "-7deg", from: "-40%", i: 1 },
-  { id: "erba-pura", size: "w-[32%]", place: "z-10", tilt: "0deg", from: "0%", i: 0 },
-  { id: "good-girl", size: "w-[25%]", place: "translate-y-[10%]", tilt: "7deg", from: "40%", i: 2 },
+  { id: "le-male-elixir", size: "w-[24%] sm:w-[18%]", place: "translate-y-[10%]", tilt: "-7deg", from: "-40%", i: 1, chip: "left-0 items-start text-left" },
+  { id: "erba-pura", size: "w-[30%] sm:w-[23%]", place: "z-10", tilt: "0deg", from: "0%", i: 0, chip: "left-1/2 -translate-x-1/2 items-center text-center" },
+  { id: "good-girl", size: "w-[24%] sm:w-[18%]", place: "translate-y-[10%]", tilt: "7deg", from: "40%", i: 2, chip: "right-0 items-end text-right" },
 ];
 
 // WhatsApp glyph, Simple Icons v13.21.0 (CC0). Nominative use: it says where the button leads.
@@ -57,19 +60,67 @@ function useCutout(src: string | null): Cutout | null {
   return shot && shot.src === src ? shot.cut : null;
 }
 
-function Bottle({ board, className }: { board: FragranceBoard; className?: string }) {
-  const shot = useCutout(board.image);
-  if (!shot) return null;
+function BottleImage({ shot, alt, className }: { shot: Cutout; alt: string; className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a shop's CDN photo (or its cut-out blob): not for next/image
     <img
       src={shot.src}
-      alt={`${board.fragrance.name} de ${board.fragrance.house}`}
+      alt={alt}
       width={shot.width}
       height={shot.height}
       referrerPolicy="no-referrer"
       className={cx("swap-in", !shot.cut && "rounded-media mix-blend-multiply", className)}
     />
+  );
+}
+
+function Bottle({ board, className }: { board: FragranceBoard; className?: string }) {
+  const shot = useCutout(board.image);
+  if (!shot) return null;
+  return <BottleImage shot={shot} alt={`${board.fragrance.name} de ${board.fragrance.house}`} className={className} />;
+}
+
+/**
+ * A bottle on the welcome's podium: it rises in, floats, stands over its reflection (the same photo,
+ * mirrored and fading) and carries its readout.
+ */
+function Spot({ spot, board }: { spot: (typeof TRIO)[number]; board?: FragranceBoard }) {
+  const shot = useCutout(board?.image ?? null);
+  const best = board?.offers[0];
+  const float = (
+    <span className="fragrance-float motion-loop block" style={{ "--i": spot.i } as CSSProperties}>
+      {shot && <BottleImage shot={shot} alt="" className="mx-auto h-auto w-full drop-shadow-[0_24px_30px_rgb(120_60_10/0.28)]" />}
+    </span>
+  );
+  return (
+    <span
+      className={cx("fragrance-bottle relative block", spot.size, spot.place)}
+      style={{ "--from-x": spot.from, "--i": spot.i } as CSSProperties}
+    >
+      {board && (
+        <span
+          className={cx("fragrance-chip absolute bottom-[calc(100%+0.25rem)] z-10 flex flex-col whitespace-nowrap", spot.chip)}
+          style={{ "--i": spot.i } as CSSProperties}
+        >
+          <span className="border border-ink/15 bg-paper/85 px-2 py-1">
+            <span className="block text-micro text-wine-bright">{board.fragrance.name}</span>
+            {best && <span className="block font-mono text-small tabular-nums">{money(best)}</span>}
+          </span>
+          <span className="mx-3 h-4 w-px bg-wine-bright/60" />
+          <span className="mx-[0.6875rem] size-[3px] rounded-full bg-wine-bright" />
+        </span>
+      )}
+      <span className="block" style={{ rotate: spot.tilt }}>
+        {float}
+      </span>
+      {shot && (
+        <span className="fragrance-reflection pointer-events-none absolute inset-x-0 top-full block">
+          <span className="block" style={{ rotate: spot.tilt }}>
+            {float}
+          </span>
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -110,6 +161,7 @@ export function Perfumery() {
   const items = catalogue.status === "ready" ? catalogue.data.items : [];
   const byId = new Map(items.map((item) => [item.fragrance.id, item]));
   const offers = featured.status === "ready" ? featured.data.offers : [];
+  const shops = new Set(items.flatMap((item) => item.offers.map((offer) => offer.shop))).size;
 
   return (
     // overflow-x-clip: the glow spills past the bottles on purpose, but never into a sideways scroll.
@@ -129,24 +181,32 @@ export function Perfumery() {
         </p>
       </div>
 
-      {/* The welcome: the bottles rise into the glow (globals.css .fragrance-*), then float. */}
-      <div aria-hidden="true" className="relative mx-auto mt-6 flex aspect-[5/4] max-w-xl items-end justify-center gap-[3%] pb-[6%]">
+      {/* The welcome, a display under the scanner: the bottles rise onto a podium whose rings turn, stand
+          over their reflections and get read out (name, best price) while the wine scan line passes,
+          framed like the hero's photo (globals.css .fragrance-*). */}
+      <InView aria-hidden="true" className="relative mx-auto mt-10 aspect-[4/5] max-w-2xl overflow-clip sm:aspect-[5/4]">
         <span className="fragrance-glow motion-loop pointer-events-none absolute inset-x-0 top-[2%] bottom-[-6%] rounded-full bg-[radial-gradient(closest-side,rgb(255_186_102/0.6),rgb(232_84_108/0.14)_58%,transparent)]" />
-        {TRIO.map((spot) => {
-          const board = byId.get(spot.id);
-          return (
-            <span
-              key={spot.id}
-              className={cx("fragrance-bottle relative block", spot.size, spot.place)}
-              style={{ rotate: spot.tilt, "--from-x": spot.from, "--i": spot.i } as CSSProperties}
-            >
-              <span className="fragrance-float motion-loop block" style={{ "--i": spot.i } as CSSProperties}>
-                {board && <Bottle board={board} className="mx-auto h-auto w-full drop-shadow-[0_24px_30px_rgb(120_60_10/0.28)]" />}
-              </span>
-            </span>
-          );
-        })}
-      </div>
+        <span className="fragrance-podium pointer-events-none absolute inset-x-[4%] bottom-[8%] aspect-square">
+          <span className="absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,rgb(163_32_58/0.12),transparent)]" />
+          <span className="fragrance-orbit motion-loop absolute inset-0 rounded-full border-2 border-dashed border-wine-bright/40" />
+          <span className="fragrance-comet motion-loop absolute inset-[10%] rounded-full" />
+        </span>
+        <div className="absolute inset-x-0 bottom-[16%] flex items-end justify-center gap-[4%]">
+          {TRIO.map((spot) => (
+            <Spot key={spot.id} spot={spot} board={byId.get(spot.id)} />
+          ))}
+        </div>
+        <span className="pointer-events-none absolute inset-0">
+          <span className="sweep motion-loop block h-[10%]">
+            <span className="block h-px bg-wine-bright shadow-[0_0_14px_2px_rgb(163_32_58/0.45)]" />
+          </span>
+        </span>
+        <span className="absolute left-3 top-3 flex items-center gap-1.5 text-micro text-wine-bright">
+          <span className="blink motion-loop size-1.5 rounded-full bg-wine-bright" /> Precios de hoy
+        </span>
+        {shops > 0 && <span className="absolute right-3 top-3 text-micro tabular-nums text-muted">{shops} tiendas</span>}
+        <Brackets />
+      </InView>
 
       {/* The featured fragrance, shop by shop (Google Shopping included when there's a SerpApi key). */}
       <div className="mx-auto mt-12 max-w-2xl">
@@ -200,7 +260,7 @@ export function Perfumery() {
         </div>
         {(catalogue.status === "idle" || catalogue.status === "loading") && (
           <ul aria-label="Cargando catálogo" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
-            {Array.from({ length: 8 }, (_, i) => (
+            {Array.from({ length: 12 }, (_, i) => (
               <li key={i}>
                 <span className="block aspect-[4/5] rounded-media bg-surface motion-safe:animate-shimmer" />
                 <span className="mt-3 block h-3 w-2/3 bg-surface motion-safe:animate-shimmer" />
@@ -229,19 +289,45 @@ export function Perfumery() {
         </p>
       </div>
 
-      {/* The supplier's direct line: wa.me opens the chat with the message already written. */}
-      <div className="mt-14 flex flex-col items-center gap-3 text-center">
+      {/* The supplier's direct line: wa.me opens the chat with the message already written. A light runs
+          round its border, a shine crosses it and the WhatsApp mark pings (loops that pause off-screen). */}
+      <InView className="mt-16 flex flex-col items-center gap-4 text-center">
         <a
           href={whatsappUrl("Hola! Vengo de Vibear y quiero precios de perfumes originales.")}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-14 items-center justify-center gap-3 rounded-full bg-wine-bright px-8 text-micro text-paper shadow-[0_0_40px_-6px_rgb(232_84_108/0.7)] transition-transform duration-200 ease-out-soft hover:scale-[1.03]"
+          className="group relative isolate inline-flex overflow-hidden rounded-full p-[3px] shadow-[0_18px_50px_-12px_rgb(163_32_58/0.55)] transition-transform duration-200 ease-out-soft hover:scale-[1.03]"
         >
-          <WhatsAppGlyph className="h-5 w-5" />
-          ¿Querés mejores precios? Hablá con el proveedor
+          <span
+            aria-hidden="true"
+            className="supplier-ring motion-loop absolute left-1/2 top-1/2 -z-10 aspect-square w-[150%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,var(--color-wine)_0%_50%,var(--color-wine-bright)_72%,var(--color-cream)_86%,var(--color-wine-bright)_92%,var(--color-wine)_100%)]"
+          />
+          <span className="relative flex items-center gap-4 overflow-hidden rounded-full bg-wine py-3 pl-3 pr-6 text-cream sm:pr-8">
+            <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-cream text-wine">
+              <span aria-hidden="true" className="hotspot-ring motion-loop absolute inset-0 rounded-full border-2 border-cream" />
+              <WhatsAppGlyph className="h-6 w-6" />
+            </span>
+            <span className="flex flex-col text-left">
+              <span className="text-micro text-cream/70">¿Querés mejores precios?</span>
+              <span className="font-display text-cta italic">Hablá con el proveedor</span>
+            </span>
+            <span
+              aria-hidden="true"
+              className="hidden text-body transition-transform duration-200 ease-out-soft group-hover:translate-x-1 sm:inline"
+            >
+              →
+            </span>
+            <span
+              aria-hidden="true"
+              className="supplier-shine motion-loop pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-[linear-gradient(100deg,transparent,rgb(255_255_255/0.28),transparent)]"
+            />
+          </span>
         </a>
-        <span className="text-micro normal-case tracking-normal text-muted">Te responde por WhatsApp</span>
-      </div>
+        <span className="flex items-center gap-2 text-micro normal-case tracking-normal text-muted">
+          <span aria-hidden="true" className="blink motion-loop size-1.5 rounded-full bg-wine-bright" />
+          Te responde por WhatsApp
+        </span>
+      </InView>
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 import type { Explainer, Pin } from "@/lib/landing";
 import { garmentKind, pad } from "@/lib/labels";
 import { Brackets, LiveClock } from "../motion/Hud";
@@ -12,12 +12,15 @@ import { AppIcon, NETWORKS, type Network } from "./SocialLogos";
 const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
 const pct = (value: number) => `${Math.round(value * 100)}%`;
 
-// Where the four side pins rest around the photo, and where they fly in from.
+// Where the four side pins rest around the photo, and where they fly in from. On a laptop the steps
+// take turns beside the photo (left, then right), so the pins on that side step back meanwhile (--dim).
+const LEFT = { "--dim-from": "16%", "--dim-to": "46%" };
+const RIGHT = { "--dim-from": "44%", "--dim-to": "70%" };
 const SIDES = [
-  { place: "left-[3%] top-[12%]", tilt: "-6deg", fromX: "-60vw", fromR: "-18deg", show: "hidden md:block" },
-  { place: "left-[9%] bottom-[16%]", tilt: "4deg", fromX: "-75vw", fromR: "14deg", show: "hidden lg:block" },
-  { place: "right-[3%] top-[9%]", tilt: "5deg", fromX: "60vw", fromR: "16deg", show: "hidden md:block" },
-  { place: "right-[9%] bottom-[14%]", tilt: "-4deg", fromX: "75vw", fromR: "-12deg", show: "hidden lg:block" },
+  { place: "left-[3%] top-[12%]", tilt: "-6deg", fromX: "-60vw", fromR: "-18deg", show: "hidden md:block", dim: LEFT },
+  { place: "left-[9%] bottom-[16%]", tilt: "4deg", fromX: "-75vw", fromR: "14deg", show: "hidden lg:block", dim: LEFT },
+  { place: "right-[3%] top-[9%]", tilt: "5deg", fromX: "60vw", fromR: "16deg", show: "hidden md:block", dim: RIGHT },
+  { place: "right-[9%] bottom-[14%]", tilt: "-4deg", fromX: "75vw", fromR: "-12deg", show: "hidden lg:block", dim: RIGHT },
 ];
 
 // The brand marks in an arc over the first line (cqw of the headline box): TikTok's note left of
@@ -136,19 +139,19 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
                   "--tilt": SIDES[i].tilt,
                   "--from-x": SIDES[i].fromX,
                   "--from-r": SIDES[i].fromR,
+                  ...SIDES[i].dim,
                 } as CSSProperties
               }
             >
-              <PinCard pin={pin} caption={false} labels={false} />
+              <div className="story-side-dim">
+                <PinCard pin={pin} caption={false} labels={false} />
+              </div>
             </div>
           ))}
 
           <div
-            className="story-card relative -translate-y-[4%]"
-            style={{
-              width: "min(84vw, calc((100svh - 3.5rem) * 0.6 * 2 / 3), 26rem)",
-              aspectRatio: `${width} / ${height}`,
-            }}
+            className="story-card relative w-(--photo-w) -translate-y-[4%]"
+            style={{ aspectRatio: `${width} / ${height}` }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized WebP */}
             <img
@@ -196,24 +199,34 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
           </div>
         </div>
 
-        <div className="story-captions px-4 pb-6 sm:pb-8">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="story-caption-title text-center text-micro text-muted">Cómo funciona</h2>
-            <ol className="story-caption-stack mt-3 grid gap-4 sm:grid-cols-3 sm:gap-6">
-              {steps.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="story-caption bg-paper/90 p-3 text-center"
-                  style={{ "--caption": `caption-${i + 1}` } as CSSProperties}
-                >
-                  <p className="text-micro text-wine-bright">
-                    {pad(i + 1)} · {step.title}
-                  </p>
-                  <p className="mt-1 text-small text-muted">{step.text}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+        {/* How it works, big: each step takes the stage in turn, somewhere else around the photo (left,
+            right, under it on a laptop; under it from alternating sides on a phone). Static, a 3-column list. */}
+        <div className="story-captions px-4 pb-6 pt-12 sm:pb-8 lg:px-8">
+          <h2 className="story-caption-title text-center text-micro text-muted">Cómo funciona</h2>
+          <ol className="story-caption-stack mx-auto mt-8 grid max-w-5xl gap-10 sm:grid-cols-3 sm:gap-8">
+            {steps.map((step, i) => (
+              <li key={step.title} className={cx("story-caption", `story-step-${i + 1}`)}>
+                <div aria-hidden="true" className="step-head flex items-center gap-4">
+                  <span className="step-rule step-rule-a" />
+                  <span className="step-num font-display text-numeral italic tabular-nums text-wine-bright">{pad(i + 1)}</span>
+                  <span className="step-rule step-rule-b" />
+                </div>
+                <h3 className="step-title mt-2 font-display text-step tracking-[-0.02em]">
+                  {step.title.split(" ").map((word, w) => (
+                    <Fragment key={w}>
+                      {w > 0 && " "}
+                      <span className="kinetic-mask">
+                        <span className="step-word inline-block" style={{ "--w": w } as CSSProperties}>
+                          {word}
+                        </span>
+                      </span>
+                    </Fragment>
+                  ))}
+                </h3>
+                <p className="step-text mt-3 max-w-[34ch] text-small text-ink/80 lg:text-body">{step.text}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>

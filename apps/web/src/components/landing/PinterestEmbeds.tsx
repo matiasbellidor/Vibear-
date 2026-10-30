@@ -57,7 +57,7 @@ export function PinterestEmbeds({ boards, pins }: { boards: string[]; pins: stri
         <div>
           <ul
             aria-label="Tableros de Pinterest"
-            className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-4 px-4 pb-4 lg:-mx-8 lg:scroll-px-8 lg:px-8"
+            className="wine-scroll -mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-4 px-4 pb-4 lg:-mx-8 lg:scroll-px-8 lg:px-8"
           >
             {boards.map((board) => (
               <li key={board} className="w-[320px] shrink-0 snap-start">

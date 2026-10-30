@@ -52,12 +52,14 @@ The source of truth is the `@theme` block in `apps/web/src/app/globals.css`. Use
 | `text-small` / `text-body` | 13px / 15px | captions and help text / body copy |
 | `text-title` | `clamp(2.25rem, 5vw, 3.75rem)` | page and results titles (display face) |
 | `text-numeral` | `clamp(2.5rem, 4vw, 3.5rem)` | editorial step numbers `01 02 03` |
+| `text-step` | `clamp(1.75rem, 1rem + 2.6vw, 3.25rem)` | the hero's how-it-works step titles (display face), big enough to read while scrolling |
+| `text-cta` | `clamp(1.25rem, 1rem + 1vw, 1.625rem)` | the display line inside a hero-size button (the supplier's WhatsApp button) |
 | `text-hero` | `calc(100cqw / 3.7)` | the giant wordmark; needs an `@container` parent |
 | `rounded-media` | 12px | photos and product cards only |
 | `ease-out-soft` | `cubic-bezier(.2,.8,.2,1)` | all transitions |
 | `animate-scan` / `animate-shimmer` | | detecting line / skeletons |
 
-Shared class strings live in `components/ui.tsx`: `primaryButton` (white on black, wine-bright on hover: the only filled action style), `creamButton` (the primary action on a wine section), `outlineButton` (secondary: 1px ink frame), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`. HUD pieces live in `components/motion/Hud.tsx`: `Brackets` (corner marks around a scanned area), `LiveClock`, `ScanField` (the crosshair).
+Shared class strings live in `components/ui.tsx`: `primaryButton` (white on black, wine-bright on hover: the only filled action style), `creamButton` (the primary action on a wine section), `outlineButton` (secondary: 1px ink frame), `textButton` (underlined micro label), plus `Notice`, `Icon` and `cx`. `.wine-scroll` (globals.css) gives a scroller and the scrollers inside it the brand's scrollbar: a wine pill riding a hairline, like the reading progress (the Pinterest boards row uses it; pinit.js draws its boards in the page, so their inner scrollbar is reachable). HUD pieces live in `components/motion/Hud.tsx`: `Brackets` (corner marks around a scanned area), `LiveClock`, `ScanField` (the crosshair).
 
 ### Using wine
 
@@ -150,7 +152,7 @@ All in `apps/web/src/components/`. Reuse before you create, and when you create,
 ## Motion
 
 Motion has its own skill, **vibear-motion**: read it before touching any animation. The split it defines:
-- The landing (`/`) tells the story with expressive motion: the Apple-style scroll story in the hero, kinetic type, the pin wall sliding with the scroll and sections opening like pages.
+- The landing (`/`) tells the story with expressive motion: the Apple-style scroll story in the hero, kinetic type, the pin wall looping on its own (slower under the mouse) and sections opening like pages.
 - The tool screens (`/scan`, `/look`, `/saved`) stay restrained: 150-250ms (500ms for image fade-in), `ease-out-soft`, opacity and transform only, no bounce, no parallax, no hover lift on cards. The restraint is the luxury.
 - Tailwind's `hover:` already applies only on devices that can hover. Put loops behind `motion-safe:` or the `.motion-loop` class.
 

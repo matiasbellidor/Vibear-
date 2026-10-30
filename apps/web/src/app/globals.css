@@ -30,6 +30,12 @@
   --text-title--line-height: 0.95;
   --text-numeral: clamp(2.5rem, 4vw, 3.5rem);
   --text-numeral--line-height: 1;
+  /* The story's step titles ("Subí una captura"): big enough to read while you scroll. */
+  --text-step: clamp(1.75rem, 1rem + 2.6vw, 3.25rem);
+  --text-step--line-height: 1;
+  /* The supplier's button line ("Hablá con el proveedor"), in the display face. */
+  --text-cta: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+  --text-cta--line-height: 1.1;
   /* Fills its @container edge to edge: "VIBEAR" in Bodoni Moda at -0.045em tracking is ~3.65em wide. */
   --text-hero: calc(100cqw / 3.7);
   --text-hero--line-height: 0.78;
@@ -74,6 +80,76 @@
 /* Soft bottom edge for the pin wall (its columns end at uneven heights). */
 @utility mask-fade-b {
   mask-image: linear-gradient(#000 78%, transparent);
+}
+
+/* Wine scrollbars: a pill riding a hairline, like the reading progress. They also reach the
+   scrollers inside (pinit.js draws its boards in the page, not in an iframe, so their scrollbar is
+   ours to style). Chrome ignores these pseudo-elements once scrollbar-color is set, so the
+   standard properties are only for browsers without them (Firefox). */
+.wine-scroll {
+  --rail: var(--color-line);
+}
+.wine-scroll * {
+  /* Inner scrollers sit on Pinterest's white card. */
+  --rail: color-mix(in srgb, var(--color-muted) 35%, transparent);
+}
+.wine-scroll::-webkit-scrollbar,
+.wine-scroll ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.wine-scroll::-webkit-scrollbar-track,
+.wine-scroll ::-webkit-scrollbar-track {
+  margin: 8px;
+}
+/* The row bleeds to the screen edge: its rail starts and ends at the gutters. */
+.wine-scroll::-webkit-scrollbar-track:horizontal {
+  margin: 0 1rem;
+}
+@media (width >= 64rem) {
+  .wine-scroll::-webkit-scrollbar-track:horizontal {
+    margin: 0 2rem;
+  }
+}
+.wine-scroll::-webkit-scrollbar-track:vertical,
+.wine-scroll ::-webkit-scrollbar-track:vertical {
+  background: linear-gradient(var(--rail), var(--rail)) center / 1px 100% no-repeat;
+}
+.wine-scroll::-webkit-scrollbar-track:horizontal,
+.wine-scroll ::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(var(--rail), var(--rail)) center / 100% 1px no-repeat;
+}
+.wine-scroll::-webkit-scrollbar-thumb,
+.wine-scroll ::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+.wine-scroll::-webkit-scrollbar-thumb:vertical,
+.wine-scroll ::-webkit-scrollbar-thumb:vertical {
+  background: linear-gradient(var(--color-wine-bright), var(--color-wine)) padding-box;
+}
+.wine-scroll::-webkit-scrollbar-thumb:horizontal,
+.wine-scroll ::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(to right, var(--color-wine), var(--color-wine-bright)) padding-box;
+}
+/* Grabbed or hovered, the pill widens and goes solid. */
+.wine-scroll::-webkit-scrollbar-thumb:hover,
+.wine-scroll ::-webkit-scrollbar-thumb:hover,
+.wine-scroll::-webkit-scrollbar-thumb:active,
+.wine-scroll ::-webkit-scrollbar-thumb:active {
+  border-width: 2px;
+  background: var(--color-wine-bright) padding-box;
+}
+.wine-scroll::-webkit-scrollbar-corner,
+.wine-scroll ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .wine-scroll,
+  .wine-scroll * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-wine-bright) transparent;
+  }
 }
 
 /* Editorial micro label: nav, buttons, metadata. */
@@ -239,11 +315,16 @@
   8%, 28% { opacity: 1; }
   30%, 100% { opacity: 0; transform: translateY(100%); }
 }
+/* The box grows out of its top-left corner. Scale, not clip-path: a clip-path loop recalculated the
+   page's style every frame on the main thread; a transform runs on the compositor. */
+.x-box {
+  transform-origin: 0 0;
+}
 @keyframes x-box {
-  0%, 34% { opacity: 0; clip-path: inset(0 100% 100% 0); }
+  0%, 34% { opacity: 0; transform: scale(0); }
   35% { opacity: 1; }
-  42%, 91% { opacity: 1; clip-path: inset(0 0 0 0); }
-  95%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
+  42%, 91% { opacity: 1; transform: none; }
+  95%, 100% { opacity: 0; transform: none; }
 }
 @keyframes x-tap {
   0%, 47% { opacity: 0; transform: scale(0.4); }
@@ -308,6 +389,20 @@
   .fragrance-glow {
     animation: fragrance-glow 4.5s var(--ease-in-out-soft) infinite alternate;
   }
+  /* The podium's rings turn: the dashed one slowly, the comet of light the other way. */
+  .fragrance-orbit {
+    animation: orbit 60s linear infinite;
+  }
+  .fragrance-comet {
+    animation: orbit 6s linear infinite reverse;
+  }
+  /* The supplier's button: a light runs round its border and a shine crosses it now and then. */
+  .supplier-ring {
+    animation: orbit 3.5s linear infinite;
+  }
+  .supplier-shine {
+    animation: shine 3.6s var(--ease-in-out-soft) infinite;
+  }
   /* ...and as the part scrolls in, the bottles rise into it from below and the sides (like the
      brand marks in the hero), the centre one first. */
   @supports (animation-timeline: view()) {
@@ -315,6 +410,12 @@
       animation: fragrance-rise linear both;
       animation-timeline: view();
       animation-range: entry calc(var(--i, 0) * 8%) cover 42%;
+    }
+    /* Each readout comes in once its bottle has landed. */
+    .fragrance-chip {
+      animation: fragrance-chip linear both;
+      animation-timeline: view();
+      animation-range: cover calc(30% + var(--i, 0) * 4%) cover calc(42% + var(--i, 0) * 4%);
     }
   }
 
@@ -336,6 +437,20 @@
     animation-delay: calc(0.55s + var(--n, 1) * 0.09s);
   }
 
+  /* The pin wall loops on its own (Loops.tsx): the list twice, so -50% lands where it started. The
+     copy only shows while it moves; still, the first one is a row you swipe. */
+  .marquee-wrap {
+    overflow: hidden;
+  }
+  .marquee {
+    padding-inline: 0;
+    animation: marquee var(--marquee, 80s) linear infinite;
+    will-change: transform;
+  }
+  .marquee .marquee-copy {
+    display: flex;
+  }
+
   /* Scroll-driven reveals run on the compositor; browsers without support show content as is. */
   @supports (animation-timeline: view()) {
     .reveal {
@@ -353,6 +468,12 @@
 
 @keyframes rise {
   from { transform: translateY(105%); }
+}
+.marquee-copy {
+  display: none;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
 }
 @keyframes reveal {
   from { opacity: 0; transform: translateY(2.5rem); }
@@ -379,6 +500,32 @@
 }
 @keyframes fragrance-rise {
   from { opacity: 0; transform: translateX(var(--from-x, 0%)) translateY(45%) scale(0.7); }
+}
+@keyframes fragrance-chip {
+  from { opacity: 0; transform: translateY(0.75rem); }
+}
+@keyframes orbit {
+  to { rotate: 360deg; }
+}
+@keyframes shine {
+  from { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(420%); }
+}
+/* The perfumery's podium: a square squashed into an ellipse (perspective without 3D), so a ring
+   turning inside it reads as an orbit seen from the side. */
+.fragrance-podium {
+  transform: scaleY(0.22);
+  transform-origin: 50% 100%;
+}
+.fragrance-comet {
+  background: conic-gradient(from 0deg, transparent 0 60%, var(--color-wine-bright) 97%, transparent);
+  mask: radial-gradient(closest-side, transparent calc(100% - 7px), #000 calc(100% - 6px));
+}
+/* Bottles stand on a glossy floor: each one mirrored under itself, fading out. */
+.fragrance-reflection {
+  transform: scaleY(-1);
+  opacity: 0.18;
+  mask-image: linear-gradient(to top, #000, transparent 40%);
 }
 @keyframes fragrance-glow {
   from { opacity: 0.65; transform: scale(0.94); }
@@ -436,9 +583,32 @@
   display: none;
 }
 
+/* The story photo's width: capped by the column and by a share of the stage height (less on phones and
+   tablets, so the steps fit under it). The steps beside it on a laptop are placed from it too. */
+.story {
+  --photo-w: min(84vw, calc((100svh - 3.5rem) * 0.52 * 2 / 3), 26rem);
+}
+@media (width >= 64rem) {
+  .story {
+    --photo-w: min(84vw, calc((100svh - 3.5rem) * 0.6 * 2 / 3), 26rem);
+  }
+}
+/* How it works: a wine numeral and a hairline that, in the story, draws toward the photo. */
+.step-rule {
+  display: block;
+  flex: 1;
+  height: 1px;
+  background-color: color-mix(in srgb, var(--color-wine-bright) 55%, transparent);
+}
+.step-rule-a {
+  display: none;
+}
+
 /* ─── Scroll story: the hero is a tall section whose sticky stage plays with the scroll ───────────
    0-16% the headline leaves · 0-34% the photo rises to the centre and pins fly in ·
-   36-56% scan line · 44-66% garment boxes · 62-82% readouts · captions follow the three beats.
+   36-56% scan line · 44-66% garment boxes · 62-82% readouts.
+   Steps: 01 16-46% (left of the photo) · 02 44-70% (right) · 03 68-100% (under it). On a phone
+   they all sit under the photo, entering from alternating sides.
    Without scroll timelines (or with reduced motion) it is a plain, complete column. */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
@@ -459,16 +629,6 @@
       animation: page-open linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 90%;
-    }
-
-    /* The pin wall slides sideways with the scroll instead of looping on its own. */
-    .scroll-row-wrap {
-      overflow: hidden;
-    }
-    .scroll-row {
-      animation: scroll-row linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
     }
   }
 }
@@ -530,26 +690,151 @@
       animation-timeline: --story;
       animation-range: contain calc(62% + var(--i, 0) * 8%) contain calc(70% + var(--i, 0) * 8%);
     }
+    /* Each step's numeral slides in from its side, its rule draws toward the photo, the title's words
+       rise and the text follows; then it leaves the way it came. --in/--out: its beat. */
     .story-captions {
       position: absolute;
-      inset: auto 0 0 0;
+      inset: 0;
       z-index: 2;
+      padding: 0;
       pointer-events: none; /* text only, and it overlaps the intro's button on short screens */
     }
-    .story-caption-stack {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr); /* the captions take turns in one cell */
-      max-width: 28rem;
-      margin-inline: auto;
-    }
-    .story-caption,
     .story-caption-title {
-      animation: var(--caption, caption-title) linear both;
-      animation-timeline: --story;
-      animation-range: contain 0% contain 100%;
+      /* The numerals say it; the heading stays for screen readers. */
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .story-caption-stack {
+      display: block;
+      margin: 0;
     }
     .story-caption {
-      grid-area: 1 / 1;
+      position: absolute;
+      inset: auto 1rem 1.25rem;
+      max-width: 36rem;
+      margin-inline: auto;
+      text-shadow: 0 0.04em 0.35em rgb(10 10 11 / 0.85);
+      animation: step-out linear both;
+      animation-timeline: --story;
+      animation-range: contain var(--out) contain calc(var(--out) + 6%);
+    }
+    .story-step-1 {
+      --in: 16%;
+      --out: 40%;
+      --from-x: -14vw;
+      --to-x: -8vw;
+      /* On phones and tablets it takes the top: the photo is still rising from below. */
+      inset: 1.5rem 1rem auto;
+      max-width: 30rem;
+    }
+    .story-step-2 {
+      --in: 44%;
+      --out: 64%;
+      --from-x: 14vw;
+      --to-x: 8vw;
+    }
+    .story-step-3 {
+      --in: 68%;
+      --from-y: 3rem;
+      animation: none;
+    }
+    .step-num {
+      animation: step-num linear both;
+      animation-timeline: --story;
+      animation-range: contain var(--in) contain calc(var(--in) + 8%);
+    }
+    .step-rule {
+      animation: step-rule linear both;
+      animation-timeline: --story;
+      animation-range: contain calc(var(--in) + 3%) contain calc(var(--in) + 11%);
+      transform-origin: left;
+    }
+    .step-rule-a {
+      transform-origin: right;
+    }
+    .step-word {
+      animation: step-word linear both;
+      animation-timeline: --story;
+      animation-range: contain calc(var(--in) + 2% + var(--w, 0) * 1.5%) contain calc(var(--in) + 9% + var(--w, 0) * 1.5%);
+    }
+    .step-text {
+      animation: step-text linear both;
+      animation-timeline: --story;
+      animation-range: contain calc(var(--in) + 8%) contain calc(var(--in) + 14%);
+    }
+
+    @media (width >= 64rem) {
+      /* Beside the photo, 3rem from it, the rule reaching for it. The pins on that side step back. */
+      .story-step-1,
+      .story-step-2 {
+        inset: 0 auto;
+        width: min(30rem, calc(50% - var(--photo-w) / 2 - 5rem));
+        max-width: none;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .story-step-1 {
+        right: calc(50% + var(--photo-w) / 2 + 3rem);
+      }
+      .story-step-2 {
+        left: calc(50% + var(--photo-w) / 2 + 3rem);
+        text-align: right;
+      }
+      .story-step-2 .step-text {
+        margin-left: auto;
+      }
+      .story-step-2 .step-rule-a {
+        display: block;
+      }
+      .story-step-2 .step-rule-b {
+        display: none;
+      }
+      /* Under the photo, in one line: the rules open out from the numeral and the title. */
+      .story-step-3 {
+        inset: auto 0 1.5rem;
+        width: min(44rem, 100% - 4rem);
+        max-width: none;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        column-gap: 1.25rem;
+        text-align: center;
+      }
+      .story-step-3 .step-head {
+        display: contents;
+      }
+      .story-step-3 .step-rule-a {
+        display: block;
+        order: 1;
+      }
+      .story-step-3 .step-num {
+        order: 2;
+      }
+      .story-step-3 .step-title {
+        order: 3;
+        margin: 0;
+      }
+      .story-step-3 .step-rule-b {
+        order: 4;
+      }
+      .story-step-3 .step-text {
+        order: 5;
+        flex-basis: 100%;
+        max-width: none;
+        margin-top: 0.5rem;
+      }
+      .story-side-dim {
+        animation: side-dim linear both;
+        animation-timeline: --story;
+        animation-range: contain var(--dim-from) contain var(--dim-to);
+      }
     }
   }
 }
@@ -586,30 +871,28 @@
 @keyframes story-chip {
   from { opacity: 0; transform: translateY(0.5rem) scale(0.9); }
 }
-@keyframes caption-title {
-  0%, 22% { opacity: 0; }
-  27%, 100% { opacity: 1; }
+@keyframes step-num {
+  from { opacity: 0; translate: var(--from-x, 0) var(--from-y, 0); }
 }
-@keyframes caption-1 {
-  0%, 22% { opacity: 0; transform: translateY(0.75rem); }
-  27%, 42% { opacity: 1; transform: none; }
-  47%, 100% { opacity: 0; transform: translateY(-0.75rem); }
+@keyframes step-rule {
+  from { transform: scaleX(0); }
 }
-@keyframes caption-2 {
-  0%, 44% { opacity: 0; transform: translateY(0.75rem); }
-  49%, 64% { opacity: 1; transform: none; }
-  69%, 100% { opacity: 0; transform: translateY(-0.75rem); }
+@keyframes step-word {
+  from { transform: translateY(110%); }
 }
-@keyframes caption-3 {
-  0%, 66% { opacity: 0; transform: translateY(0.75rem); }
-  71%, 100% { opacity: 1; transform: none; }
+@keyframes step-text {
+  from { opacity: 0; transform: translateY(0.75rem); }
 }
-@keyframes scroll-row {
-  to { transform: translateX(calc(-100% + 100vw)); }
+@keyframes step-out {
+  to { opacity: 0; translate: var(--to-x, 0) 0; }
+}
+@keyframes side-dim {
+  20%, 80% { opacity: 0.15; }
 }
 /* ─── Page transitions: View Transitions through React's <ViewTransition> (PageTransition, Header)
-   The page leaves fast and the next one arrives gently: 150 ms out, 380 ms in. Tabs slide toward
-   the tab you picked; other navigations crossfade. The header stays put and the wine pill morphs. */
+   Short, so a tab feels instant: the page leaves in 90 ms while the next one arrives in 220 ms (no
+   delay between them). Tabs slide toward the tab you picked; other navigations crossfade. The header
+   stays put and the wine pill morphs. The user found 150 + 380 ms (with a 60 ms gap) slow. */
 ::view-transition {
   pointer-events: none; /* clicks during a transition reach the live page */
 }
@@ -625,27 +908,27 @@
 }
 ::view-transition-group(.nav-pill) {
   z-index: 101;
-  animation-duration: 420ms;
+  animation-duration: 260ms;
   animation-timing-function: var(--ease-expo);
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 180ms;
+  animation-duration: 120ms;
 }
 ::view-transition-old(.nav-forward),
 ::view-transition-old(.nav-back),
 ::view-transition-old(.page-fade) {
-  animation: page-out 150ms var(--ease-in-out-soft) both;
+  animation: page-out 90ms var(--ease-in-out-soft) both;
 }
 ::view-transition-new(.nav-forward),
 ::view-transition-new(.nav-back),
 ::view-transition-new(.page-fade) {
-  animation: page-in 380ms var(--ease-expo) 60ms both;
+  animation: page-in 220ms var(--ease-expo) both;
 }
-::view-transition-old(.nav-forward) { --page-to: -3rem 0; }
-::view-transition-new(.nav-forward) { --page-from: 3rem 0; }
-::view-transition-old(.nav-back) { --page-to: 3rem 0; }
-::view-transition-new(.nav-back) { --page-from: -3rem 0; }
+::view-transition-old(.nav-forward) { --page-to: -1.5rem 0; }
+::view-transition-new(.nav-forward) { --page-from: 2rem 0; }
+::view-transition-old(.nav-back) { --page-to: 1.5rem 0; }
+::view-transition-new(.nav-back) { --page-from: -2rem 0; }
 ::view-transition-new(.page-fade) { --page-from: 0 0.75rem; }
 @keyframes page-out {
   to { opacity: 0; translate: var(--page-to, 0 0); }

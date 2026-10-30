@@ -68,6 +68,17 @@ test("scrolling drives the story: the headline leaves and the readouts appear", 
   await expect.poll(() => page.locator(".story-chip").first().evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
 });
 
+test("the pin wall moves on its own and slows down under the mouse", async ({ page }) => {
+  await page.goto("/");
+  const wall = page.locator(".marquee");
+  const loop = (key: "playState" | "playbackRate") => wall.evaluate((el, key) => el.getAnimations()[0]?.[key], key);
+  await wall.hover();
+  await expect.poll(() => loop("playState")).toBe("running");
+  await expect.poll(() => loop("playbackRate")).toBeLessThan(1);
+  await page.mouse.move(0, 0);
+  await expect.poll(() => loop("playbackRate")).toBe(1);
+});
+
 test("a visitor without a screenshot can try an example", async ({ page }) => {
   await mockApi(page);
   await page.goto("/scan");
