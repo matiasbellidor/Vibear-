@@ -5,6 +5,7 @@ import { garmentKind, pad } from "@/lib/labels";
 import { Brackets, LiveClock } from "../motion/Hud";
 import { KineticText } from "../motion/KineticText";
 import { MotionToggle } from "../motion/MotionToggle";
+import { StyleLink } from "../style/StyleEntry";
 import { cx, primaryButton } from "../ui";
 import { PinCard } from "./Pin";
 import { AppIcon, NETWORKS, type Network } from "./SocialLogos";
@@ -112,6 +113,7 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
             <Link href="/scan" transitionTypes={["nav-forward"]} className={primaryButton}>
               Empezá a escanear
             </Link>
+            <StyleLink />
             <span className="text-micro text-muted">
               Bajá para ver cómo <span aria-hidden="true">↓</span>
             </span>

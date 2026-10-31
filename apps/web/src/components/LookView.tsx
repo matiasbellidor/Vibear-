@@ -13,6 +13,7 @@ import { MasonryGrid } from "./MasonryGrid";
 import { NearbyPanel, brandsFrom } from "./NearbyPanel";
 import { CARD_CAPTION, ProductCard } from "./ProductCard";
 import { LookSkeleton, ResultsSkeleton } from "./Skeletons";
+import { PaletteBadge } from "./style/StyleEntry";
 import { Icon, Notice, icons, primaryButton, textButton } from "./ui";
 
 type Loaded<T> = { status: "ready"; data: T } | { status: "error"; message: string; code: number };
@@ -99,9 +100,14 @@ export function LookView({ id }: { id: string }) {
 
       <section aria-labelledby="results-title" className="mt-10 lg:col-span-7 lg:mt-0">
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
-          <h1 id="results-title" className="font-display text-title tracking-tight">
-            {garmentName(selected)}
-          </h1>
+          <div>
+            <h1 id="results-title" className="font-display text-title tracking-tight">
+              {garmentName(selected)}
+            </h1>
+            <div className="mt-2 empty:hidden">
+              <PaletteBadge color={selected.color} />
+            </div>
+          </div>
           <p className="text-micro tabular-nums text-muted">
             {results?.status === "ready" ? `${results.data.results.length} resultados · por similitud` : "Buscando…"}
           </p>

@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, Field, StringConstraints
 
 from app.storage import ID_PATTERN
 
@@ -14,6 +16,7 @@ class DetectedItem(BaseModel):
     kind: str | None = None
     brand: str | None = None  # a hint from the image alone, only when the model is very sure
     similar: str | None = None  # no brand: whose signature design it resembles ("Símil Polo Ralph Lauren")
+    color: str | None = None  # its main colour's name ("azul marino"), to check it against a colour palette
 
 
 class DetectResponse(BaseModel):
@@ -55,6 +58,37 @@ class SearchResponse(BaseModel):
 
 class SavedProduct(Match):
     savedAt: int  # epoch ms, set by the browser (same shape as the web app's SavedItem)
+
+
+# The anonymous profile: the style test's answers and the colour analysis, as short keys (the web app
+# owns their meaning, lib/style.ts and lib/colorimetry.ts). Keys are checked for shape, not meaning.
+Key = Annotated[str, StringConstraints(pattern=r"^[a-z0-9-]{1,32}$")]
+
+
+class StyleAnswers(BaseModel):
+    dress: Key | None = None  # who they shop for: mujer, hombre, ambos
+    aesthetics: list[Key] = Field(default_factory=list, max_length=8)
+    lifestyle: list[Key] = Field(default_factory=list, max_length=8)
+    goals: list[Key] = Field(default_factory=list, max_length=8)
+    budget: Key | None = None
+
+
+class ColorResult(BaseModel):
+    season: Key  # "otono-suave"
+    undertone: Key
+    contrast: Key
+    chroma: Key
+
+
+class Profile(BaseModel):
+    """One browser's profile. `user` is the id the browser made up on its first visit, kept here too so
+    it comes back if the browser's storage is wiped. updated_at (epoch ms) decides which copy wins."""
+
+    user: Annotated[str, StringConstraints(pattern=r"^[0-9a-f-]{36}$")] | None = None
+    status: Literal["new", "done", "skipped"] = "new"
+    style: StyleAnswers | None = None
+    color: ColorResult | None = None
+    updated_at: int = Field(default=0, ge=0)
 
 
 Point = tuple[float, float]  # x, y as fractions of the photo's width and height

@@ -15,6 +15,8 @@ export type DetectedItem = {
   brand?: string | null;
   /** No brand: whose signature design it resembles ("Polo Ralph Lauren" → "Símil Polo Ralph Lauren"). */
   similar?: string | null;
+  /** Its main colour's name ("azul marino"), checked against the visitor's palette (lib/colorimetry.ts). */
+  color?: string | null;
 };
 
 export type Look = {

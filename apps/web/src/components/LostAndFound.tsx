@@ -8,6 +8,16 @@ import { STYLE_LABELS, shopLinks } from "@/lib/outfits";
 import { PinCard } from "./landing/Pin";
 import { cx, primaryButton, tapArea, textButton } from "./ui";
 
+// Every way out: the 404 is a detour, so it shows the whole site.
+const ELSEWHERE = [
+  { href: "/", label: "Inicio" },
+  { href: "/scan", label: "Escanear" },
+  { href: "/#outfits", label: "Outfits de la semana" },
+  { href: "/#perfumeria", label: "Perfumería" },
+  { href: "/outfits", label: "Probador" },
+  { href: "/saved", label: "Guardados" },
+];
+
 // How you want to feel, and the styles that get you there (styles: describe.py STYLES).
 const MOODS = [
   { label: "Segura/o", styles: ["streetwear", "old-money"], line: "Hombros atrás: este look camina solo." },
@@ -68,14 +78,30 @@ export function LostAndFound({ pins }: { pins: Pin[] }) {
               </button>
             ))}
           </div>
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-            <Link href="/scan" className={primaryButton}>
-              Escanear un look
-            </Link>
-            <Link href="/" className={textButton}>
-              Volver al inicio
-            </Link>
+          <div className="mt-10 border border-line p-5">
+            <p className="text-micro text-wine-bright">¿No sabés qué ponerte?</p>
+            <p className="mt-2 text-small text-muted">Un test de un minuto: tus estilos, tu colorimetría y looks para vos.</p>
+            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <Link href="/estilo" className={primaryButton}>
+                Descubrí tu estilo
+              </Link>
+              <Link href="/scan" className={textButton}>
+                Escanear un look
+              </Link>
+            </div>
           </div>
+          <nav aria-label="Seguí por acá" className="mt-10">
+            <p className="text-micro text-muted">Seguí por acá</p>
+            <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+              {ELSEWHERE.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={textButton}>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
         {look && (

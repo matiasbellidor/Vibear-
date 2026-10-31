@@ -24,7 +24,8 @@ from app.prices import PriceBoard, PriceError
 from app.rerank import VectorCache, http_loader, rank_by_similarity
 from app.ml.pose import YoloPose
 from app.schemas import (
-    Body, BrandGuess, Closet, DetectedItem, DetectResponse, Garment, Garments, Match, SearchRequest, SearchResponse,
+    Body, BrandGuess, Closet, DetectedItem, DetectResponse, Garment, Garments, Match, Profile, SearchRequest,
+    SearchResponse,
 )
 from app.storage import CLOSET_ID_RE, ID_PATTERN, MediaStore
 from app.tryon import (
@@ -39,6 +40,7 @@ USER_AGENT = "VibearBot/0.2 (+https://github.com/matiasbellidor/Vibear-)"
 CLOSET_COOKIE = "vibear_closet"
 CLOSET_MAX_AGE = 400 * 24 * 3600  # browsers cap cookie lifetimes at 400 days; each visit renews it
 CLOSET_MAX_BYTES = 1024 * 1024
+PROFILE_MAX_BYTES = 16 * 1024
 
 # FashionCLIP cosine below which a result doesn't look like the garment: on the demo catalog, close
 # matches score 0.6-0.75 and same-category but unalike ones ~0.5. Only applied with the real model:
@@ -166,6 +168,7 @@ def create_app(
                     kind=description.kind if description else None,
                     brand=description.brand if description else None,
                     similar=description.similar if description else None,
+                    color=description.color if description else None,
                 )
             )
         if not items:
@@ -290,6 +293,31 @@ def create_app(
         if kept is None or body.updated_at >= kept["updated_at"]:
             kept = body.model_dump()
             store.write_closet(closet_id, kept)
+        keep_closet_cookie(response, request, closet_id)
+        return kept
+
+    @app.get("/v1/profile", response_model=Profile)
+    async def get_profile(request: Request, response: Response):
+        """This browser's style profile (the style test and its colour analysis); a new one until
+        it answers or skips the test."""
+        closet_id = closet_id_of(request)
+        saved = store.read_profile(closet_id) if closet_id else None
+        if saved is None:
+            return Profile()
+        keep_closet_cookie(response, request, closet_id)
+        return saved
+
+    @app.put("/v1/profile", response_model=Profile)
+    async def put_profile(body: Profile, request: Request, response: Response):
+        """Back up this browser's style profile, under the same anonymous cookie as its closet. The
+        newest copy wins (updated_at). Returns the copy that is kept."""
+        if int(request.headers.get("content-length") or 0) > PROFILE_MAX_BYTES:
+            raise HTTPException(413, "Profile is too large")
+        closet_id = closet_id_of(request) or secrets.token_hex(16)
+        kept = store.read_profile(closet_id)
+        if kept is None or body.updated_at >= kept["updated_at"]:
+            kept = body.model_dump()
+            store.write_profile(closet_id, kept)
         keep_closet_cookie(response, request, closet_id)
         return kept
 

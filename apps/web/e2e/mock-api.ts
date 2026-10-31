@@ -18,6 +18,7 @@ export const LOOK: Look = {
       confidence: 0.69,
       box: [229, 472, 342, 708],
       crop_url: "/media/1111111111111111.jpg",
+      color: "negro",
     },
     {
       crop_id: "2222222222222222",
@@ -25,6 +26,7 @@ export const LOOK: Look = {
       confidence: 0.87,
       box: [59, 631, 202, 862],
       crop_url: "/media/2222222222222222.jpg",
+      color: "azul marino",
     },
   ],
 };
@@ -105,12 +107,17 @@ export const GARMENTS = {
 /** The API's anonymous closet backup, as this test left it (newest copy wins, like the real one). */
 export const closetBackup: { items: Match[]; updated_at: number } = { items: [], updated_at: 0 };
 
+/** The API's anonymous profile backup (the style test), as this test left it. */
+export const profileBackup: Record<string, unknown> & { updated_at: number } = { updated_at: 0 };
+
 /** Mock every /api call the browser makes. Returns the crop ids that were searched, in order. */
 export async function mockApi(page: Page, { mode = "serpapi", search = "ok", detect = "ok" }: Options = {}) {
   const searched: string[] = [];
   nearbyCalls.length = 0;
   closetBackup.items = [];
   closetBackup.updated_at = 0;
+  for (const key of Object.keys(profileBackup)) delete profileBackup[key];
+  profileBackup.updated_at = 0;
   const image = { body: PNG, contentType: "image/png" };
 
   await page.route("**/api/health", (route) => route.fulfill({ json: { status: "ok", search: mode } }));
@@ -142,6 +149,13 @@ export async function mockApi(page: Page, { mode = "serpapi", search = "ok", det
   await page.route("**/api/v1/fragrances", (route) => route.fulfill({ json: CATALOGUE }));
   await page.route("**/api/v1/tryon/body", (route) => route.fulfill({ json: BODY }));
   await page.route("**/api/v1/tryon/garments", (route) => route.fulfill({ json: GARMENTS }));
+  await page.route("**/api/v1/profile", (route) => {
+    if (route.request().method() === "PUT") {
+      const body = route.request().postDataJSON() as typeof profileBackup;
+      if (body.updated_at >= profileBackup.updated_at) Object.assign(profileBackup, body);
+    }
+    return route.fulfill({ json: { user: null, status: "new", style: null, color: null, ...profileBackup } });
+  });
   await page.route("**/api/v1/closet", (route) => {
     if (route.request().method() === "PUT") {
       const body = route.request().postDataJSON() as typeof closetBackup;

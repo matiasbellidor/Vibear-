@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, ViewTransition, useEffect } from "react";
+import { syncProfile } from "@/lib/profile";
 import { syncCloset, useSaved } from "@/lib/storage";
 import { Icon, cx, icons, tapArea } from "./ui";
 
@@ -24,8 +25,11 @@ function tabOf(pathname: string): number {
 }
 
 export function Header() {
-  // The header is on every page, so it is where the closet backup syncs, once per load.
-  useEffect(syncCloset, []);
+  // The header is on every page, so it is where the closet and the anonymous profile sync, once per load.
+  useEffect(() => {
+    syncCloset();
+    syncProfile();
+  }, []);
 
   return (
     // Named, so it stays put while the page underneath slides (see globals.css).

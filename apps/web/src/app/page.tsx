@@ -3,12 +3,13 @@ import { Perfumery } from "@/components/landing/Perfumery";
 import { WeeklyOutfits } from "@/components/landing/WeeklyOutfits";
 import { PageTransition } from "@/components/motion/PageTransition";
 import { Story } from "@/components/landing/Story";
+import { StyleTeaser } from "@/components/style/StyleEntry";
 import { PINS } from "@/lib/landing";
 import { getLanding } from "@/lib/landing-data";
 
 // The story, page after page, alternating black and white: the promise and how it works (scroll
-// story), the problem, the feed, why it helps, the week's outfits, the perfumery, straight from
-// Pinterest, your turn.
+// story), the problem, the feed, why it helps, your colours (the style test, on wine), the week's
+// outfits, the perfumery, straight from Pinterest, your turn.
 export default function Landing() {
   const { pins, explainer, local } = getLanding();
   // Your own photos lead the outfits in dev; the published ones fill in (your board may be all menswear).
@@ -20,6 +21,7 @@ export default function Landing() {
       <Problem />
       <Carousels pins={pins} />
       <Benefits />
+      <StyleTeaser />
       <WeeklyOutfits pins={outfits} />
       <Perfumery />
       <FromPinterest />

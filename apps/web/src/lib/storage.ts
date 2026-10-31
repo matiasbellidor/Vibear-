@@ -8,7 +8,7 @@ import type { Look, Match, Place } from "./api";
 
 const CHANGE_EVENT = "vibear:storage";
 
-function createStore<T>(key: string, fallback: T) {
+export function createStore<T>(key: string, fallback: T) {
   let cachedRaw: string | null | undefined;
   let value = fallback;
 

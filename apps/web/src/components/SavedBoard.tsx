@@ -7,6 +7,7 @@ import { ratioOf } from "@/lib/masonry";
 import { useSaved } from "@/lib/storage";
 import { MasonryGrid } from "./MasonryGrid";
 import { CARD_CAPTION, ProductCard } from "./ProductCard";
+import { ProfileCard } from "./style/StyleEntry";
 import { ClosetBanner } from "./TabBanners";
 import { primaryButton } from "./ui";
 
@@ -27,6 +28,8 @@ export function SavedBoard({ preview = [] }: { preview?: Pin[] }) {
           {pad(items.length)} {items.length === 1 ? "producto" : "productos"}
         </p>
       </header>
+
+      <ProfileCard />
 
       <ClosetBanner cards={example ? preview.map((pin) => ({ key: pin.src, src: pin.src })) : mine} example={example} />
 

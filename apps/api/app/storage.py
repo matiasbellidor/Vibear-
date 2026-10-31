@@ -25,7 +25,8 @@ class MediaStore:
         self.looks_dir = root / "looks"
         self.cache_dir = root / "cache"
         self.closets_dir = root / "closets"
-        for folder in (self.images_dir, self.looks_dir, self.cache_dir, self.closets_dir):
+        self.profiles_dir = root / "profiles"
+        for folder in (self.images_dir, self.looks_dir, self.cache_dir, self.closets_dir, self.profiles_dir):
             folder.mkdir(parents=True, exist_ok=True)
 
     def put(self, jpeg: bytes) -> str:
@@ -73,6 +74,18 @@ class MediaStore:
         if not CLOSET_ID_RE.fullmatch(closet_id):
             raise ValueError("Invalid closet id")
         _write_json(self.closets_dir / f"{closet_id}.json", closet)
+
+    def read_profile(self, closet_id: str) -> dict | None:
+        """The same anonymous browser as the closet (its cookie id), its style profile."""
+        path = self.profiles_dir / f"{closet_id}.json"
+        if not CLOSET_ID_RE.fullmatch(closet_id) or not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def write_profile(self, closet_id: str, profile: dict) -> None:
+        if not CLOSET_ID_RE.fullmatch(closet_id):
+            raise ValueError("Invalid closet id")
+        _write_json(self.profiles_dir / f"{closet_id}.json", profile)
 
 
 def _write_json(path: Path, payload: dict) -> None:
