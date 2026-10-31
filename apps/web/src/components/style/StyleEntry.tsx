@@ -12,13 +12,13 @@ import { cx, creamButton, textButton } from "../ui";
 // A sample of the four families' colours, for the invitation.
 const TEASER = ["#F6B99A", "#30B5AB", "#E6B7C1", "#7F95A8", "#C2785C", "#6B6B2A", "#7A1F3D", "#2349B0", "#F2C14E", "#9CAF88", "#1B2A4A", "#E0218A"];
 
-/** One line under the hero's button: the test, or their season once they took it. */
+/** Next to the hero's scroll hint: the test, or their season once they took it. */
 export function StyleLink() {
   const profile = useProfile();
   const season = profile.color ? SEASONS[profile.color.season] : undefined;
   return (
     <Link href="/estilo" className={cx(textButton, "text-ink/80")}>
-      {season ? `Tu paleta: ${season.name}` : "¿Qué colores te quedan bien? Test de 1 minuto"} <span aria-hidden="true">→</span>
+      {season ? `Tu paleta: ${season.name}` : "Tu colorimetría en 1 minuto"} <span aria-hidden="true">→</span>
     </Link>
   );
 }

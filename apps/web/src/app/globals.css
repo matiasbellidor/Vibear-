@@ -745,9 +745,12 @@
       position: absolute;
       inset: 0;
       z-index: 2;
-      animation: story-intro linear both;
-      animation-timeline: --story;
-      animation-range: contain 0% contain 16%;
+      /* Two animations: the fade and lift (compositor-only), and the hiding at its very end (so
+         the faded button can't be clicked). Together in one, visibility kept the fade off the
+         compositor and the page's style was recalculated on every scroll frame. */
+      animation: story-intro linear both, story-intro-hide linear both;
+      animation-timeline: --story, --story;
+      animation-range: contain 0% contain 16%, contain 15.5% contain 16%;
     }
     /* The app icons fly outward while the headline leaves. */
     .story-app {
@@ -776,6 +779,7 @@
       animation-range: contain 36% contain 56%;
     }
     .story-box {
+      transform-origin: 0 0;
       animation: story-box linear both;
       animation-timeline: --story;
       animation-range: contain calc(44% + var(--i, 0) * 8%) contain calc(56% + var(--i, 0) * 8%);
@@ -1128,7 +1132,10 @@
   to { translate: var(--spread, 0 0); scale: 1.2; }
 }
 @keyframes story-intro {
-  to { opacity: 0; transform: translateY(-8svh) scale(0.94); visibility: hidden; }
+  to { opacity: 0; transform: translateY(-8svh) scale(0.94); }
+}
+@keyframes story-intro-hide {
+  to { visibility: hidden; }
 }
 @keyframes story-card {
   /* Starts below the fold, so the headline has the stage to itself. */
@@ -1142,8 +1149,10 @@
   90% { opacity: 1; }
   to { opacity: 0; transform: translateY(1000%); }
 }
+/* The box grows out of its top-left corner: scale runs on the compositor, a clip-path made every
+   scroll frame of the hero recalculate style on the main thread. */
 @keyframes story-box {
-  from { opacity: 0; clip-path: inset(0 100% 100% 0); }
+  from { opacity: 0; transform: scale(0); }
 }
 @keyframes story-chip {
   from { opacity: 0; transform: translateY(0.5rem) scale(0.9); }

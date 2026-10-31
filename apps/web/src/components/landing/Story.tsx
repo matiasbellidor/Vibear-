@@ -113,10 +113,14 @@ export function Story({ pins, explainer }: { pins: Pin[]; explainer: Explainer }
             <Link href="/scan" transitionTypes={["nav-forward"]} className={primaryButton}>
               Empezá a escanear
             </Link>
-            <StyleLink />
-            <span className="text-micro text-muted">
-              Bajá para ver cómo <span aria-hidden="true">↓</span>
-            </span>
+            {/* One row with the scroll hint, so the hero stays as tall as it was: on a 720px screen the
+                pause button must stay inside the sticky stage. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+              <span className="text-micro text-muted">
+                Bajá para ver cómo <span aria-hidden="true">↓</span>
+              </span>
+              <StyleLink />
+            </div>
             <div className="flex items-center gap-5">
               <p className="flex items-center gap-3 text-micro text-muted">
                 <span className="flex items-center gap-1.5 text-wine-bright">

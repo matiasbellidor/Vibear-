@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { analyze, COLOR_QUESTIONS, type ColorAnswers, type Option } from "@/lib/colorimetry";
 import type { Pin } from "@/lib/landing";
 import { pad } from "@/lib/labels";
@@ -36,6 +36,11 @@ export function StyleTest({ pins }: { pins: Pin[] }) {
   const [style, setStyle] = useState<StyleAnswers>(EMPTY_STYLE);
   const [color, setColor] = useState<ColorAnswers>({});
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Each question starts at the top: after the tall styles grid, the next one would open scrolled down.
+  useEffect(() => {
+    if (window.scrollY > 0) window.scrollTo({ top: 0 });
+  }, [step]);
 
   // The server render (and the first client one) can't read this browser's profile: hold the space.
   if (!profile.user) return <div className="min-h-[calc(100svh-3.5rem)]" />;
