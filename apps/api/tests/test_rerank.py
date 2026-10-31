@@ -45,9 +45,9 @@ def test_cached_thumbnails_are_neither_downloaded_nor_embedded_again():
 def test_the_cache_keeps_the_most_recently_used():
     cache = VectorCache(size=2)
     for url in ["a", "b"]:
-        cache.put(url, (None, (1, 1)))
+        cache.put(url, (None, (1, 1), None))
     cache.get("a")
-    cache.put("c", (None, (1, 1)))
+    cache.put("c", (None, (1, 1), None))
     assert cache.get("b") is None and cache.get("a") is not None and cache.get("c") is not None
 
 
@@ -59,3 +59,30 @@ def test_results_of_another_kind_or_too_far_are_dropped():
     )
     # blue: another kind (and far); gray: kept; red: kept; broken: no picture, so it can't be judged and stays last.
     assert [r.match.title for r in ranked] == ["red", "gray", "broken"]
+
+
+class SameLookEmbedder:
+    """CLIP sees every picture the same: only colour can tell them apart."""
+
+    def embed(self, images):
+        import numpy as np
+
+        vectors = np.ones((len(images), 4))
+        return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+
+
+def test_among_equally_alike_results_the_same_colour_ranks_first():
+    from app.lens import LensMatch
+
+    navy, camel = (25, 35, 80), (190, 150, 100)
+    pictures = {"https://img.test/camel.png": camel, "https://img.test/navy.png": navy}
+    matches = [LensMatch(title=name, link=f"https://shop.test/{name}", source="Shop", thumbnail=f"https://img.test/{name}.png", price=None)
+               for name in ("camel", "navy")]
+
+    async def load(url):
+        return decode_image(png_bytes(pictures[url]))
+
+    ranked = asyncio.run(rank_by_similarity(Image.new("RGB", (64, 64), navy), matches, SameLookEmbedder(), load))
+    assert [r.match.title for r in ranked] == ["navy", "camel"]
+    # The colour moves the score at most COLOR_WEIGHT / 2 from CLIP's 1.0.
+    assert ranked[0].similarity == 1.0 and 0.94 <= ranked[1].similarity < 1.0
