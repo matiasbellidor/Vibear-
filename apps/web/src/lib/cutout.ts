@@ -1,31 +1,28 @@
+import { useEffect, useState } from "react";
+import { knockOut } from "./cutout-core";
+import type { CutReply, CutRequest } from "./cutout.worker";
+
 /**
  * A product photo on white, cut out in the browser: the white that touches the photo's edges turns
  * transparent (with a soft rim), and the picture is trimmed to the product, so a perfume bottle stands
  * on its own like a PNG. The photo is the shop's own, hotlinked from its CDN (Tiendanube's allows it
  * with CORS); nothing is stored or re-published. When a CDN doesn't allow it, the photo is used as is.
+ *
+ * The cutting runs in a worker (lib/cutout.worker.ts): on the main thread a 1400px bottle took ~100 ms
+ * on a laptop and ~600 ms on a phone-speed CPU, right as the perfumery scrolled in.
  */
-import { useEffect, useState } from "react";
 
 /** `tint`: the bottle's own colour (its most colourful pixels, averaged), for a backdrop that matches it. */
 export type Cutout = { src: string; width: number; height: number; cut: boolean; tint?: string };
 
 const MAX_SIDE = 640; // a catalogue card; the perfume film asks for more
-// Shop photos sit on 254-255 white; a white bottle's edge is ~234. At 236 the flood ate into Naxos's
-// white glass, at 248 it stops at the glass.
-const WHITE = 248; // a pixel this light on every channel, and grey, is background when it touches the edge
-const GREY = 10; // max spread between channels: a pale-blue bottle is not background
 const cache = new Map<string, Promise<Cutout>>();
-// One photo at a time, with a breath between them: a catalogue cuts a dozen bottles, and doing them
-// all at once would stall the scroll just as the section arrives.
-let queue: Promise<unknown> = Promise.resolve();
-const breathe = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 export function cutout(src: string, maxSide = MAX_SIDE): Promise<Cutout> {
   const key = `${maxSide} ${src}`;
   let pending = cache.get(key);
   if (!pending) {
-    pending = queue.then(breathe).then(() => load(src, true).then((image) => cut(image, maxSide), () => load(src, false).then(plain)));
-    queue = pending.catch(() => undefined);
+    pending = workerCut(src, maxSide) ?? mainThreadCut(src, maxSide);
     pending.catch(() => cache.delete(key));
     cache.set(key, pending);
   }
@@ -48,6 +45,57 @@ export function useCutout(src: string | null, maxSide = MAX_SIDE): Cutout | null
     };
   }, [src, maxSide, key]);
   return src && shot && shot.key === key ? shot.cut : null;
+}
+
+// ─── In a worker ──────────────────────────────────────────────────────────────────────────────
+let worker: Worker | null | undefined;
+let nextId = 0;
+const waiting = new Map<number, (reply: CutReply) => void>();
+
+function workerCut(src: string, maxSide: number): Promise<Cutout> | null {
+  if (worker === undefined) {
+    try {
+      worker =
+        typeof Worker !== "undefined" && typeof OffscreenCanvas !== "undefined"
+          ? new Worker(new URL("./cutout.worker.ts", import.meta.url), { type: "module" })
+          : null;
+      worker?.addEventListener("message", ({ data }: MessageEvent<CutReply>) => {
+        waiting.get(data.id)?.(data);
+        waiting.delete(data.id);
+      });
+    } catch {
+      worker = null;
+    }
+  }
+  if (!worker) return null;
+  const id = nextId++;
+  return new Promise<Cutout>((resolve) => {
+    waiting.set(id, (reply) =>
+      resolve(
+        reply.ok
+          ? { src: URL.createObjectURL(reply.blob), width: reply.width, height: reply.height, cut: true, tint: reply.tint }
+          : loadPlain(src),
+      ),
+    );
+    worker!.postMessage({ id, src, maxSide } satisfies CutRequest);
+  });
+}
+
+/** The photo as is, measured by loading it. */
+function loadPlain(src: string): Promise<Cutout> {
+  return load(src, false).then(plain);
+}
+
+// ─── On the main thread (browsers without workers or OffscreenCanvas) ───────────────────────────
+// One photo at a time, with a breath between them: a catalogue cuts a dozen bottles, and doing them
+// all at once would stall the scroll just as the section arrives.
+let queue: Promise<unknown> = Promise.resolve();
+const breathe = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+function mainThreadCut(src: string, maxSide: number): Promise<Cutout> {
+  const pending = queue.then(breathe).then(() => load(src, true).then((image) => cut(image, maxSide), () => loadPlain(src)));
+  queue = pending.catch(() => undefined);
+  return pending;
 }
 
 function load(src: string, cors: boolean): Promise<HTMLImageElement> {
@@ -83,80 +131,15 @@ async function cut(image: HTMLImageElement, maxSide: number): Promise<Cutout> {
   } catch {
     return plain(image); // tainted after all: show the photo as it is
   }
-  const data = pixels.data;
-  const isWhite = (p: number) => {
-    const r = data[p * 4], g = data[p * 4 + 1], b = data[p * 4 + 2];
-    return Math.min(r, g, b) >= WHITE && Math.max(r, g, b) - Math.min(r, g, b) <= GREY;
-  };
-
-  // Flood the background from every edge pixel that is white.
-  const background = new Uint8Array(w * h);
-  const queue = new Int32Array(w * h);
-  let head = 0, tail = 0;
-  const seed = (p: number) => {
-    if (!background[p] && isWhite(p)) {
-      background[p] = 1;
-      queue[tail++] = p;
-    }
-  };
-  for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); }
-  for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
-  while (head < tail) {
-    const p = queue[head++];
-    const x = p % w;
-    if (x > 0) seed(p - 1);
-    if (x < w - 1) seed(p + 1);
-    if (p >= w) seed(p - w);
-    if (p < w * (h - 1)) seed(p + w);
-  }
-  if (tail === 0) return plain(image); // no white around it: not a studio shot, leave it alone
-
-  // Background out; the product's rim (next to the background) fades by how white it is, with the
-  // white taken back out of its colour, so no pale halo shows on a dark page.
-  let top = h, left = w, bottom = -1, right = -1;
-  // The tint: solid product pixels, weighted by how colourful they are (gold beats a black stripe).
-  let tr = 0, tg = 0, tb = 0, weight = 0;
-  for (let p = 0; p < w * h; p++) {
-    const i = p * 4;
-    if (background[p]) {
-      data[i + 3] = 0;
-      continue;
-    }
-    const x = p % w, y = (p - x) / w;
-    const rim = (x > 0 && background[p - 1]) || (x < w - 1 && background[p + 1]) || (y > 0 && background[p - w]) || (y < h - 1 && background[p + w]);
-    if (rim) {
-      const alpha = Math.min(1, (255 - Math.min(data[i], data[i + 1], data[i + 2])) / 60);
-      if (alpha < 0.04) {
-        data[i + 3] = 0;
-        continue;
-      }
-      for (let c = 0; c < 3; c++) data[i + c] = Math.max(0, Math.min(255, (data[i + c] - 255 * (1 - alpha)) / alpha));
-      data[i + 3] = Math.round(alpha * 255);
-    }
-    if (!rim) {
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-      const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-      if (chroma > 24 && Math.max(r, g, b) > 28) {
-        tr += r * chroma;
-        tg += g * chroma;
-        tb += b * chroma;
-        weight += chroma;
-      }
-    }
-    if (x < left) left = x;
-    if (x > right) right = x;
-    if (y < top) top = y;
-    if (y > bottom) bottom = y;
-  }
-  if (bottom < 0) return plain(image);
+  const box = knockOut(pixels.data, w, h);
+  if (!box) return plain(image);
   context.putImageData(pixels, 0, 0);
 
   const trimmed = document.createElement("canvas");
-  trimmed.width = right - left + 1;
-  trimmed.height = bottom - top + 1;
-  trimmed.getContext("2d")!.drawImage(canvas, left, top, trimmed.width, trimmed.height, 0, 0, trimmed.width, trimmed.height);
+  trimmed.width = box.width;
+  trimmed.height = box.height;
+  trimmed.getContext("2d")!.drawImage(canvas, box.left, box.top, box.width, box.height, 0, 0, box.width, box.height);
   const blob = await new Promise<Blob | null>((resolve) => trimmed.toBlob(resolve, "image/png"));
   if (!blob) return plain(image);
-  const tint = weight ? `rgb(${Math.round(tr / weight)} ${Math.round(tg / weight)} ${Math.round(tb / weight)})` : undefined;
-  return { src: URL.createObjectURL(blob), width: trimmed.width, height: trimmed.height, cut: true, tint };
+  return { src: URL.createObjectURL(blob), width: box.width, height: box.height, cut: true, tint: box.tint };
 }
