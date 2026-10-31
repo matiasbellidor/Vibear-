@@ -691,6 +691,13 @@
 .film-ticks {
   display: none;
 }
+/* The welcome's bottles live in the film only: the static covers already show them. */
+.film-glows {
+  display: none;
+}
+.film-glow-image {
+  filter: drop-shadow(0 0 2.5cqw color-mix(in srgb, var(--tint) 75%, transparent)) drop-shadow(0 1.5cqw 2cqw rgb(0 0 0 / 0.18));
+}
 
 /* ─── Scroll story: the hero is a tall section whose sticky stage plays with the scroll ───────────
    0-16% the headline leaves · 0-34% the photo rises to the centre and pins fly in ·
@@ -945,10 +952,31 @@
       height: calc(100svh - 3.5rem);
       overflow: hidden;
     }
+    /* The welcome: the bottles rise from behind the title as the film comes in (entry), glow and
+       float; as the intro leaves (0-6%) they fly apart. A warm amber-to-turquoise halo behind. */
+    .film-glows {
+      display: block;
+      position: absolute;
+      inset: -20% -10%;
+      z-index: -1;
+      pointer-events: none;
+      background: radial-gradient(closest-side, rgb(255 186 102 / 0.32), rgb(48 181 171 / 0.12) 60%, transparent);
+    }
+    .film-glow {
+      animation: film-spread linear both;
+      animation-timeline: --film;
+      animation-range: contain 0% contain 6%;
+    }
+    .film-glow-pop {
+      animation: film-glow-pop linear both;
+      animation-timeline: --film;
+      animation-range: entry calc(30% + var(--i, 0) * 10%) entry calc(80% + var(--i, 0) * 6%);
+    }
     .film-intro {
       position: absolute;
       inset: 0;
       z-index: 3;
+      padding-top: 12svh; /* room above the title for the featured bottle */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1137,6 +1165,12 @@
 }
 @keyframes side-dim {
   20%, 80% { opacity: 0.15; }
+}
+@keyframes film-spread {
+  to { translate: var(--spread, 0 0); scale: 1.15; opacity: 0; }
+}
+@keyframes film-glow-pop {
+  from { opacity: 0; transform: translateY(45%) scale(0.35); }
 }
 @keyframes film-intro {
   to { opacity: 0; transform: translateY(-5svh) scale(0.97); }

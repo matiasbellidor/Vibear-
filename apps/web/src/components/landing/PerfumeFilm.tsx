@@ -17,6 +17,16 @@ const CHAPTERS = [
   { in: "67%", out: "94%" },
 ];
 
+// The welcome, like the hero's network marks: the three bottles come out from behind the title and
+// float, each glowing in its own colour, then fly apart as the film starts. Places in container
+// units of the title block; --spread is where each one flies.
+// On phones only the featured one: the sides would be cut by the screen's edge.
+const GLOWS = [
+  { place: "left-[39cqw] -top-[52cqw] w-[22cqw] sm:left-[43.5cqw] sm:-top-[32cqw] sm:w-[13cqw]", tilt: "0deg", spread: "0cqw -22cqw" }, // the featured one, above
+  { place: "hidden sm:block -left-[6cqw] -top-[4cqw] w-[18cqw]", tilt: "-11deg", spread: "-26cqw 4cqw" },
+  { place: "hidden sm:block -right-[6cqw] -top-[6cqw] w-[18cqw]", tilt: "11deg", spread: "26cqw 4cqw" },
+];
+
 /** Tiendanube serves each photo in several sizes: the film wants the biggest one (1024 px). */
 function largest(url: string): string {
   return url.includes("mitiendanube.com") ? url.replace(/-\d+-\d+\.(webp|jpe?g|png)$/, "-1024-1024.$1") : url;
@@ -41,7 +51,16 @@ export function PerfumeFilm({ boards, intro }: { boards: (FragranceBoard | undef
   return (
     <div className="film -mx-4 lg:-mx-8">
       <div className="film-stage">
-        <div className="film-intro px-4 text-center">{intro}</div>
+        <div className="film-intro px-4 text-center">
+          <div className="@container relative isolate mx-auto w-full max-w-3xl">
+            <ul aria-hidden="true" className="film-glows">
+              {boards.map((board, i) => (
+                <IntroBottle key={i} board={board} index={i} />
+              ))}
+            </ul>
+            {intro}
+          </div>
+        </div>
         <ol aria-label="Fragancias destacadas" className="film-covers">
           {boards.map((board, i) => (
             <Cover key={i} board={board} index={i} />
@@ -57,6 +76,26 @@ export function PerfumeFilm({ boards, intro }: { boards: (FragranceBoard | undef
         </ol>
       </div>
     </div>
+  );
+}
+
+function IntroBottle({ board, index }: { board?: FragranceBoard; index: number }) {
+  // The same cut-out as its cover (same size, so it is cut once).
+  const shot = useCutout(board?.image ? largest(board.image) : null, 1400);
+  const spot = GLOWS[index];
+  if (!shot?.cut) return null;
+  return (
+    <li
+      className={cx("film-glow absolute", spot.place)}
+      style={{ rotate: spot.tilt, "--spread": spot.spread, "--i": index, "--tint": shot.tint ?? "var(--color-wine-bright)" } as CSSProperties}
+    >
+      <span className="film-glow-pop block">
+        <span className="app-float motion-loop block" style={{ "--i": index } as CSSProperties}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a cut-out blob */}
+          <img src={shot.src} alt="" width={shot.width} height={shot.height} className="film-glow-image h-auto w-full" />
+        </span>
+      </span>
+    </li>
   );
 }
 
